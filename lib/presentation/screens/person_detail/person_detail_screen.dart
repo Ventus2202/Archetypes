@@ -5,8 +5,10 @@ import '../../../domain/entities/person.dart';
 import '../../../domain/entities/personality_profile.dart';
 import '../../../domain/personality_systems/mbti/mbti_profile.dart';
 import '../../../domain/affinity/cognitive_function_affinity.dart';
+import '../../../domain/affinity/relationship_dynamics.dart';
 import '../../providers/person_provider.dart';
 import '../../providers/database_provider.dart';
+import '../../../data/repositories/content_repository.dart';
 import '../../theme/app_theme.dart';
 import '../person_edit/person_edit_screen.dart';
 import '../content_viewer/content_viewer_screen.dart';
@@ -218,27 +220,30 @@ class _PersonalityTab extends ConsumerWidget {
       return Center(child: Text(l10n.affinityNoProfile));
     }
 
-    return FutureBuilder<AffinityResult?>(
-      future: _computeAffinityWithSelf(ref, mbtiProfile!),
+    return FutureBuilder<({AffinityResult affinity, RelationshipReport report, RelationshipDynamicsContent textContent})?>(
+      future: _computeAffinityWithSelf(ref, mbtiProfile!, context),
       builder: (ctx, affinitySnap) {
-        final affinity = affinitySnap.data;
+        final data = affinitySnap.data;
 
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _FunctionStackCard(profile: mbtiProfile!),
             const SizedBox(height: 12),
-            if (affinity != null && !person.isSelf)
-              _AffinityCard(
-                  affinity: affinity, personName: person.displayName),
+            if (data != null && !person.isSelf) ...[
+              _AffinityCard(affinity: data.affinity, personName: person.displayName),
+              const SizedBox(height: 12),
+              _DynamicsReportCard(report: data.report, textContent: data.textContent),
+            ],
           ],
         );
       },
     );
   }
 
-  Future<AffinityResult?> _computeAffinityWithSelf(
-      WidgetRef ref, MbtiProfile profile) async {
+  Future<({AffinityResult affinity, RelationshipReport report, RelationshipDynamicsContent textContent})?> _computeAffinityWithSelf(
+      WidgetRef ref, MbtiProfile profile, BuildContext context) async {
+    final locale = Localizations.localeOf(context).languageCode;
     final self = await ref.read(personRepositoryProvider).getSelf();
     if (self == null) return null;
     final selfProfiles =
@@ -249,7 +254,12 @@ class _PersonalityTab extends ConsumerWidget {
     try {
       final selfProfile =
           MbtiProfile.fromJson(Map<String, dynamic>.from(selfMbti.data));
-      return CognitiveFunctionAffinity.calculate(selfProfile, profile);
+      final affinity = CognitiveFunctionAffinity.calculate(selfProfile, profile);
+      final report = RelationshipDynamics.analyze(selfProfile, profile);
+      
+      final textContent = await ref.read(contentRepositoryProvider).loadDynamicsContent(locale);
+
+      return (affinity: affinity, report: report, textContent: textContent);
     } catch (_) {
       return null;
     }
@@ -506,6 +516,161 @@ class _NotesTab extends StatelessWidget {
               '${person.firstMetDate!.day}/${person.firstMetDate!.month}/${person.firstMetDate!.year}',
             ),
           ),
+      ],
+    );
+  }
+}
+
+class _DynamicsReportCard extends StatelessWidget {
+  const _DynamicsReportCard({
+    required this.report,
+    required this.textContent,
+  });
+
+  final RelationshipReport report;
+  final RelationshipDynamicsContent textContent;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (report.frictionPoints.isNotEmpty) ...[
+              Text(
+                l10n.reportFrictionPoints,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: cs.error),
+              ),
+              const SizedBox(height: 8),
+              ...report.frictionPoints.map((f) => _buildItem(
+                    icon: Icons.warning_amber_rounded,
+                    iconColor: cs.error,
+                    title: textContent.frictions[f.titleKey.replaceAll('_title', '')]?['title'] ?? f.titleKey,
+                    desc: textContent.frictions[f.titleKey.replaceAll('_title', '')]?['description'] ?? f.descriptionKey,
+                    context: context,
+                  )),
+              const Divider(height: 24),
+            ],
+            
+            if (report.mutualGrowthAreas.isNotEmpty) ...[
+              Text(
+                l10n.reportGrowthAreas,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.green),
+              ),
+              const SizedBox(height: 8),
+              ...report.mutualGrowthAreas.map((g) => _buildItem(
+                    icon: Icons.trending_up,
+                    iconColor: Colors.green,
+                    title: textContent.growths[g.titleKey.replaceAll('_title', '')]?['title'] ?? g.titleKey,
+                    desc: textContent.growths[g.titleKey.replaceAll('_title', '')]?['description'] ?? g.descriptionKey,
+                    context: context,
+                  )),
+              const Divider(height: 24),
+            ],
+
+            if (report.communicationTips.isNotEmpty) ...[
+              Text(
+                l10n.reportCommunication,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: cs.primary),
+              ),
+              const SizedBox(height: 8),
+              ...report.communicationTips.map((c) => _buildItem(
+                    icon: Icons.chat_bubble_outline,
+                    iconColor: cs.primary,
+                    title: textContent.communications[c.titleKey.replaceAll('_title', '')]?['title'] ?? c.titleKey,
+                    desc: textContent.communications[c.titleKey.replaceAll('_title', '')]?['description'] ?? c.descriptionKey,
+                    context: context,
+                  )),
+              const Divider(height: 24),
+            ],
+
+            Text(
+              l10n.reportAxisAnalysis,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: cs.secondary),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _buildAxis(l10n.axisIE, report.axisAnalysis.ieStatus, l10n, cs)),
+                Expanded(child: _buildAxis(l10n.axisNS, report.axisAnalysis.nsStatus, l10n, cs)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: _buildAxis(l10n.axisTF, report.axisAnalysis.tfStatus, l10n, cs)),
+                Expanded(child: _buildAxis(l10n.axisJP, report.axisAnalysis.jpStatus, l10n, cs)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String desc,
+    required BuildContext context,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(desc, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAxis(String label, AxisStatus status, AppLocalizations l10n, ColorScheme cs) {
+    final statusText = switch (status) {
+      AxisStatus.aligned => l10n.reportAxisAligned,
+      AxisStatus.complementary => l10n.reportAxisComplementary,
+      AxisStatus.tension => l10n.reportAxisTension,
+    };
+    final color = switch (status) {
+      AxisStatus.aligned => Colors.green,
+      AxisStatus.complementary => cs.primary,
+      AxisStatus.tension => cs.error,
+    };
+    final icon = switch (status) {
+      AxisStatus.aligned => Icons.check_circle_outline,
+      AxisStatus.complementary => Icons.sync_alt,
+      AxisStatus.tension => Icons.bolt,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 4),
+            Text(statusText, style: TextStyle(fontSize: 12, color: color)),
+          ],
+        ),
       ],
     );
   }

@@ -13,8 +13,21 @@ class MbtiContent {
   });
 }
 
+class RelationshipDynamicsContent {
+  final Map<String, dynamic> frictions;
+  final Map<String, dynamic> growths;
+  final Map<String, dynamic> communications;
+
+  const RelationshipDynamicsContent({
+    required this.frictions,
+    required this.growths,
+    required this.communications,
+  });
+}
+
 class ContentRepository {
   MbtiContent? _cache;
+  RelationshipDynamicsContent? _dynamicsCache;
   String? _loadedLocale;
 
   Future<MbtiContent> loadMbtiContent(String languageCode) async {
@@ -37,8 +50,35 @@ class ContentRepository {
     return _cache!;
   }
 
+  Future<RelationshipDynamicsContent> loadDynamicsContent(String languageCode) async {
+    if (_dynamicsCache != null && _loadedLocale == languageCode) return _dynamicsCache!;
+
+    final supportedLocales = ['it', 'en'];
+    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
+
+    try {
+      final raw =
+          await rootBundle.loadString('assets/content/$locale/relationship_dynamics.json');
+      final parsed = json.decode(raw) as Map<String, dynamic>;
+
+      _dynamicsCache = RelationshipDynamicsContent(
+        frictions: Map<String, dynamic>.from(parsed['frictions'] as Map? ?? {}),
+        growths: Map<String, dynamic>.from(parsed['growths'] as Map? ?? {}),
+        communications: Map<String, dynamic>.from(parsed['communications'] as Map? ?? {}),
+      );
+    } catch (_) {
+      _dynamicsCache = const RelationshipDynamicsContent(
+        frictions: {}, growths: {}, communications: {}
+      );
+    }
+    
+    _loadedLocale = languageCode;
+    return _dynamicsCache!;
+  }
+
   void invalidateCache() {
     _cache = null;
+    _dynamicsCache = null;
     _loadedLocale = null;
   }
 

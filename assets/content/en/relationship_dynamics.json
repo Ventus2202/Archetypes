@@ -1,0 +1,100 @@
+{
+  "frictions": {
+    "conflict_te_fi": {
+      "title": "Organization vs Authenticity",
+      "description": "The logical, objective, and efficiency-oriented approach of Extraverted Thinking (Te) often clashes with the strong need for authenticity, personal meaning, and moral integrity of Introverted Feeling (Fi). The former seeks to structure the external world, while the latter protects the internal world, potentially causing misunderstandings about what is truly 'important'."
+    },
+    "conflict_fe_ti": {
+      "title": "Social Harmony vs Logical Consistency",
+      "description": "Extraverted Feeling (Fe) seeks to maintain group harmony and respond to the needs of others, while Introverted Thinking (Ti) pursues rigorous, feeling-independent logical truth. This dynamic can cause friction when logical decisions threaten the social climate, or conversely, when social compromises appear illogical."
+    },
+    "conflict_ne_si": {
+      "title": "Novelty vs Tradition",
+      "description": "Extraverted Intuition (Ne) constantly explores new possibilities and rejects routine, coming into tension with Introverted Sensing (Si), which relies on past experience, stability, and proven methods. The risk is that one perceives the other as too chaotic or too rigid."
+    },
+    "conflict_ni_se": {
+      "title": "Long-term Vision vs Immediate Experience",
+      "description": "Introverted Intuition (Ni) is focused on the future, deep meanings, and distant goals. In contrast, Extraverted Sensing (Se) lives in the present, reacting to concrete stimuli and seeking action. Friction emerges when the need to plan stifles spontaneity, or impulsiveness sabotages long-term plans."
+    }
+  },
+  "growths": {
+    "growth_ni": {
+      "title": "Vision Development",
+      "description": "An opportunity to learn to look beyond the immediate, developing a long-term vision and grasping the deep meanings behind events."
+    },
+    "growth_ne": {
+      "title": "Openness to the Possible",
+      "description": "A chance to explore new perspectives, embrace brainstorming, and break free from overly rigid thought patterns."
+    },
+    "growth_si": {
+      "title": "Recognition of Stability",
+      "description": "A growth space to appreciate the value of past experience, positive routines, and building solid foundations."
+    },
+    "growth_se": {
+      "title": "Anchoring to the Present",
+      "description": "An invitation to live more in the 'here and now', appreciating concrete action, spontaneity, and physical awareness."
+    },
+    "growth_ti": {
+      "title": "Logical Refinement",
+      "description": "A challenge to analyze situations with greater objectivity and precision, developing a coherent and independent mental framework."
+    },
+    "growth_te": {
+      "title": "Organizational Empowerment",
+      "description": "The opportunity to translate ideas and feelings into structured actions, improving efficiency, delegation, and management of the external world."
+    },
+    "growth_fi": {
+      "title": "Exploration of Authenticity",
+      "description": "A path to connect with one's deepest values, learning to make decisions based not only on utility but on what resonates deeply."
+    },
+    "growth_fe": {
+      "title": "Expansion of Empathy",
+      "description": "The chance to improve attunement to group needs, developing tact, diplomacy, and relational intelligence."
+    }
+  },
+  "communications": {
+    "comm_default": {
+      "title": "Communication Dynamic",
+      "description": "A unique combination that requires active listening and mutual understanding to bridge differences."
+    },
+    "comm_it_it": {
+      "title": "Shared and Silent Analysis",
+      "description": "Both prefer to reflect internally before speaking. Communication is precise, logical, and focused on complex concepts, but may lack emotional warmth or risk long silences."
+    },
+    "comm_it_if": {
+      "title": "Analytical Logic vs Intimate Values",
+      "description": "One focuses on detached analysis, the other on deep emotional resonance. A conscious effort is needed to translate the language of reason into that of the heart and vice versa, respecting each other's inner spaces."
+    },
+    "comm_it_et": {
+      "title": "Introspective Thought vs Executive Action",
+      "description": "A dialogue between someone who builds mental logical models and someone who wants to apply logic in the real world efficiently. Risk of clashes over pace: too much reflection versus too much executive haste."
+    },
+    "comm_it_ef": {
+      "title": "Cold Reflection vs Warm Expressiveness",
+      "description": "The pole of introspective logic meets emotional exuberance. It can be highly complementary: one brings structure and detachment, the other empathy and connection. Be careful not to perceive each other as too cold or too dramatic."
+    },
+    "comm_if_if": {
+      "title": "Deep and Silent Harmony",
+      "description": "An understanding based on values, ideals, and deep respect for the other's interiority. They can understand each other without many words but struggle to resolve conflicts directly or make purely practical decisions."
+    },
+    "comm_if_et": {
+      "title": "Intimate Idealism vs External Efficiency",
+      "description": "A stimulating but demanding dynamic. The practical, logical, and directive approach meets inner sensitivity and values. Communication must be measured: delicacy is needed on one side, and practicality on the other."
+    },
+    "comm_if_ef": {
+      "title": "Reflective Sensitivity vs Extraverted Sharing",
+      "description": "They share a focus on feelings and human relationships, but at different paces. One needs time to process emotions, the other prefers to express them and immediately harmonize the environment."
+    },
+    "comm_et_et": {
+      "title": "Efficiency and Open Debate",
+      "description": "Direct, fast, and pragmatic communication. Discussions can be very heated and turn into real intellectual debates. Excellent at problem-solving, but tend to neglect the human side."
+    },
+    "comm_et_ef": {
+      "title": "Directive Logic vs Relational Harmony",
+      "description": "Both outward-oriented, but with opposite priorities. One wants to make things work logically, the other wants people to feel good. Great energy in solving practical and social problems if they learn to mediate."
+    },
+    "comm_ef_ef": {
+      "title": "Emotional Synergy and Dynamism",
+      "description": "Vibrant, warm communication highly focused on people. An environment rich in mutual confirmation and support, but risks avoiding conflicts or losing sight of harsh logical objectivity."
+    }
+  }
+}

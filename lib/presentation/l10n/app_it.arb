@@ -143,6 +143,18 @@
   "affinityComplement": "Funzioni complementari",
   "affinitySimilarFunction": "Funzioni condivise",
 
+  "reportFrictionPoints": "Punti di attrito prevedibili",
+  "reportGrowthAreas": "Aree di crescita reciproca",
+  "reportCommunication": "Dinamiche di comunicazione",
+  "reportAxisAnalysis": "Analisi per asse",
+  "reportAxisAligned": "Allineati",
+  "reportAxisComplementary": "Complementari",
+  "reportAxisTension": "In tensione",
+  "axisIE": "Introversione / Estroversione",
+  "axisNS": "Intuizione / Sensazione",
+  "axisTF": "Pensiero / Sentimento",
+  "axisJP": "Giudizio / Percezione",
+
   "graphTitle": "Grafo relazioni",
   "graphModeFree": "Libero",
   "graphModeCluster": "Per tipo",

@@ -680,6 +680,72 @@ abstract class AppLocalizations {
   /// **'Funzioni condivise'**
   String get affinitySimilarFunction;
 
+  /// No description provided for @reportFrictionPoints.
+  ///
+  /// In it, this message translates to:
+  /// **'Punti di attrito prevedibili'**
+  String get reportFrictionPoints;
+
+  /// No description provided for @reportGrowthAreas.
+  ///
+  /// In it, this message translates to:
+  /// **'Aree di crescita reciproca'**
+  String get reportGrowthAreas;
+
+  /// No description provided for @reportCommunication.
+  ///
+  /// In it, this message translates to:
+  /// **'Dinamiche di comunicazione'**
+  String get reportCommunication;
+
+  /// No description provided for @reportAxisAnalysis.
+  ///
+  /// In it, this message translates to:
+  /// **'Analisi per asse'**
+  String get reportAxisAnalysis;
+
+  /// No description provided for @reportAxisAligned.
+  ///
+  /// In it, this message translates to:
+  /// **'Allineati'**
+  String get reportAxisAligned;
+
+  /// No description provided for @reportAxisComplementary.
+  ///
+  /// In it, this message translates to:
+  /// **'Complementari'**
+  String get reportAxisComplementary;
+
+  /// No description provided for @reportAxisTension.
+  ///
+  /// In it, this message translates to:
+  /// **'In tensione'**
+  String get reportAxisTension;
+
+  /// No description provided for @axisIE.
+  ///
+  /// In it, this message translates to:
+  /// **'Introversione / Estroversione'**
+  String get axisIE;
+
+  /// No description provided for @axisNS.
+  ///
+  /// In it, this message translates to:
+  /// **'Intuizione / Sensazione'**
+  String get axisNS;
+
+  /// No description provided for @axisTF.
+  ///
+  /// In it, this message translates to:
+  /// **'Pensiero / Sentimento'**
+  String get axisTF;
+
+  /// No description provided for @axisJP.
+  ///
+  /// In it, this message translates to:
+  /// **'Giudizio / Percezione'**
+  String get axisJP;
+
   /// No description provided for @graphTitle.
   ///
   /// In it, this message translates to:

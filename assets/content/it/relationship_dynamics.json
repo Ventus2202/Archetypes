@@ -1,0 +1,100 @@
+{
+  "frictions": {
+    "conflict_te_fi": {
+      "title": "Organizzazione vs Autenticità",
+      "description": "L'approccio logico, oggettivo ed orientato all'efficienza del Pensiero Estroverso (Te) si scontra spesso con il forte bisogno di autenticità, significato personale e integrità morale del Sentimento Introverso (Fi). Il primo cerca di strutturare il mondo esterno, mentre il secondo protegge il proprio mondo interiore, causando potenziali incomprensioni su cosa sia veramente 'importante'."
+    },
+    "conflict_fe_ti": {
+      "title": "Armonia sociale vs Coerenza logica",
+      "description": "Il Sentimento Estroverso (Fe) cerca di mantenere l'armonia di gruppo e rispondere ai bisogni altrui, mentre il Pensiero Introverso (Ti) persegue una verità logica rigorosa e indipendente dai sentimenti. Questa dinamica può generare attriti quando le decisioni logiche minacciano il clima sociale, o viceversa, quando i compromessi sociali appaiono illogici."
+    },
+    "conflict_ne_si": {
+      "title": "Novità vs Tradizione",
+      "description": "L'Intuizione Estroversa (Ne) esplora costantemente nuove possibilità e rifiuta la routine, entrando in tensione con la Sensazione Introversa (Si) che si affida all'esperienza passata, alla stabilità e ai metodi collaudati. Il rischio è che uno percepisca l'altro come troppo caotico o troppo rigido."
+    },
+    "conflict_ni_se": {
+      "title": "Visione a lungo termine vs Esperienza immediata",
+      "description": "L'Intuizione Introversa (Ni) è focalizzata sul futuro, su significati profondi e obiettivi lontani. Al contrario, la Sensazione Estroversa (Se) vive nel presente, reagendo agli stimoli concreti e cercando l'azione. L'attrito emerge quando la necessità di pianificare soffoca la spontaneità, o l'impulsività sabota i piani a lungo termine."
+    }
+  },
+  "growths": {
+    "growth_ni": {
+      "title": "Sviluppo della Visione",
+      "description": "Un'opportunità per imparare a guardare oltre l'immediato, sviluppando una visione a lungo termine e cogliendo i significati profondi dietro agli eventi."
+    },
+    "growth_ne": {
+      "title": "Apertura al Possibile",
+      "description": "Un'occasione per esplorare nuove prospettive, abbracciare il brainstorming e liberarsi da schemi di pensiero eccessivamente rigidi."
+    },
+    "growth_si": {
+      "title": "Riconoscimento della Stabilità",
+      "description": "Uno spazio di crescita per apprezzare il valore dell'esperienza passata, della routine positiva e della costruzione di basi solide."
+    },
+    "growth_se": {
+      "title": "Ancoraggio al Presente",
+      "description": "Un invito a vivere maggiormente nel 'qui e ora', apprezzando l'azione concreta, la spontaneità e la consapevolezza fisica."
+    },
+    "growth_ti": {
+      "title": "Raffinamento Logico",
+      "description": "Una sfida ad analizzare le situazioni con maggiore obiettività e precisione, sviluppando un framework mentale coerente e indipendente."
+    },
+    "growth_te": {
+      "title": "Potenziamento Organizzativo",
+      "description": "L'opportunità di tradurre idee e sentimenti in azioni strutturate, migliorando l'efficienza, la delega e la gestione del mondo esterno."
+    },
+    "growth_fi": {
+      "title": "Esplorazione dell'Autenticità",
+      "description": "Un percorso per connettersi ai propri valori più intimi, imparando a prendere decisioni basate non solo sull'utile, ma su ciò che risuona profondamente."
+    },
+    "growth_fe": {
+      "title": "Espansione dell'Empatia",
+      "description": "L'occasione di migliorare la sintonizzazione con i bisogni del gruppo, sviluppando tatto, diplomazia e intelligenza relazionale."
+    }
+  },
+  "communications": {
+    "comm_default": {
+      "title": "Dinamica di comunicazione",
+      "description": "Una combinazione unica che richiede ascolto attivo e comprensione reciproca per colmare le differenze."
+    },
+    "comm_it_it": {
+      "title": "Analisi Condivisa e Silenziosa",
+      "description": "Entrambi preferiscono riflettere internamente prima di parlare. La comunicazione è precisa, logica, e focalizzata su concetti complessi, ma può mancare di calore emotivo o rischiare lunghi silenzi."
+    },
+    "comm_it_if": {
+      "title": "Logica Analitica vs Valori Intimi",
+      "description": "Uno si concentra su analisi distaccate, l'altro su risonanze emotive profonde. È necessario uno sforzo consapevole per tradurre il linguaggio della ragione in quello del cuore e viceversa, nel rispetto dei reciproci spazi interiori."
+    },
+    "comm_it_et": {
+      "title": "Pensiero Introspettivo vs Azione Esecutiva",
+      "description": "Un dialogo tra chi costruisce modelli logici mentali e chi vuole applicare la logica nel mondo reale in modo efficiente. Rischio di scontri sul ritmo: troppa riflessione contro troppa fretta esecutiva."
+    },
+    "comm_it_ef": {
+      "title": "Riflessione Fredda vs Espressività Calorosa",
+      "description": "Il polo della logica introspettiva incontra l'esuberanza emotiva. Può essere estremamente complementare: l'uno porta struttura e distacco, l'altro empatia e connessione. Attenzione a non percepirsi a vicenda come troppo freddi o troppo drammatici."
+    },
+    "comm_if_if": {
+      "title": "Sintonia Profonda e Silenziosa",
+      "description": "Un'intesa basata su valori, ideali e profondo rispetto per l'interiorità altrui. Possono comprendersi senza molte parole, ma faticano a risolvere i conflitti in modo diretto o a prendere decisioni puramente pratiche."
+    },
+    "comm_if_et": {
+      "title": "Idealismo Intimo vs Efficienza Esterna",
+      "description": "Una dinamica stimolante ma faticosa. L'approccio pratico, logico e direttivo si incontra con la sensibilità e i valori interiori. La comunicazione deve essere dosata: serve delicatezza da una parte e senso pratico dall'altra."
+    },
+    "comm_if_ef": {
+      "title": "Sensibilità Riflessiva vs Condivisione Estroversa",
+      "description": "Condividono un focus sui sentimenti e le relazioni umane, ma con ritmi diversi. Uno ha bisogno di tempo per elaborare le emozioni, l'altro preferisce esprimerle e armonizzare subito l'ambiente."
+    },
+    "comm_et_et": {
+      "title": "Efficienza e Dibattito Aperto",
+      "description": "Una comunicazione diretta, veloce e pragmatica. Le discussioni possono essere molto accese e sfociare in veri e propri dibattiti intellettuali. Eccellenti nel problem-solving, ma tendono a trascurare il lato umano."
+    },
+    "comm_et_ef": {
+      "title": "Logica Direttiva vs Armonia Relazionale",
+      "description": "Entrambi orientati all'esterno, ma con priorità opposte. Uno vuole far funzionare le cose in modo logico, l'altro vuole che le persone stiano bene. Ottima energia nel risolvere problemi pratici e sociali, se si impara a mediare."
+    },
+    "comm_ef_ef": {
+      "title": "Sinergia Emotiva e Dinamismo",
+      "description": "Comunicazione vibrante, calda ed estremamente focalizzata sulle persone. Un ambiente ricco di conferme e supporto reciproco, ma che rischia di evitare i conflitti o di perdere di vista la cruda oggettività logica."
+    }
+  }
+}

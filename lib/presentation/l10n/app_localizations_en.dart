@@ -318,6 +318,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get affinitySimilarFunction => 'Shared functions';
 
   @override
+  String get reportFrictionPoints => 'Predictable friction points';
+
+  @override
+  String get reportGrowthAreas => 'Mutual growth areas';
+
+  @override
+  String get reportCommunication => 'Communication tips';
+
+  @override
+  String get reportAxisAnalysis => 'Axis analysis';
+
+  @override
+  String get reportAxisAligned => 'Aligned';
+
+  @override
+  String get reportAxisComplementary => 'Complementary';
+
+  @override
+  String get reportAxisTension => 'In tension';
+
+  @override
+  String get axisIE => 'Introversion / Extraversion';
+
+  @override
+  String get axisNS => 'Intuition / Sensing';
+
+  @override
+  String get axisTF => 'Thinking / Feeling';
+
+  @override
+  String get axisJP => 'Judging / Perceiving';
+
+  @override
   String get graphTitle => 'Relationship graph';
 
   @override

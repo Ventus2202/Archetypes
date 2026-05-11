@@ -141,6 +141,18 @@
   "affinityComplement": "Complementary functions",
   "affinitySimilarFunction": "Shared functions",
 
+  "reportFrictionPoints": "Predictable friction points",
+  "reportGrowthAreas": "Mutual growth areas",
+  "reportCommunication": "Communication tips",
+  "reportAxisAnalysis": "Axis analysis",
+  "reportAxisAligned": "Aligned",
+  "reportAxisComplementary": "Complementary",
+  "reportAxisTension": "In tension",
+  "axisIE": "Introversion / Extraversion",
+  "axisNS": "Intuition / Sensing",
+  "axisTF": "Thinking / Feeling",
+  "axisJP": "Judging / Perceiving",
+
   "graphTitle": "Relationship graph",
   "graphModeFree": "Free",
   "graphModeCluster": "By type",
