@@ -1,0 +1,60 @@
+name: archetypes
+description: "Personality profile manager with cognitive function affinity graph."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Local database
+  drift: ^2.26.1
+  sqlite3_flutter_libs: ^0.5.30
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # Lightweight key-value store (preferences, cache)
+  hive_flutter: ^1.1.0
+
+  # Graph visualization
+  graphview: ^1.2.0
+
+  # Image picker (avatar)
+  image_picker: ^1.1.2
+
+  # Export / import ZIP
+  archive: ^4.0.7
+
+  # Markdown rendering for educational cards
+  flutter_markdown: ^0.7.6
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Code generation
+  build_runner: ^2.4.15
+  drift_dev: ^2.26.1
+  riverpod_generator: ^2.6.1
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/content/it/mbti.json
+    - assets/content/en/mbti.json

@@ -1,0 +1,238 @@
+{
+  "@@locale": "en",
+  "appName": "Archetypes",
+  "navGraph": "Graph",
+  "navPeople": "People",
+  "navSettings": "Settings",
+
+  "actionAdd": "Add",
+  "actionSave": "Save",
+  "actionCancel": "Cancel",
+  "actionDelete": "Delete",
+  "actionEdit": "Edit",
+  "actionBack": "Back",
+  "actionClose": "Close",
+  "actionNext": "Next",
+  "actionPrevious": "Previous",
+  "actionFinish": "Finish",
+  "actionSearch": "Search",
+  "actionFilter": "Filter",
+  "actionExport": "Export",
+  "actionImport": "Import",
+  "actionLearnMore": "Learn more",
+  "actionConfirm": "Confirm",
+
+  "onboardingWelcomeTitle": "Welcome to Archetypes",
+  "onboardingWelcomeSubtitle": "Explore your relationships through Jungian cognitive functions",
+  "onboardingYourName": "What's your name?",
+  "onboardingNameHint": "Your name",
+  "onboardingChooseMethod": "How do you want to enter your personality?",
+  "onboardingMethodManual": "Manual selection",
+  "onboardingMethodManualDesc": "Choose your MBTI type directly",
+  "onboardingMethodTest": "In-app test",
+  "onboardingMethodTestDesc": "Answer a questionnaire to discover your type",
+  "onboardingMethodGranular": "Granular input",
+  "onboardingMethodGranularDesc": "Specify dichotomy and cognitive function values directly",
+  "onboardingSelectType": "Select your MBTI type",
+  "onboardingComplete": "Start exploring!",
+  "onboardingStep": "Step {current} of {total}",
+  "@onboardingStep": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "personName": "Name",
+  "personNickname": "Nickname",
+  "personRole": "Role",
+  "personBirthday": "Date of birth",
+  "personGender": "Gender",
+  "personNotes": "Notes",
+  "personFirstMet": "Date met",
+  "personAvatar": "Photo",
+  "personPersonality": "Personality",
+  "personRelationship": "Your relationship",
+  "personAddNew": "New person",
+  "personEditTitle": "Edit person",
+  "personDetailTitle": "Profile",
+  "personSelf": "Me",
+  "personDisplayName": "{name}",
+  "@personDisplayName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "roleFamily": "Family",
+  "roleFriend": "Friend",
+  "rolePartner": "Partner",
+  "roleColleague": "Colleague",
+  "roleAcquaintance": "Acquaintance",
+  "roleOther": "Other",
+
+  "mbtiTypeLabel": "MBTI Type",
+  "mbtiSelectType": "Select type",
+  "mbtiConfidence": "Confidence",
+  "mbtiConfidenceHint": "How confident are you about this type? ({value}%)",
+  "@mbtiConfidenceHint": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "mbtiSourceManual": "Manual selection",
+  "mbtiSourceQuizShort": "Short test",
+  "mbtiSourceQuizMedium": "Medium test",
+  "mbtiSourceQuizLong": "Full test",
+  "mbtiSourceGranular": "Granular input",
+  "mbtiDominant": "Dominant",
+  "mbtiAuxiliary": "Auxiliary",
+  "mbtiTertiary": "Tertiary",
+  "mbtiInferior": "Inferior",
+  "mbtiLearnAboutType": "Learn about type {type}",
+  "@mbtiLearnAboutType": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "mbtiLearnAboutFunction": "Learn about function {function}",
+  "@mbtiLearnAboutFunction": {
+    "placeholders": {
+      "function": { "type": "String" }
+    }
+  },
+  "mbtiGranularTitle": "Set dichotomies",
+  "mbtiDichotomyIE": "Introversion / Extraversion",
+  "mbtiDichotomyNS": "Intuition / Sensing",
+  "mbtiDichotomyTF": "Thinking / Feeling",
+  "mbtiDichotomyJP": "Judging / Perceiving",
+
+  "relationshipKind": "Relationship type",
+  "relationshipStrength": "Perceived intensity",
+  "relationshipNote": "Relationship notes",
+  "relationshipStartDate": "Start date",
+  "relationKindFriendship": "Friendship",
+  "relationKindRomantic": "Romantic",
+  "relationKindFamily": "Family",
+  "relationKindProfessional": "Professional",
+  "relationKindAcquaintance": "Acquaintance",
+  "relationKindConflict": "Conflict",
+
+  "affinityTitle": "Affinity",
+  "affinityScore": "Score: {score}/100",
+  "@affinityScore": {
+    "placeholders": {
+      "score": { "type": "int" }
+    }
+  },
+  "affinityHigh": "High affinity",
+  "affinityMedium": "Good affinity",
+  "affinityLow": "Moderate affinity",
+  "affinityBreakdown": "Function breakdown",
+  "affinityWith": "Affinity with {name}",
+  "@affinityWith": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "affinityNoProfile": "Add an MBTI profile to calculate affinity",
+  "affinityDominantComplement": "Complementary dominant functions",
+  "affinityCoreComplement": "Core complementarity",
+  "affinityComplement": "Complementary functions",
+  "affinitySimilarFunction": "Shared functions",
+
+  "graphTitle": "Relationship graph",
+  "graphModeFree": "Free",
+  "graphModeCluster": "By type",
+  "graphModeTimeline": "Timeline",
+  "graphNoConnections": "Add people to visualize relationships",
+  "graphTapPerson": "Tap a person to see details",
+  "graphFilterGroups": "Filter by group",
+  "graphFilterTypes": "Filter by MBTI type",
+
+  "settingsTitle": "Settings",
+  "settingsLanguage": "Language",
+  "settingsTheme": "Theme",
+  "settingsThemeSystem": "System",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsExportData": "Export data",
+  "settingsImportData": "Import data",
+  "settingsExportDesc": "Save all your data as a ZIP file",
+  "settingsImportDesc": "Restore data from a ZIP file",
+  "settingsAbout": "About",
+  "settingsVersion": "Version {version}",
+  "@settingsVersion": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+
+  "quizShort": "Short test",
+  "quizShortDesc": "~20 questions · 5 min",
+  "quizMedium": "Medium test",
+  "quizMediumDesc": "~50 questions · 12 min",
+  "quizLong": "Full test",
+  "quizLongDesc": "~80 questions · 20 min",
+  "quizStart": "Start the test",
+  "quizQuestion": "Question {current} of {total}",
+  "@quizQuestion": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "quizResults": "Results",
+  "quizResultType": "Your type is {type}",
+  "@quizResultType": {
+    "placeholders": {
+      "type": { "type": "String" }
+    }
+  },
+  "quizAgree": "Agree",
+  "quizDisagree": "Disagree",
+
+  "contentSectionStrengths": "Strengths",
+  "contentSectionWeaknesses": "Growth areas",
+  "contentSectionRelationships": "In relationships",
+  "contentSectionWork": "At work",
+  "contentSectionStack": "Functional stack",
+  "contentSectionCompatibility": "Compatibility",
+  "contentSectionBehaviors": "Typical behaviors",
+  "contentSectionExamples": "Famous examples",
+  "contentHighAffinity": "High affinity",
+  "contentGoodWorking": "Good collaboration",
+  "contentChallengingGrowth": "Challenging growth",
+
+  "errorGeneric": "An error occurred",
+  "errorNotFound": "Content not found",
+  "errorImportFailed": "Import failed",
+  "errorExportFailed": "Export failed",
+
+  "emptyPeopleList": "No people added yet",
+  "emptyPeopleListAction": "Add your first person",
+  "emptyGraph": "The graph is empty",
+
+  "confirmDelete": "Delete this person?",
+  "confirmDeleteBody": "All data for this person will be permanently deleted. This action cannot be undone.",
+  "confirmDeleteAction": "Delete permanently",
+
+  "languageIt": "Italiano",
+  "languageEn": "English",
+
+  "tabPersonality": "Personality",
+  "tabRelationship": "Relationship",
+  "tabNotes": "Notes",
+  "tabTimeline": "Timeline",
+
+  "groupLabel": "Group",
+  "groupAdd": "New group",
+  "groupColor": "Color",
+  "groupName": "Group name",
+  "groupNoGroups": "No groups",
+
+  "contentTypeMbti": "MBTI Type",
+  "contentTypeFunction": "Cognitive function",
+  "contentTypeDichotomy": "Dichotomy",
+  "contentTypeAffinity": "Affinity"
+}

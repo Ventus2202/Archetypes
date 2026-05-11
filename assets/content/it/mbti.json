@@ -1,0 +1,780 @@
+{
+  "types": {
+    "INTJ": {
+      "title": "L'Architetto",
+      "tagline": "Pensatore strategico indipendente con una visione chiara del futuro",
+      "description": "Gli INTJ sono tra le personalità più rare e strategicamente capaci. Combinano immaginazione e razionalità in misura insolita: hanno visioni concrete e a lungo termine (Ni dominante) e la determinazione intellettuale per realizzarle (Te ausiliaria). Non vivono nel presente — vivono già nel futuro che stanno costruendo.\n\nIn superficie possono sembrare freddi o arroganti, ma internamente ospitano un sistema di valori profondi e privati (Fi terziaria) che guidano ogni decisione. Non cercano l'approvazione altrui: la loro bussola interna è sufficiente. Questo li rende impermeabili alle pressioni sociali, ma anche difficili da raggiungere emotivamente per chi non ha pazienza.\n\nIl loro tallone d'Achille è la Se inferiore: tendono a trascurare il presente sensoriale, il corpo, il piacere immediato. Sotto stress diventano iper-controllo o, al contrario, si lasciano andare in eccessi sensoriali. La maturazione dell'INTJ passa dall'integrare il presente senza perdere la visione.",
+      "stack": ["Ni", "Te", "Fi", "Se"],
+      "strengths": [
+        "Pensiero sistemico e strategico a lungo termine",
+        "Capacità di vedere pattern nascosti e implicazioni future",
+        "Alta autodisciplina e determinazione nel raggiungere obiettivi",
+        "Standard intellettuali elevati — qualità prima di tutto",
+        "Indipendenza di pensiero: non seguono le mode o l'autorità cieca",
+        "Efficienza nell'ottimizzare sistemi e processi"
+      ],
+      "weaknesses": [
+        "Tendenza all'arroganza intellettuale e all'impazienza con chi «non capisce»",
+        "Difficoltà a esprimere emozioni — sembrano più freddi di quanto siano",
+        "Perfezionismo paralizzante: aspettano che tutto sia «giusto» prima di agire",
+        "Difficoltà con l'imprevedibile emotivo nelle relazioni",
+        "Possono sembrare troppo diretti o taglienti in contesti sociali",
+        "Trascurano il corpo e il benessere fisico per priorità intellettuali"
+      ],
+      "behavioral_traits": [
+        "Parlano poco ma ciò che dicono è preciso e denso di significato",
+        "Preferiscono pochi amici profondi a molte relazioni superficiali",
+        "Ricercano continuamente conoscenza in ambiti diversi",
+        "Pianificano tutto con anticipo — l'improvvisazione li disturba",
+        "Critici costruttivi per natura: vedono sempre come migliorare",
+        "Risolvono problemi complessi in solitudine, poi presentano soluzioni complete"
+      ],
+      "in_relationships": "In amore, gli INTJ sono partner leali e profondi, ma il loro modo di esprimere affetto è raramente convenzionale. Mostrano cura attraverso atti concreti, pianificazione, e impegno a lungo termine piuttosto che con parole o gesti romantici. Hanno bisogno di un partner che rispetti la loro indipendenza e li stimoli intellettualmente. Scelgono con cura e raramente si aprono completamente, ma chi guadagna la loro fiducia riceve una dedizione incrollabile.",
+      "at_work": "Eccellono in ruoli che richiedono visione strategica, problem-solving complesso e autonomia: ricercatori, ingegneri, architetti, programmatori, strateghi, accademici. Mal sopportano burocrazia, riunioni inutili e management microgestito. Idealmente: obiettivi chiari, libertà nel metodo, colleghi competenti.",
+      "growth_areas": "La crescita dell'INTJ passa dall'imparare a valorizzare le emozioni proprie e altrui senza classificarle come «irrazionali». Sviluppare la Se significa anche godersi il presente, praticare attività fisiche, e connettersi con l'esperienza sensoriale immediata. L'INTJ maturo mantiene la visione ma è presente nel momento.",
+      "famous_examples_fictional": ["Tyrion Lannister (GoT)", "Moriarty (Sherlock Holmes)", "Hermione Granger (HP)"],
+      "compatibility_notes": {
+        "high_affinity": ["ENFP", "ENTP"],
+        "good_working": ["ENTJ", "INFJ", "INTJ"],
+        "challenging_growth": ["ESFP", "ISFP"]
+      }
+    },
+    "INTP": {
+      "title": "Il Logico",
+      "tagline": "Analista curioso alla ricerca della verità assoluta",
+      "description": "Gli INTP vivono in un mondo di teorie, sistemi logici e domande senza risposta. La loro funzione dominante Ti costruisce modelli interni estremamente precisi e coerenti — ogni incongruenza li disturba fisicamente. Amano smontare e rimontare idee come orologi: devono capire il meccanismo interno.\n\nLa Ne ausiliaria porta entusiasmo esplorativo: passano da un argomento all'altro, vedono connessioni inaspettate, e generano idee in quantità. Il problema è la Si terziaria che porta a inerzia e nostalgia, e la Fe inferiore che rende difficile connettersi con gli altri a livello emotivo.\n\nSotto stress, gli INTP possono diventare emotivamente reattivi in modo inaspettato (Fe inferiore in azione) o chiudersi in loop mentali infiniti. La loro maturazione passa dall'esprimere le proprie teorie al mondo e dall'imparare a dare peso alle relazioni umane quanto ai sistemi logici.",
+      "stack": ["Ti", "Ne", "Si", "Fe"],
+      "strengths": [
+        "Pensiero analitico profondo e capacità di trovare errori logici ovunque",
+        "Creatività teorica: vedono connessioni tra campi apparentemente distanti",
+        "Obiettività e onestà intellettuale senza compromessi",
+        "Capacità di concentrazione intensa su problemi complessi",
+        "Apertura mentale genuina — aggiornano le opinioni di fronte alle prove",
+        "Originalità: non accettano nessuna idea senza averla verificata"
+      ],
+      "weaknesses": [
+        "Procrastinazione cronica: la ricerca del metodo perfetto rimanda all'azione",
+        "Difficoltà a finire i progetti — l'esplorazione è più attraente della conclusione",
+        "Possono sembrare distaccati o insensibili in contesti emotivi",
+        "Tendono a isolarsi eccessivamente",
+        "Difficoltà con le convenzioni sociali — le trovano arbitrarie",
+        "Possono essere condescendenti nei confronti di chi non ragiona «logicamente»"
+      ],
+      "behavioral_traits": [
+        "Fanno domande che altri non pensano nemmeno di fare",
+        "Giocano con le idee ad alta voce, spesso senza arrivare a conclusioni pratiche",
+        "Lunga lista di interessi mai completamente esplorati",
+        "Amano i dibattiti intellettuali — non come scontri ma come esplorazioni",
+        "Spesso in ritardo o disorganizzati nelle faccende quotidiane",
+        "Trovano più naturale scrivere o fare diagrammi che parlare di sé"
+      ],
+      "in_relationships": "Gli INTP cercano partner intellettualmente stimolanti con cui possano esplorare idee senza giudizio. Non esprimono affetto in modo convenzionale ma sono curiosi e devoti verso chi amano. Hanno bisogno di spazio e indipendenza: non sopportano il controllo. Il loro punto debole è la comunicazione emotiva — devono imparare a «tradurre» i loro sentimenti in parole.",
+      "at_work": "Eccellono in filosofia, matematica, informatica, fisica teorica, architettura dei sistemi, analisi dati, ricerca. Mal sopportano ambienti rigidamente gerarchici o lavori ripetitivi senza sfida intellettuale.",
+      "growth_areas": "Imparare a completare i progetti invece di iniziarne sempre di nuovi. Sviluppare la Fe significa coltivare relazioni profonde e imparare a esprimere apprezzamento verso gli altri. L'INTP maturo usa la logica al servizio della connessione umana.",
+      "famous_examples_fictional": ["Sheldon Cooper (TBBT)", "L (Death Note)", "Sherlock Holmes"],
+      "compatibility_notes": {
+        "high_affinity": ["ENTJ", "ENFJ"],
+        "good_working": ["INTJ", "ENTP", "INFP"],
+        "challenging_growth": ["ESFJ", "ISFJ"]
+      }
+    },
+    "INFJ": {
+      "title": "Il Visionario",
+      "tagline": "Idealista con visione profonda dell'animo umano",
+      "description": "Gli INFJ sono la personalità più rara al mondo — circa l'1-2% della popolazione. Portano dentro di sé una paradossale combinazione: una Ni dominante che genera intuizioni profonde sul futuro e sull'animo umano, e una Fe ausiliaria che li orienta costantemente verso il benessere degli altri. Sono mistici pratici: vedono dove nessuno guarda, ma agiscono per cambiare il mondo in meglio.\n\nHanno un senso di missione forte e spesso si sentono «diversi» fin dall'infanzia — come se appartenessero a un posto che non riescono a trovare. La loro ricchezza interiore è immensa, ma la condividono solo con pochissimi. Con la maggior parte delle persone mostrano una maschera calda e accessibile (Fe), mentre il loro vero sé rimane custodito con cura.\n\nIl lato oscuro è la tendenza all'esaurimento emotivo (assorbono le emozioni degli altri come spugne), al perfezionismo riguardo alla propria missione, e al «door slam»: quando qualcuno tradisce profondamente la loro fiducia, l'INFJ chiude la porta per sempre, senza possibilità di ritorno.",
+      "stack": ["Ni", "Fe", "Ti", "Se"],
+      "strengths": [
+        "Intuizione profonda sulla psicologia umana e le motivazioni altrui",
+        "Visione strategica orientata al bene comune",
+        "Empatia profonda e capacità di connessione autentica",
+        "Determinazione nel perseguire la propria missione",
+        "Creatività applicata alla risoluzione di problemi umani",
+        "Capacità di ispirare e guidare gli altri verso il cambiamento"
+      ],
+      "weaknesses": [
+        "Esaurimento emotivo per eccesso di cura verso gli altri",
+        "Perfezionismo e difficoltà ad accettare i propri limiti",
+        "«Door slam»: chiusura totale verso chi li ha traditi",
+        "Difficoltà a stabilire confini sani nelle relazioni",
+        "Tendenza all'isolamento quando il mondo esterno diventa troppo",
+        "Conflitto tra idealismo e realtà — la realtà spesso delude"
+      ],
+      "behavioral_traits": [
+        "Capiscono le persone meglio di quanto queste capiscano sé stesse",
+        "Amano la letteratura, la psicologia, la filosofia e l'arte",
+        "Sembrano estrovertiti in superficie ma si ricaricano nella solitudine",
+        "Scrivono meglio di quanto parlino — preferiscono esprimersi per iscritto",
+        "Hanno un forte senso estetico e simbolico",
+        "Spesso avvertono tensioni o problemi prima che diventino evidenti"
+      ],
+      "in_relationships": "Per gli INFJ, le relazioni sono sacre. Cercano connessioni autentiche e profonde — preferiscono un solo rapporto trasformativo a dieci superficiali. Quando amano, si dedicano completamente. Ma hanno bisogno di sentirsi visti e compresi nel loro profondo: se un partner non riesce a raggiungerli davvero, l'INFJ si sente terribilmente solo anche quando è insieme.",
+      "at_work": "Psicologi, scrittori, consulenti, insegnanti, counselor, mediatori, attivisti. Eccellono in ruoli dove possono avere un impatto positivo sulle persone. Mal sopportano ambienti cinicamente competitivi o eticamente compromessi.",
+      "growth_areas": "Imparare a prendersi cura di sé con la stessa intensità con cui si prendono cura degli altri. Sviluppare la Se significa abitare il proprio corpo, godere del presente sensoriale, e non vivere solo nella proiezione futura.",
+      "famous_examples_fictional": ["Atticus Finch (Il buio oltre la siepe)", "Aragorn (Il Signore degli Anelli)", "Remus Lupin (HP)"],
+      "compatibility_notes": {
+        "high_affinity": ["ENTP", "ENFP"],
+        "good_working": ["INTJ", "INFP", "INFJ"],
+        "challenging_growth": ["ESTP", "ESFP"]
+      }
+    },
+    "INFP": {
+      "title": "Il Mediatore",
+      "tagline": "Idealista creativo con un universo interiore ricchissimo",
+      "description": "Gli INFP portano dentro di sé un cosmo di valori, emozioni e ideali che raramente mostrano completamente al mondo esterno. La loro Fi dominante è una bussola morale interna di straordinaria sensibilità: sanno sempre — con certezza quasi fisica — cosa è giusto e cosa non lo è per loro. La Ne ausiliaria aggiunge visione creativa, capacità di vedere possibilità ovunque e di immaginare mondi alternativi.\n\nAppaiono spesso sognatori, talvolta dispersivi. La realtà pratica (Te inferiore) può essere una sfida: hanno intuizioni brillanti ma possono avere difficoltà a tradurle in risultati concreti. Il loro ambiente ideale è uno in cui possono esprimere autenticamente sé stessi senza compromettere i propri valori.\n\nLa loro forza nascosta è la resilienza emotiva: dopo ogni caduta, tornano ancora più in contatto con ciò che conta davvero per loro.",
+      "stack": ["Fi", "Ne", "Si", "Te"],
+      "strengths": [
+        "Profonda empatia e capacità di comprendere le esperienze altrui",
+        "Creatività autentica — la loro arte viene da un posto reale",
+        "Integrità morale assoluta: non tradiscono i propri valori",
+        "Apertura mentale e curiosità genuina verso tutte le esperienze",
+        "Capacità di trovare significato in situazioni di difficoltà",
+        "Dedizione incondizionata alle persone e cause in cui credono"
+      ],
+      "weaknesses": [
+        "Tendenza all'idealismo irealizzabile — il mondo raramente è all'altezza",
+        "Sensibilità intensa alle critiche, anche quando costruttive",
+        "Procrastinazione causata dalla paura di non fare le cose «nel modo giusto»",
+        "Difficoltà a stabilire confini — si sacrificano per gli altri",
+        "Tendenza all'auto-isolamento nei periodi di difficoltà",
+        "Difficoltà con l'organizzazione pratica e la gestione del tempo"
+      ],
+      "behavioral_traits": [
+        "Scrivono diari, poesie, racconti — l'espressione scritta è un rifugio",
+        "Profonda connessione con la musica, l'arte, la letteratura",
+        "Tendono ad antropomorfizzare tutto — animali, oggetti, concetti",
+        "Evitano i conflitti ma possono esplodere quando i valori fondamentali vengono violati",
+        "Cambiano spesso tra socialità intensa e periodi di ritiro totale",
+        "Sognatori ad occhi aperti — spesso «assenti» anche quando presenti"
+      ],
+      "in_relationships": "Gli INFP cercano connessioni profonde e autentiche. Amano con tutta la loro intensità emotiva, ma hanno bisogno di sentire che il partner li vede, li accetta e li ama così come sono — imperfezioni comprese. Sono romantici nell'anima: credono nell'amore trasformativo. Il rischio è idealizzare il partner al punto da rimanere delusi quando la realtà emerge.",
+      "at_work": "Scrittori, poeti, artisti, psicologi, insegnanti, counselor, attivisti. Eccellono dove possono esprimere valori attraverso il lavoro. Mal sopportano ambienti competitivi, cinici o moralmente vuoti.",
+      "growth_areas": "Imparare che l'azione imperfetta vale più dell'attesa della perfezione. Sviluppare la Te significa tradurre i valori in risultati concreti, gestire il tempo e imparare a ricevere feedback senza sentirsi attaccati.",
+      "famous_examples_fictional": ["Frodo Baggins (Il Signore degli Anelli)", "Luna Lovegood (HP)", "Anne of Green Gables"],
+      "compatibility_notes": {
+        "high_affinity": ["ENFJ", "ENTJ"],
+        "good_working": ["INFJ", "ENFP", "INFP"],
+        "challenging_growth": ["ESTJ", "ENTJ"]
+      }
+    },
+    "ENTJ": {
+      "title": "Il Comandante",
+      "tagline": "Leader nato con visione strategica e forza esecutiva",
+      "description": "Gli ENTJ combinano visione a lungo termine (Ni ausiliaria) con una capacità esecutiva formidabile (Te dominante). Vedono il futuro, costruiscono il piano, organizzano le risorse e guidano gli altri verso l'obiettivo. Sono tra le personalità più orientate al risultato in assoluto.\n\nNon sopportano l'incompetenza, la lentezza o i sistemi inefficienti. Se vedono un problema, lo affrontano direttamente — anche quando gli altri preferiscono ignorarlo. Questa direttezza può sembrare aggressiva, ma per l'ENTJ è semplicemente efficienza comunicativa.\n\nIl lato vulnerabile è la Fi terziaria: le loro emozioni profonde esistono ma raramente emergono. Sotto stress possono diventare tirannici o iper-controllanti. La maturazione dell'ENTJ passa dal riconoscere le emozioni proprie e altrui come dati rilevanti, non come distrazioni.",
+      "stack": ["Te", "Ni", "Se", "Fi"],
+      "strengths": [
+        "Leadership naturale: ispirano fiducia e guidano grandi visioni",
+        "Efficienza estrema nell'organizzare sistemi e persone",
+        "Capacità di prendere decisioni difficili rapidamente",
+        "Visione strategica a lungo termine combinata con capacità esecutiva",
+        "Alta resistenza allo stress e alle sfide",
+        "Capacità di vedere opportunità dove altri vedono solo problemi"
+      ],
+      "weaknesses": [
+        "Intolleranza per l'incompetenza o la lentezza altrui",
+        "Possono diventare dominanti o tirannici sotto pressione",
+        "Difficoltà ad ascoltare punti di vista emotivi o «irrazionali»",
+        "Tendenza a sovracaricarsi di responsabilità",
+        "Raramente si fermano a godersi i risultati raggiunti",
+        "Possono sacrificare le relazioni per gli obiettivi"
+      ],
+      "behavioral_traits": [
+        "Prendono il controllo in ogni situazione — naturalmente e spesso inconsapevolmente",
+        "Comunicano in modo diretto, talvolta brusco",
+        "Sempre alla ricerca di come migliorare sé stessi e i sistemi intorno",
+        "Amano il dibattito e la sfida intellettuale",
+        "Calendari pieni, obiettivi chiari, risultati misurabili",
+        "Trovano difficile «non fare nulla» — il riposo deve essere produttivo"
+      ],
+      "in_relationships": "In amore, gli ENTJ sono partner dedicati che investono molto nella relazione — ma la gestiscono come un progetto. Hanno bisogno di un partner che tenga il loro stesso ritmo intellettuale e non si senta minacciato dalla loro intensità. Imparare a rallentare, essere vulnerabili e godersi il presente è la loro crescita principale.",
+      "at_work": "CEO, avvocati, imprenditori, manager, consulenti strategici, militari di alto rango. Eccellono in qualsiasi ruolo che richieda decisioni rapide, visione e guida di team.",
+      "growth_areas": "Sviluppare la Fi significa imparare a valorizzare i propri valori profondi e le emozioni altrui. La crescita passa dall'umiltà: capire che non tutto può essere ottimizzato, e che alcune cose — come l'intimità — richiedono lentezza.",
+      "famous_examples_fictional": ["Harvey Specter (Suits)", "Miranda Priestly (Il Diavolo Veste Prada)", "Magneto (X-Men)"],
+      "compatibility_notes": {
+        "high_affinity": ["INTP", "INFP"],
+        "good_working": ["INTJ", "ENTP", "ENTJ"],
+        "challenging_growth": ["ISFP", "INFP"]
+      }
+    },
+    "ENTP": {
+      "title": "Il Dibattitore",
+      "tagline": "Genio trasgressivo che ama sfidare ogni certezza",
+      "description": "Gli ENTP sono macchine per generare idee e sfidare lo status quo. La loro Ne dominante vede connessioni ovunque, genera possibilità in serie e ama esplorare senza mappe. La Ti ausiliaria analizza, smonta e verifica la logica interna di tutto ciò che incontrano. Il risultato è una mente brillante, veloce e leggermente incontrollabile.\n\nAmano il dibattito non per vincere ma per capire — spesso difendono posizioni in cui non credono nemmeno, solo per testare la solidità degli argomenti altrui. Questo può renderli affascinanti o insopportabili, a seconda dell'interlocutore.\n\nL'esecuzione pratica (Si inferiore) è il loro punto debole: iniziano cento progetti, finiscono cinque. La maturazione dell'ENTP passa dal canalizzare la loro energia esplosiva in risultati concreti e dall'imparare che alcune persone non vogliono essere sfidate, vogliono essere ascoltate.",
+      "stack": ["Ne", "Ti", "Fe", "Si"],
+      "strengths": [
+        "Capacità creativa straordinaria — idee in quantità industriale",
+        "Agilità intellettuale: possono argomentare qualsiasi posizione",
+        "Carisma e capacità di coinvolgere gli altri nelle proprie visioni",
+        "Velocità nel cogliere i principi fondamentali di qualsiasi campo",
+        "Apertura al cambiamento e all'innovazione",
+        "Coraggio intellettuale: sfidano anche le idee più sacre"
+      ],
+      "weaknesses": [
+        "Difficoltà nel seguire attraverso — molti inizi, pochi finali",
+        "Possono essere insensibili alle emozioni degli altri durante i dibattiti",
+        "Noia cronica con la routine — difficoltà con le strutture rigide",
+        "Tendenza a procrastinare su attività pratiche poco stimolanti",
+        "Possono sembrare arroganti o condiscendenti",
+        "Difficoltà a fare le scelte definitive — sempre un'altra opzione possibile"
+      ],
+      "behavioral_traits": [
+        "Cambiano argomento in corsa senza avvertire",
+        "Trovano noiose le conversazioni superficiali — vogliono andare subito al nocciolo",
+        "Eccitati dall'ipotetico e dall'assurdo",
+        "Spesso in ritardo, disorganizzati, con la testa nelle nuvole",
+        "Capaci di imparare quasi qualsiasi cosa rapidamente se motivati",
+        "Umorismo brillante, spesso sardónico"
+      ],
+      "in_relationships": "Gli ENTP cercano partner che li stimolino intellettualmente e non si offendano quando vengono «sfidati». Hanno bisogno di libertà e detestano il senso di soffocamento. Sotto la brillantezza c'è un bisogno profondo di connessione autentica (Fe) che esprimono raramente in modo diretto.",
+      "at_work": "Imprenditori, avvocati, innovatori, giornalisti, ricercatori, comici. Eccellono in startup, consulenza strategica, ambienti creativi. Mal sopportano la burocrazia.",
+      "growth_areas": "Imparare a finire quello che si inizia. Sviluppare la Si significa creare strutture e routine che supportino la propria creatività invece di sabotarla. L'ENTP maturo è anche un esecutore.",
+      "famous_examples_fictional": ["Tony Stark (Iron Man)", "Fred e George Weasley (HP)", "Jack Sparrow (Pirati dei Caraibi)"],
+      "compatibility_notes": {
+        "high_affinity": ["INFJ", "INTJ"],
+        "good_working": ["ENTJ", "ENFP", "INTP"],
+        "challenging_growth": ["ISFJ", "ISTJ"]
+      }
+    },
+    "ENFJ": {
+      "title": "Il Protagonista",
+      "tagline": "Leader carismatico che ispira e guida gli altri verso il meglio",
+      "description": "Gli ENFJ sono nati per guidare con il cuore. La loro Fe dominante sintonizza continuamente sulle emozioni e i bisogni degli altri, mentre la Ni ausiliaria li dota di una visione chiara di dove le persone e i sistemi potrebbero andare. Il risultato è un leader che non solo strategizza, ma ispira — che non solo gestisce, ma trasforma.\n\nHanno un talento naturale per vedere il potenziale nelle persone — anche quello che le persone stesse non vedono. Possono diventare mentori, insegnanti, attivisti di straordinaria efficacia. Il rischio è perdere sé stessi nel processo: la Fe li spinge a prendersi cura di tutti, a costo delle proprie esigenze.\n\nIl loro sistema di valori (Ti terziaria) può essere rigido sotto stress — diventano moralistici o giudicanti. La maturazione passa dall'imparare a ricevere cura, non solo a darla.",
+      "stack": ["Fe", "Ni", "Se", "Ti"],
+      "strengths": [
+        "Carisma naturale e capacità di ispirare fiducia",
+        "Empatia profonda con visione strategica — combinazione rara",
+        "Comunicazione trascinante: fanno sentire le persone viste e valorizzate",
+        "Dedizione totale alle persone e cause in cui credono",
+        "Capacità di leggere le dinamiche di gruppo con precisione",
+        "Organizzati e orientati ai risultati nel servire gli altri"
+      ],
+      "weaknesses": [
+        "Tendenza a trascurare i propri bisogni per gli altri",
+        "Difficoltà a dire «no» — anche quando necessario",
+        "Sensibilità eccessiva alle critiche: le prendono come attacchi personali",
+        "Possono diventare manipolativi (in modo inconsapevole) nel «guidare» gli altri",
+        "Tendenza al burnout da eccesso di cura",
+        "Possono perdere identità propria nelle relazioni"
+      ],
+      "behavioral_traits": [
+        "Ricordano i dettagli di ogni persona che incontrano",
+        "Organizzano eventi, riunioni, connettono persone tra loro naturalmente",
+        "Si sentono responsabili del benessere emotivo di chi li circonda",
+        "Espressivi, eloquenti, sanno trovare le parole giuste al momento giusto",
+        "Difficoltà a ricevere aiuto: preferiscono essere loro a dare",
+        "Hanno standard molto alti per sé stessi e talvolta anche per gli altri"
+      ],
+      "in_relationships": "Partner intensi e devoti. Portano tutta la loro capacità di cura nella relazione, ma hanno bisogno di sentire che il partner apprezza questo sforzo. Devono imparare a chiedere ciò di cui hanno bisogno invece di aspettarsi che l'altro lo intuisca.",
+      "at_work": "Insegnanti, terapeuti, manager HR, politici, attori, formatori, coach. Eccellono ovunque ci sia un gruppo da guidare verso un obiettivo condiviso.",
+      "growth_areas": "Imparare a prendersi cura di sé con la stessa intensità. Sviluppare la Ti significa imparare a valutare le proprie idee con oggettività, senza lasciare che le emozioni altrui colorino ogni giudizio.",
+      "famous_examples_fictional": ["Mufasa (Il Re Leone)", "Gandalf (Il Signore degli Anelli)", "Emma Woodhouse (Jane Austen)"],
+      "compatibility_notes": {
+        "high_affinity": ["INFP", "INTP"],
+        "good_working": ["INFJ", "ENFP", "ENFJ"],
+        "challenging_growth": ["ISTP", "INTP"]
+      }
+    },
+    "ENFP": {
+      "title": "Il Campione",
+      "tagline": "Spirito libero entusiasta che vede infinite possibilità ovunque",
+      "description": "Gli ENFP sono energia pura in forma umana. La loro Ne dominante è un radar costante per possibilità, connessioni inaspettate e significati nascosti — non riescono a guardare la realtà senza vedere cosa potrebbe diventare. La Fi ausiliaria aggiunge profondità autentica: non si battono per nessuna causa che non risuoni profondamente con i loro valori.\n\nSono il tipo che ti fa sentire la persona più interessante del mondo durante una conversazione — e lo pensano davvero. La loro curiosità verso le persone è genuina. Il problema è che questa stessa apertura li rende dispersivi: troppe possibilità, poche scelte definitive.\n\nL'esecuzione sistemica (Si-Te) è la loro sfida: possono avere difficoltà con routine, follow-through e decisioni definitive. La maturazione dell'ENFP passa dall'imparare che scegliere una cosa significa dare profondità a qualcosa di straordinario, non perdere tutto il resto.",
+      "stack": ["Ne", "Fi", "Te", "Si"],
+      "strengths": [
+        "Entusiasmo contagioso che energizza chiunque li circondi",
+        "Creatività e capacità di connettere idee distanti in modi originali",
+        "Empatia autentica — sentono davvero le emozioni altrui",
+        "Adattabilità e apertura verso l'inaspettato",
+        "Capacità di ispirare gli altri e aiutarli a credere in sé stessi",
+        "Comunicazione brillante e magnetica"
+      ],
+      "weaknesses": [
+        "Difficoltà a concludere progetti — l'entusiasmo iniziale svanisce",
+        "Indecisione cronica: ogni opzione sembra valida",
+        "Tendenza a idealizzare persone e situazioni fino alla delusione",
+        "Sensibilità intensa alle critiche e al rifiuto",
+        "Difficoltà con la routine e la struttura ripetitiva",
+        "Possono promettere più di quanto riescano a mantenere"
+      ],
+      "behavioral_traits": [
+        "Saltano da un argomento all'altro con entusiasmo genuino",
+        "Stretti legami con molte persone diverse tra loro",
+        "Spesso in ritardo — il tempo è un concetto astratto per loro",
+        "Amano i grandi dibattiti sulle idee, la filosofia, la vita",
+        "Cambiano piani all'ultimo minuto — ispirazione vs struttura",
+        "Reattivi emotivamente ma si riprendono velocemente"
+      ],
+      "in_relationships": "Gli ENFP sono partner intensi e romantici che investono completamente nella relazione. Cercano connessione profonda e autentica, non solo compatibilità superficiale. Il loro rischio è proiettare sul partner ciò che vogliono vedere. Hanno bisogno di libertà e crescita continua nella relazione.",
+      "at_work": "Giornalisti, attivisti, imprenditori creativi, attori, formatori, coach motivazionali, ricercatori. Eccellono in ambienti che premiano creatività, originalità e connessione umana.",
+      "growth_areas": "Imparare a completare e approfondire invece di espandere sempre. Sviluppare la Te-Si significa creare sistemi e routine che supportino i propri obiettivi invece di sabotarli. L'ENFP maturo trasforma l'entusiasmo in impatto reale.",
+      "famous_examples_fictional": ["Robin Williams (personaggio archetipico)", "Aladdin", "Willy Wonka"],
+      "compatibility_notes": {
+        "high_affinity": ["INTJ", "INFJ"],
+        "good_working": ["ENTP", "ENFJ", "INFP"],
+        "challenging_growth": ["ISTJ", "ESTJ"]
+      }
+    },
+    "ISTJ": {
+      "title": "Il Logistico",
+      "tagline": "Pilastro affidabile che sostiene il mondo con precisione e dedizione",
+      "description": "Gli ISTJ sono il fondamento su cui poggia la società. Affidabili, metodici, e profondamente impegnati nel rispettare le proprie responsabilità, portano stabilità ovunque vadano. La Si dominante radica ogni decisione nell'esperienza concreta e nelle tradizioni testate nel tempo. La Te ausiliaria traduce questa esperienza in sistemi efficienti e risultati misurabili.\n\nNon cercano il riconoscimento — fanno il lavoro perché è la cosa giusta. Non si entusiasmano per l'innovazione fine a sé stessa — vogliono vedere prove che qualcosa funziona prima di adottarlo. La loro riservatezza può essere scambiata per freddezza, ma sotto la superficie c'è una fedeltà profonda verso le persone e i valori a cui tengono.",
+      "stack": ["Si", "Te", "Fi", "Ne"],
+      "strengths": ["Affidabilità assoluta", "Precisione e attenzione ai dettagli", "Capacità organizzativa eccellente", "Etica del lavoro inflessibile", "Lealtà verso persone e istituzioni", "Stabilità emotiva in situazioni di crisi"],
+      "weaknesses": ["Resistenza al cambiamento", "Difficoltà con l'ambiguità e l'improvvisazione", "Tendenza al rigidismo nelle regole", "Difficoltà a esprimere emozioni", "Possono rimanere bloccati in schemi anche quando non funzionano più", "Difficoltà a delegare"],
+      "behavioral_traits": ["Fanno ciò che dicono — sempre", "Preferiscono ambienti strutturati e prevedibili", "Conservano oggetti significativi per ragioni sentimentali", "Preparati per ogni eventualità", "Comunicazione diretta e fattuale"],
+      "in_relationships": "Partner stabili e devoti che mostrano amore attraverso atti concreti di cura. Difficoltà con l'espressione verbale delle emozioni, ma la loro costanza parla da sola.",
+      "at_work": "Contabili, avvocati, militari, manager, ingegneri, archivisti. Eccellono in ambienti strutturati che richiedono precisione e affidabilità.",
+      "growth_areas": "Aprirsi all'innovazione e al cambiamento. Sviluppare la Ne significa vedere possibilità alternative e non trattare il nuovo come minaccia automatica.",
+      "famous_examples_fictional": ["Ned Stark (GoT)", "Hermione Granger (aspetti pratici)"],
+      "compatibility_notes": {
+        "high_affinity": ["ESFP", "ESTP"],
+        "good_working": ["ISFJ", "ESTJ", "ISTJ"],
+        "challenging_growth": ["ENFP", "ENTP"]
+      }
+    },
+    "ISFJ": {
+      "title": "Il Difensore",
+      "tagline": "Custode premuroso che protegge e nutre chi ama",
+      "description": "Gli ISFJ sono tra i più devoti di tutti i tipi. Combinano memoria dettagliata e cura per le persone (Si dominante) con una sensibilità emotiva profonda e orientata alla comunità (Fe ausiliaria). Si ricordano di ogni persona importante nella loro vita con una precisione fotográfica — il compleanno, la preferenza nel caffè, quella difficoltà che hanno condiviso due anni fa.\n\nIl loro servizio agli altri è silenzioso ma costante. Non cercano i riflettori — preferiscono assicurarsi che tutto funzioni senza intoppi per le persone che amano. Il rischio è che il loro eccesso di disponibilità venga dato per scontato e che non imparino mai a stabilire confini.",
+      "stack": ["Si", "Fe", "Ti", "Ne"],
+      "strengths": ["Empatia pratica — sanno cosa fare concretamente per aiutare", "Memoria eccellente per dettagli personali", "Affidabilità e costanza nella cura", "Attenzione e sensibilità nelle relazioni", "Capacità organizzativa al servizio degli altri", "Umiltà e disponibilità"],
+      "weaknesses": ["Difficoltà a stabilire confini — danno troppo", "Tendenza a reprimere i propri bisogni", "Resistenza al cambiamento", "Difficoltà a ricevere critiche", "Possono portare rancore senza esprimerlo", "Tendenza al martirio"],
+      "behavioral_traits": ["Ricordano compleanni, preferenze, dettagli di ogni persona", "Sempre disponibili per un aiuto pratico", "Casa ordinata e accogliente", "Difficoltà a dire «no»", "Preferiscono l'ambiente familiare al nuovo"],
+      "in_relationships": "Partner incredibilmente devoti e attenti. Esprimono amore attraverso atti di servizio. Hanno bisogno di sentirsi apprezzati — anche i piccoli gesti di riconoscimento significano molto.",
+      "at_work": "Infermieri, insegnanti, assistenti, lavoratori sociali, HR. Eccellono in ambienti di cura e supporto.",
+      "growth_areas": "Imparare a chiedere e ricevere. Sviluppare la Ne e Ti significa coltivare la propria identità indipendentemente dalle aspettative degli altri.",
+      "famous_examples_fictional": ["Samwise Gamgee (Il Signore degli Anelli)", "Effie Trinket (Hunger Games)"],
+      "compatibility_notes": {
+        "high_affinity": ["ESTP", "ESFP"],
+        "good_working": ["ISTJ", "ISFJ", "ESFJ"],
+        "challenging_growth": ["ENTP", "ENTJ"]
+      }
+    },
+    "ISTP": {
+      "title": "Il Virtuoso",
+      "tagline": "Artigiano pragmatico che risolve problemi con mani e mente",
+      "description": "Gli ISTP sono il tipo che, quando si rompe qualcosa, lo smontano per capire come funziona — e poi lo rimontano meglio di prima. La Ti dominante costruisce modelli logici del mondo fisico con una precisione quasi ingegneristica. La Se ausiliaria li connette con la realtà concreta e sensoriale in modo diretto e efficace.\n\nSono maestri dell'adattamento nel momento presente: quando c'è una crisi, gli ISTP diventano sorprendentemente calmi e funzionali. Non cercano complessità inutili. La semplicità elegante è il loro ideale — la soluzione più diretta al problema.",
+      "stack": ["Ti", "Se", "Ni", "Fe"],
+      "strengths": ["Risoluzione pratica di problemi tecnici", "Calma sotto pressione", "Efficienza e pragmatismo", "Manualità e abilità tecniche", "Adattabilità in situazioni di crisi", "Osservazione acuta dell'ambiente"],
+      "weaknesses": ["Difficoltà a impegnarsi a lungo termine", "Comunicazione emotiva limitata", "Imprevedibilità — possono sparire senza avvertire", "Insofferenza per le strutture rigide", "Difficoltà con la pianificazione futura"],
+      "behavioral_traits": ["Preferiscono fare che spiegare", "Amano sport, strumenti, meccanica, tecnologia", "Poco interessati alle conversazioni astratte", "Difficoltà a impegnarsi nelle relazioni a lungo termine", "Reattivi e presenti nel momento"],
+      "in_relationships": "Partner indipendenti che hanno bisogno di spazio. Mostrano cura attraverso azioni pratiche. Difficoltà con l'intimità emotiva — imparano lentamente a condividere il mondo interiore.",
+      "at_work": "Meccanici, ingegneri, chirurghi, piloti, tecnici, militari. Eccellono in ambienti pratici che richiedono problem-solving immediato.",
+      "growth_areas": "Sviluppare la Fe significa imparare a connettersi emotivamente e a riconoscere i bisogni altrui. Sviluppare la Ni significa pianificare oltre il presente immediato.",
+      "famous_examples_fictional": ["Arya Stark (GoT)", "James Bond", "Beatrix Kiddo (Kill Bill)"],
+      "compatibility_notes": {
+        "high_affinity": ["ESFJ", "ENFJ"],
+        "good_working": ["ISTJ", "ESTP", "ISTP"],
+        "challenging_growth": ["ENFJ", "INFJ"]
+      }
+    },
+    "ISFP": {
+      "title": "L'Avventuriero",
+      "tagline": "Artista silenzioso che vive nel momento con intensità sensoriale",
+      "description": "Gli ISFP sono tra i tipi più difficili da capire dall'esterno: riservati, indipendenti, con una ricchezza interiore immensa che raramente mostrano. La Fi dominante ospita un universo di valori e emozioni profonde; la Se ausiliaria li connette al mondo fisico in modo diretto e vivido. Sono presenti nel momento come pochi altri tipi.\n\nAmano la bellezza — la trovano ovunque: in una melodia, in un tramonto, in un gesto umano autentico. Spesso sono artisti, designer, musicisti. Il loro senso estetico è sviluppato e istintivo. Non hanno bisogno di giustificare ciò che li colpisce — lo sentono e basta.",
+      "stack": ["Fi", "Se", "Ni", "Te"],
+      "strengths": ["Sensibilità estetica profonda", "Autenticità — non recitano", "Apertura e non-giudizio verso gli altri", "Connessione intensa con l'esperienza sensoriale e il momento presente", "Cura genuina per chi amano", "Creatività espressiva e artistica"],
+      "weaknesses": ["Difficoltà con la pianificazione e l'organizzazione", "Estrema sensibilità alle critiche", "Tendenza all'evitamento dei conflitti", "Difficoltà a esprimere verbalmente ciò che sentono", "Indecisione e difficoltà con le scadenze"],
+      "behavioral_traits": ["Espressione artistica come linguaggio principale", "Preferiscono osservare prima di partecipare", "Profonda connessione con la natura e gli animali", "Fedeli a un piccolo cerchio di persone scelte", "Vivono nel presente sensoriale"],
+      "in_relationships": "Partner teneri e devoti. Mostrano amore attraverso gesti fisici e atti di cura. Difficoltà a verbalizzzare i sentimenti — comunicano meglio attraverso azioni, arte, presenza.",
+      "at_work": "Artisti, musicisti, designer, chef, infermieri, lavoratori con animali. Eccellono dove possono esprimere creatività o servire direttamente con le mani.",
+      "growth_areas": "Sviluppare la Te significa imparare a trasformare la visione artistica in risultati concreti. Sviluppare la Ni significa pianificare verso il futuro invece di vivere solo nel presente.",
+      "famous_examples_fictional": ["Bob Ross", "Forrest Gump (in parte)", "Pocahontas"],
+      "compatibility_notes": {
+        "high_affinity": ["ESTJ", "ENTJ"],
+        "good_working": ["ISFJ", "ESFP", "ISFP"],
+        "challenging_growth": ["ENTJ", "ESTJ"]
+      }
+    },
+    "ESTJ": {
+      "title": "Il Dirigente",
+      "tagline": "Organizzatore tradizionalista che mantiene l'ordine e la struttura",
+      "description": "Gli ESTJ sono i custodi dell'ordine sociale. Con Te dominante e Si ausiliaria, eccellono nell'organizzare sistemi, rispettare tradizioni testate e guidare con autorità. Credono nelle regole, nelle gerarchie e nei metodi provati — e si aspettano che gli altri facciano lo stesso.\n\nSono leader pratici e diretti che ottengono risultati. Quando c'è qualcosa da fare, gli ESTJ lo faranno — nel modo giusto, rispettando i tempi, senza scuse. Il loro punto debole è la flessibilità: il mondo cambia e le soluzioni di ieri non sempre funzionano domani.",
+      "stack": ["Te", "Si", "Ne", "Fi"],
+      "strengths": ["Eccellente organizzazione e gestione", "Affidabilità totale", "Leadership chiara e diretta", "Difesa dei valori e delle tradizioni", "Capacità decisionale rapida", "Creazione e mantenimento di strutture funzionali"],
+      "weaknesses": ["Rigidità eccessiva", "Difficoltà con l'ambiguità", "Insensibilità alle emozioni — possono sembrare bruschi", "Resistenza all'innovazione", "Tendenza al giudizio sugli altri"],
+      "behavioral_traits": ["Rispettano e fanno rispettare le regole", "Puntualità come valore fondamentale", "Casa e lavoro organizzati con cura", "Comunicazione diretta, talvolta tagliente", "Forte senso del dovere"],
+      "in_relationships": "Partner stabili e affidabili. Tendono a esprimere amore attraverso atti pratici e responsabilità. Difficoltà con la vulnerabilità emotiva.",
+      "at_work": "Manager, militari, giudici, avvocati, banchieri. Eccellono in qualsiasi ruolo che richieda organizzazione, autorità e rispetto delle norme.",
+      "growth_areas": "Sviluppare la Fi significa imparare ad ascoltare i propri valori profondi oltre le regole. Sviluppare la Ne significa aprirsi a nuove possibilità invece di rifiutarle a priori.",
+      "famous_examples_fictional": ["Tywin Lannister (GoT)", "Umbridge (HP)"],
+      "compatibility_notes": {
+        "high_affinity": ["ISFP", "ISTP"],
+        "good_working": ["ISTJ", "ESTJ", "ESFJ"],
+        "challenging_growth": ["INFP", "ENFP"]
+      }
+    },
+    "ESFJ": {
+      "title": "Il Console",
+      "tagline": "Connettore sociale che nutre la comunità con calore e dedizione",
+      "description": "Gli ESFJ sono i cementatori della comunità. Con Fe dominante e Si ausiliaria, sono profondamente sintonizzati sui bisogni degli altri e si dedicano instancabilmente a creare armonia e connessione. Ricordano ogni dettaglio di ogni persona che conta per loro — e per loro conta quasi chiunque incontrino.\n\nHanno un talento naturale per l'ospitalità, l'organizzazione di eventi, la mediazione nei conflitti. Il rischio è che il loro valore sia troppo legato all'approvazione altrui — se non si sentono apprezzati, soffrono intensamente.",
+      "stack": ["Fe", "Si", "Ne", "Ti"],
+      "strengths": ["Capacità di connettere persone", "Organizzazione e gestione di eventi sociali", "Empatia pratica", "Cura costante e concreta", "Lealtà profonda", "Creazione di ambienti accoglienti"],
+      "weaknesses": ["Eccessiva dipendenza dall'approvazione altrui", "Difficoltà con chi viola le norme sociali", "Tendenza al gossip e al controllo sociale", "Difficoltà con il conflitto diretto", "Possono reprimere la propria identità per piacere agli altri"],
+      "behavioral_traits": ["Fanno sentire tutti benvenuti", "Organizzatori naturali di eventi e riunioni", "Si preoccupano per i bisogni pratici degli altri", "Difficoltà con persone «diverse dalla norma»", "Espressivi emotivamente"],
+      "in_relationships": "Partner devoti e attenti. Esprimono amore attraverso atti di servizio e attenzione ai dettagli. Hanno bisogno di sentirsi apprezzati verbalmente.",
+      "at_work": "Insegnanti, infermieri, HR, event planner, servizio clienti. Eccellono dove possono costruire relazioni e comunità.",
+      "growth_areas": "Sviluppare l'autonomia emotiva: il proprio valore non dipende dall'approvazione altrui. La Ti aiuta a prendere decisioni basate sulla logica oltre le aspettative sociali.",
+      "famous_examples_fictional": ["Monica Geller (Friends)", "Effie Trinket (HG)"],
+      "compatibility_notes": {
+        "high_affinity": ["ISTP", "ISFP"],
+        "good_working": ["ISFJ", "ESFJ", "ESTJ"],
+        "challenging_growth": ["INTP", "ENTP"]
+      }
+    },
+    "ESTP": {
+      "title": "L'Imprenditore",
+      "tagline": "Agente del caos costruttivo — vivace, pragmatico, presente al 100%",
+      "description": "Gli ESTP sono l'energia pura del momento presente. Con Se dominante, vivono completamente nel qui e ora — percepiscono tutto con acutezza, reagiscono con velocità, e amano l'azione diretta. La Ti ausiliaria aggiunge analisi rapida e pragmatica: leggono le situazioni istantaneamente e agiscono di conseguenza.\n\nSono i primi ad agire in una crisi, i migliori negoziatori in situazioni tese, i più adatti ai lavori che richiedono improvvisazione. Il loro punto debole è la pianificazione a lungo termine (Ni inferiore) e l'elaborazione emotiva (Fe terziaria).",
+      "stack": ["Se", "Ti", "Fe", "Ni"],
+      "strengths": ["Azione rapida ed efficace in situazioni di crisi", "Negoziazione e persuasione", "Adattabilità totale", "Energia e carisma travolgenti", "Problem-solving pratico e immediato", "Osservazione acuta del contesto"],
+      "weaknesses": ["Impazienti con la pianificazione e la teoria", "Difficoltà con l'impegno a lungo termine", "Tendenza ad assumere rischi eccessivi", "Difficoltà con le emozioni proprie e altrui", "Possono manipolare anche senza intenzione"],
+      "behavioral_traits": ["Sempre al centro dell'azione", "Difficoltà a stare fermi", "Amano la competizione", "Carismatici e socialmente abili", "Preferiscono imparare facendo"],
+      "in_relationships": "Partner vivaci e passionali. Mostrano amore attraverso esperienze condivise. Difficoltà con la profondità emotiva e l'impegno a lungo termine.",
+      "at_work": "Imprenditori, venditori, paramedici, atleti, poliziotti, militari. Eccellono in ambienti dinamici che richiedono azione immediata.",
+      "growth_areas": "Imparare a pianificare oltre il momento presente. La Ni sviluppata aiuta a vedere le conseguenze a lungo termine delle proprie azioni.",
+      "famous_examples_fictional": ["Han Solo (Star Wars)", "Tyler Durden (Fight Club)", "James Bond (aspetti Se)"],
+      "compatibility_notes": {
+        "high_affinity": ["ISFJ", "ISTJ"],
+        "good_working": ["ISTP", "ESTP", "ESFP"],
+        "challenging_growth": ["INFJ", "INTJ"]
+      }
+    },
+    "ESFP": {
+      "title": "L'Intrattenitore",
+      "tagline": "Solare, spontaneo, trasforma ogni momento in una celebrazione",
+      "description": "Gli ESFP sono la gioia di vivere incarnata. Con Se dominante e Fi ausiliaria, amano le esperienze sensoriali intense e le connessioni umane autentiche. Non pianificano — scelgono. Non aspettano — agiscono. Non analizzano — sentono.\n\nSono maestri nel creare atmosfera: dove va un ESFP, nascono risate, musica, connessione. La loro autenticità è disarmante — non sanno fingere. Il rischio è evitare il disagio emotivo attraverso la costante ricerca di stimolazione esterna.",
+      "stack": ["Se", "Fi", "Te", "Ni"],
+      "strengths": ["Capacità di portare gioia e leggerezza", "Autenticità e spontaneità", "Empatia calorosissima", "Adattabilità e apertura", "Energia contagiosa", "Connessione con il corpo e i sensi"],
+      "weaknesses": ["Difficoltà con la pianificazione", "Evitamento del disagio emotivo", "Impulsività nelle decisioni", "Difficoltà con la critica", "Tendenza alla dispersione"],
+      "behavioral_traits": ["La vita è una festa — letteralmente", "Al centro dell'attenzione naturalmente", "Generosi con tempo e risorse", "Amano la musica, il ballo, il cibo, le esperienze fisiche", "Difficoltà a rimanere fermi"],
+      "in_relationships": "Partner calorosi, affettuosi, presenti. Amano con tutto il corpo. Difficoltà con la profondità emotiva prolungata o con i periodi difficili.",
+      "at_work": "Attori, cantanti, animatori, insegnanti di danza, chef, event planner. Eccellono ovunque ci sia interazione umana e creatività.",
+      "growth_areas": "Imparare a stare con il disagio invece di fuggirlo. La Ni sviluppata aiuta a pianificare un futuro invece di vivere solo nel presente.",
+      "famous_examples_fictional": ["Ferris Bueller", "Effie (Grease)", "Tigger (Winnie the Pooh)"],
+      "compatibility_notes": {
+        "high_affinity": ["ISTJ", "ISFJ"],
+        "good_working": ["ESTP", "ESFP", "ESFJ"],
+        "challenging_growth": ["INTJ", "INFJ"]
+      }
+    }
+  },
+  "functions": {
+    "Ni": {
+      "title": "Intuizione Interiore",
+      "label_short": "Ni",
+      "full_name": "Introverted Intuition",
+      "axis": "NS",
+      "direction": "introverted",
+      "description": "La Ni è la funzione della visione profonda e del pattern inconscio. Chi la usa in modo dominante o ausiliare «vede» connessioni e implicazioni che altri non colgono — come se proiettasse mentalmente il futuro e percepisse la traiettoria degli eventi prima che si manifestino. Non è una deduzione logica: è una certezza intuitiva, spesso difficile da spiegare razionalmente ma quasi sempre accurata.\n\nLa Ni lavora nell'ombra: raccoglie dati in modo inconscio, li integra, e genera insight improvvisi (il classico «mi è venuto in mente sotto la doccia»). Non è analitica come Ti o Te — è sintetica e olistica.\n\nIn eccesso, la Ni può diventare ossessiva o paranoica: vede pattern ovunque, anche dove non esistono, e può rimanere bloccata su una singola visione rifiutando alternative.",
+      "dominant_in": ["INTJ", "INFJ"],
+      "auxiliary_in": ["ENTJ", "ENFJ"],
+      "tertiary_in": ["ISTP", "ISFP"],
+      "inferior_in": ["ESTP", "ESFP"],
+      "as_dominant": "L'INTJ e l'INFJ vivono guidati dalla loro visione. Ogni decisione viene filtrata attraverso «dove porta questo?». Hanno spesso la sensazione di sapere come andrà a finire prima che accada.",
+      "as_auxiliary": "Negli ENTJ e ENFJ, la Ni supporta la loro Fe/Te dominante fornendo visione strategica: non solo «cosa fare ora» ma «dove vogliamo arrivare».",
+      "as_tertiary": "In ISTP e ISFP, la Ni terziaria emerge a tratti — intuizioni occasionali che li sorprendono. Possono avere momenti di visione profonda alternati a lunghi periodi di pura presenza sensoriale.",
+      "as_inferior": "Negli ESTP e ESFP, la Ni inferiore è una fonte di ansia: paure del futuro, scenari catastrofici, paranoia. Sotto stress, possono diventare ossessionati da presagi negativi.",
+      "shadow_function": "Ne",
+      "axis_partner": "Se",
+      "examples_behavior": [
+        "Sapere che una relazione finirà mesi prima della rottura effettiva",
+        "Vedere una soluzione completa prima di avere tutti i dati",
+        "Senso di «déjà vu» frequente o sensazione di predestinazione"
+      ]
+    },
+    "Ne": {
+      "title": "Intuizione Esteriore",
+      "label_short": "Ne",
+      "full_name": "Extraverted Intuition",
+      "axis": "NS",
+      "direction": "extraverted",
+      "description": "La Ne è la funzione dell'esplorazione infinita. Mentre la Ni affonda verso un'unica visione, la Ne si espande in tutte le direzioni contemporaneamente — vedendo possibilità, connessioni impreviste, significati nascosti in ogni cosa. È la funzione del «e se...», dell'associazione libera, della creatività senza confini.\n\nChi usa la Ne in modo dominante vive in uno stato di costante eccitazione intellettuale: ogni idea porta a un'altra, ogni conversazione apre dieci porte. Questo è meraviglioso per la generazione di idee, ma può rendere difficile la focalizzazione e la finalizzazione.\n\nLa Ne raccoglie informazioni dall'esterno (persone, libri, conversazioni, media) e le connette in pattern imprevisti. È estroversa: ha bisogno di stimolazione esterna per nutrirsi.",
+      "dominant_in": ["ENTP", "ENFP"],
+      "auxiliary_in": ["INTP", "INFP"],
+      "tertiary_in": ["ESTJ", "ESFJ"],
+      "inferior_in": ["ISTJ", "ISFJ"],
+      "as_dominant": "Gli ENTP e ENFP esplorano instancabilmente. Un'idea genera dieci altre idee. Possono essere difficili da seguire, ma la loro creatività è inesauribile.",
+      "as_auxiliary": "Negli INTP e INFP, la Ne porta freschezza e apertura alle teorie della Ti e ai valori della Fi. Aiuta a vedere nuove prospettive e connessioni inaspettate.",
+      "as_tertiary": "In ESTJ e ESFJ, la Ne terziaria emerge come voglia occasionale di esplorare idee nuove o vedere le cose diversamente — spesso come «gioco» o brainstorming.",
+      "as_inferior": "In ISTJ e ISFJ, la Ne inferiore genera ansia riguardo alle infinite possibilità negative. «E se qualcosa va storto?» «E se c'è qualcosa che non ho considerato?»",
+      "shadow_function": "Ni",
+      "axis_partner": "Si",
+      "examples_behavior": [
+        "Passare da un argomento all'altro durante una conversazione",
+        "Vedere connessioni tra una canzone e una teoria quantistica",
+        "Entusiasmarsi per un'idea nuova mentre quella vecchia è ancora incompleta"
+      ]
+    },
+    "Si": {
+      "title": "Sensazione Interiore",
+      "label_short": "Si",
+      "full_name": "Introverted Sensing",
+      "axis": "NS",
+      "direction": "introverted",
+      "description": "La Si è la funzione della memoria incarnata e dell'esperienza sedimentata. Non è solo «ricordare» — è portare il passato nel presente come punto di riferimento vivo. Chi usa la Si in modo dominante confronta continuamente il presente con esperienze passate: «questo mi ricorda quella volta in cui...». È la bussola della tradizione, della continuità, dell'affidabilità.\n\nLa Si non è nostalgia sentimentale — è un database interno di esperienze verificate. «Questo metodo ha funzionato in passato, quindi mi fido.» «Questo non l'ho mai fatto prima, quindi sono cauto.» È una funzione di stabilità e consolidamento.\n\nIn eccesso, la Si può diventare resistenza al cambiamento: la paura del nuovo non verificato prevale sull'opportunità della novità.",
+      "dominant_in": ["ISTJ", "ISFJ"],
+      "auxiliary_in": ["ESTJ", "ESFJ"],
+      "tertiary_in": ["ENTP", "ENFP"],
+      "inferior_in": ["ENTJ", "ENFJ"],
+      "as_dominant": "ISTJ e ISFJ vivono radicati nell'esperienza concreta. Ogni decisione è filtrata da «è stato già testato? Ha funzionato prima?» Creano stabilità e affidabilità ovunque vadano.",
+      "as_auxiliary": "In ESTJ e ESFJ, la Si supporta la Te/Fe fornendo un archivio di metodi provati. «Facciamo come si è sempre fatto» è una forza, non una debolezza.",
+      "as_tertiary": "In ENTP e ENFP, la Si terziaria emerge come nostalgia improvvisa o attaccamento a certi rituali familiari in mezzo al caos creativo.",
+      "as_inferior": "In ENTJ e ENFJ, la Si inferiore è il punto di fragilità: sotto stress, possono diventare ossessionati dai dettagli passati, rimpianti o ipersensibili alle emozioni fisiche.",
+      "shadow_function": "Se",
+      "axis_partner": "Ne",
+      "examples_behavior": [
+        "Seguire una routine precisa perché «funziona»",
+        "Sentirsi disturbati quando un rituale familiare viene interrotto",
+        "Ricordare con precisione come «si faceva la cosa X» anni prima"
+      ]
+    },
+    "Se": {
+      "title": "Sensazione Esteriore",
+      "label_short": "Se",
+      "full_name": "Extraverted Sensing",
+      "axis": "NS",
+      "direction": "extraverted",
+      "description": "La Se è la funzione della presenza assoluta nel momento. Chi la usa in modo dominante percepisce l'ambiente fisico con straordinaria acutezza — i colori, i suoni, le consistenze, le opportunità fisiche del qui e ora. Non stanno «nella testa» — sono completamente nel corpo e nell'ambiente.\n\nÈ la funzione dell'azione impulsiva e deliberata, della reattività fisica, del piacere sensoriale immediato. Gli atleti, gli artisti performativi, i chirurghi, i negoziatori — tutti beneficiano di una Se ben sviluppata.\n\nIn eccesso, la Se può portare a impulsività e ricerca compulsiva di stimolazione — hedonismo, rischi inutili, difficoltà con l'attesa e la riflessione.",
+      "dominant_in": ["ESTP", "ESFP"],
+      "auxiliary_in": ["ISTP", "ISFP"],
+      "tertiary_in": ["ENTJ", "ENFJ"],
+      "inferior_in": ["INTJ", "INFJ"],
+      "as_dominant": "ESTP e ESFP vivono completamente nel presente fisico. Reagiscono con velocità, godono del momento, e sono spesso eccellenti in situazioni che richiedono azione immediata.",
+      "as_auxiliary": "In ISTP e ISFP, la Se porta la logica/i valori interni in contatto diretto con la realtà. Sono artigiani, atleti, artisti — persone che «fanno» con precisione e grazia.",
+      "as_tertiary": "In ENTJ e ENFJ, la Se terziaria emerge come bisogno occasionale di esperienze fisiche intense — sport, cucina, attività sensoriali — come contrappeso alla loro vita cognitiva intensa.",
+      "as_inferior": "In INTJ e INFJ, la Se inferiore è spesso trascurata. Sotto stress, può esplodere in comportamenti opposti alla loro norma: eccessi sensoriali, impulsività, eccessiva attenzione ai dettagli fisici.",
+      "shadow_function": "Si",
+      "axis_partner": "Ni",
+      "examples_behavior": [
+        "Reagire fisicamente prima di pensare in una situazione di pericolo",
+        "Notare ogni dettaglio dell'ambiente (colori, suoni, odori) in modo acuto",
+        "Godere profondamente di esperienze fisiche: sport, cucina, musica dal vivo"
+      ]
+    },
+    "Ti": {
+      "title": "Pensiero Interiore",
+      "label_short": "Ti",
+      "full_name": "Introverted Thinking",
+      "axis": "TF",
+      "direction": "introverted",
+      "description": "La Ti è la funzione della logica interna e della precisione assoluta. Non si chiede «funziona?» (come Te) ma «è coerente?». Costruisce modelli mentali con la cura di un orologiaio: ogni ingranaggio deve essere al suo posto, ogni principio deve reggere all'esame dell'autoconsistenza.\n\nÈ una logica solitaria e autosufficiente: non ha bisogno di validazione esterna — il modello interno è il giudice. Questo la rende estremamente precisa ma anche potenzialmente rigida: la Ti può rifiutare evidenze esterne che contraddicono il proprio sistema.\n\nIn eccesso, la Ti genera analysis paralysis: il sistema non è mai abbastanza perfetto per essere condiviso o applicato.",
+      "dominant_in": ["INTP", "ISTP"],
+      "auxiliary_in": ["ENTP", "ESTP"],
+      "tertiary_in": ["INFJ", "ISFJ"],
+      "inferior_in": ["ENFJ", "ESFJ"],
+      "as_dominant": "INTP e ISTP sono architetti di sistemi logici. L'INTP costruisce teorie; l'ISTP costruisce meccanismi fisici. Entrambi con la stessa precisione implacabile.",
+      "as_auxiliary": "In ENTP e ESTP, la Ti analizza rapidamente le informazioni raccolte dalla Ne/Se dominante. Permette critica rapida e adattamento del pensiero.",
+      "as_tertiary": "In INFJ e ISFJ, la Ti terziaria emerge come bisogno di capire il «perché» logico dei sistemi in cui vivono — critica sottile e inaspettata.",
+      "as_inferior": "In ENFJ e ESFJ, la Ti inferiore è fonte di insicurezza: dubitano della propria logica, temono di essere «illogici» o di prendere decisioni sbagliate.",
+      "shadow_function": "Te",
+      "axis_partner": "Fe",
+      "examples_behavior": [
+        "Fare mental-debugging di un'argomentazione alla ricerca di incongruenze",
+        "Rifiutare un'idea non per ragioni pratiche ma perché «non regge logicamente»",
+        "Costruire tassonomie e classificazioni interne per organizzare la conoscenza"
+      ]
+    },
+    "Te": {
+      "title": "Pensiero Esteriore",
+      "label_short": "Te",
+      "full_name": "Extraverted Thinking",
+      "axis": "TF",
+      "direction": "extraverted",
+      "description": "La Te è la funzione dell'efficienza applicata al mondo reale. Mentre la Ti chiede «è coerente?», la Te chiede «funziona?». È orientata a risultati misurabili, sistemi ottimizzati e procedure che producono output tangibili.\n\nChi usa la Te in modo dominante tende a strutturare l'ambiente circostante — crea processi, delega con precisione, stabilisce metriche. È la funzione del manager, dello stratega esecutivo, dell'imprenditore che trasforma visioni in realtà.\n\nIn eccesso, la Te può diventare fredda e controllante: tutto deve essere produttivo, misurabile, ottimizzato. Le relazioni diventano transazioni; le emozioni diventano «irrazionali».",
+      "dominant_in": ["ENTJ", "ESTJ"],
+      "auxiliary_in": ["INTJ", "ISTJ"],
+      "tertiary_in": ["ENFP", "ESFP"],
+      "inferior_in": ["INFP", "ISFP"],
+      "as_dominant": "ENTJ e ESTJ sono macchine di produttività. Sanno esattamente come ottenere risultati, delegare compiti, e misurare il progresso. La loro efficienza è impressionante e talvolta opprimente.",
+      "as_auxiliary": "In INTJ e ISTJ, la Te traduce la Ni/Si in azioni concrete. L'INTJ ha la visione, la Te la esegue. L'ISTJ ha l'esperienza accumulata, la Te la applica con rigore.",
+      "as_tertiary": "In ENFP e ESFP, la Te terziaria emerge come capacità organizzativa occasionale — quando devono «mettersi a posto», possono essere sorprendentemente efficienti.",
+      "as_inferior": "In INFP e ISFP, la Te inferiore è fonte di difficoltà pratiche: organizzazione, rispetto delle scadenze, gestione pratica del mondo esterno. Sotto stress, possono diventare eccessivamente rigidi o controllanti.",
+      "shadow_function": "Ti",
+      "axis_partner": "Fi",
+      "examples_behavior": [
+        "Creare immediatamente un piano con obiettivi, scadenze e responsabilità",
+        "Cercare dati e metriche prima di prendere qualsiasi decisione importante",
+        "Ottimizzare un processo esistente anche quando «funziona già abbastanza bene»"
+      ]
+    },
+    "Fi": {
+      "title": "Sentimento Interiore",
+      "label_short": "Fi",
+      "full_name": "Introverted Feeling",
+      "axis": "TF",
+      "direction": "introverted",
+      "description": "La Fi è la funzione dei valori profondi e dell'autenticità assoluta. Non gestisce le emozioni degli altri (come Fe) — custodisce i propri valori con una cura quasi sacra. Chi usa la Fi in modo dominante sa sempre, con certezza quasi fisica, cosa è giusto e cosa non lo è per loro — indipendentemente da cosa pensino gli altri.\n\nÈ una funzione profondamente silenziosa: la Fi non ha bisogno di esprimersi per esistere. Può sembrare fredda dall'esterno, ma dentro coltiva un universo emotivo di straordinaria ricchezza e sensibilità.\n\nIn eccesso, la Fi può diventare moralismo rigido, eccessiva sensibilità alle critiche, o isolamento difensivo: «nessuno può capire davvero cosa sento».",
+      "dominant_in": ["INFP", "ISFP"],
+      "auxiliary_in": ["ENFP", "ESFP"],
+      "tertiary_in": ["INTJ", "ISTJ"],
+      "inferior_in": ["ENTJ", "ESTJ"],
+      "as_dominant": "INFP e ISFP sono guidati da un sistema di valori interni incrollabile. L'autenticità non è una scelta — è una necessità. Non possono fare cose che tradiscono chi sono.",
+      "as_auxiliary": "In ENFP e ESFP, la Fi aggiunge profondità autentica alla loro esuberanza. Non si entusiasmano per qualcosa se non lo sentono davvero — la loro passione è genuina.",
+      "as_tertiary": "In INTJ e ISTJ, la Fi terziaria è il sistema di valori personali che emerge raramente ma con grande forza quando i confini morali vengono violati.",
+      "as_inferior": "In ENTJ e ESTJ, la Fi inferiore è il ventre molle: quando le emozioni profonde emergono, possono sentirsi sopraffatti, irrazionali, o esprimersi in modo inappropriato.",
+      "shadow_function": "Fe",
+      "axis_partner": "Te",
+      "examples_behavior": [
+        "Rifiutare un lavoro ben pagato perché «non si allinea con i miei valori»",
+        "Sentire disagio fisico quando si è costretti a fare qualcosa contro la propria etica",
+        "Proteggere ferocemente la propria identità e unicità personale"
+      ]
+    },
+    "Fe": {
+      "title": "Sentimento Esteriore",
+      "label_short": "Fe",
+      "full_name": "Extraverted Feeling",
+      "axis": "TF",
+      "direction": "extraverted",
+      "description": "La Fe è la funzione dell'armonia sociale e della connessione emotiva condivisa. Mentre la Fi custodisce i valori interni, la Fe sintonizza continuamente sulle emozioni e i bisogni degli altri — creando connessione, gestendo l'atmosfera emotiva del gruppo, facilitando l'armonia.\n\nChi usa la Fe in modo dominante percepisce il «clima emotivo» di una stanza come altri percepiscono la temperatura fisica. Sanno sempre come stanno gli altri, cosa li disturba, cosa li farebbe stare meglio. Questo talento per la connessione può diventare un peso: assorbire le emozioni altrui fino all'esaurimento.\n\nIn eccesso, la Fe può portare alla perdita di identità propria nel tentativo di accontentare tutti, o alla manipolazione emotiva consapevole/inconsapevole del gruppo.",
+      "dominant_in": ["ENFJ", "ESFJ"],
+      "auxiliary_in": ["INFJ", "ISFJ"],
+      "tertiary_in": ["ENTP", "ESTP"],
+      "inferior_in": ["INTP", "ISTP"],
+      "as_dominant": "ENFJ e ESFJ sono magnet per le relazioni. Creano connessione ovunque vadano, fanno sentire tutti visti e valorizzati. La loro cura è una forza che trasforma le comunità.",
+      "as_auxiliary": "In INFJ e ISFJ, la Fe aggiunge calore umano alla loro Si/Ni. Non sono solo visionari/osservatori — sono profondi nel connettere i loro insight con il benessere degli altri.",
+      "as_tertiary": "In ENTP e ESTP, la Fe terziaria emerge come charme sociale e capacità di sintonizzarsi sulle emozioni del gruppo — spesso usata per persuadere o intrattenere.",
+      "as_inferior": "In INTP e ISTP, la Fe inferiore è la funzione più difficile da gestire. Raramente espressa, può esplodere in scenari di stress come reazioni emotive sproporzionate o, all'opposto, come una brusca chiusura.",
+      "shadow_function": "Fi",
+      "axis_partner": "Ti",
+      "examples_behavior": [
+        "Percepire immediatamente il cambiamento d'umore in una stanza",
+        "Modificare il proprio comportamento istintivamente per mettere a proprio agio gli altri",
+        "Sentirsi personalmente responsabili dell'umore del gruppo"
+      ]
+    }
+  },
+  "dichotomies": {
+    "IE": {
+      "title": "Introversione / Estroversione",
+      "poles": {
+        "I": {
+          "label": "Introversione",
+          "description": "Gli introversi si ricaricano nella solitudine e trovano stimolazione nell'elaborazione interna. Non sono necessariamente timidi o antisociali — molti introversi sono brillanti comunicatori — ma le interazioni sociali prolungate prosciugano la loro energia, non la alimentano.",
+          "behavioral_markers": [
+            "Preferiscono conversazioni profonde a piccole chiacchiere",
+            "Hanno bisogno di tempo da soli dopo eventi sociali intensi",
+            "Pensano prima di parlare — raramente «parlano per pensare»",
+            "Preferiscono un piccolo gruppo di amici intimi a molte conoscenze superficiali",
+            "Si sentono a disagio al centro dell'attenzione continua"
+          ]
+        },
+        "E": {
+          "label": "Estroversione",
+          "description": "Gli estroversi si ricaricano attraverso le interazioni sociali e trovano energia nel mondo esterno. Non sono necessariamente superficiali o invadenti — molti estroversi hanno profondità notevole — ma l'isolamento prolungato li deprime e li svuota.",
+          "behavioral_markers": [
+            "Pensano ad alta voce — la conversazione è un modo per elaborare le idee",
+            "Si sentono energizzati dopo eventi sociali",
+            "Preferiscono lavorare in ambienti aperti e interattivi",
+            "Tendono ad avere reti sociali ampie",
+            "Si sentono a disagio con lunghi periodi di silenzio e solitudine"
+          ]
+        }
+      },
+      "spectrum_note": "L'I/E è un continuum, non un binario. La maggior parte delle persone ha tendenze in entrambe le direzioni a seconda del contesto. Ciò che conta è: dove vai per ricaricarti?",
+      "common_myths": [
+        "Mito: L'introverso è timido. Realtà: La timidezza è ansia sociale, non introversione.",
+        "Mito: L'estroverso è superficiale. Realtà: L'estroversione riguarda la fonte di energia, non la profondità.",
+        "Mito: Gli introversi non amano le persone. Realtà: Amano le persone, ma in dosi e contesti diversi."
+      ]
+    },
+    "NS": {
+      "title": "Intuizione / Sensazione",
+      "poles": {
+        "N": {
+          "label": "Intuizione",
+          "description": "Gli intuitivi si concentrano sui pattern, i significati nascosti, le connessioni astratte e le possibilità future. Vedono il bosco più degli alberi. Spesso si sentono «diversi» dalla maggioranza delle persone, perché l'N è meno comune dell'S nella popolazione.",
+          "behavioral_markers": [
+            "Preferiscono concetti e teorie ai dettagli pratici",
+            "Spesso «saltano» i dettagli per arrivare subito ai principi",
+            "Attratti dal simbolico, metaforico, astratto",
+            "Parlano per metafore e analogie",
+            "Annoiati dalla routine — cercano sempre il nuovo e il diverso"
+          ]
+        },
+        "S": {
+          "label": "Sensazione",
+          "description": "I sensoriali si concentrano sulla realtà concreta, i fatti verificabili, l'esperienza diretta e il presente tangibile. Vedono gli alberi più del bosco. Sono generalmente più comuni degli intuitivi nella popolazione.",
+          "behavioral_markers": [
+            "Preferiscono fatti concreti alle teorie astratte",
+            "Apprezzano le esperienze sensoriali dirette",
+            "Communicazione precisa e letterale",
+            "Si fidano dell'esperienza passata come guida",
+            "Pratici e orientati ai risultati tangibili"
+          ]
+        }
+      },
+      "spectrum_note": "N e S descrivono il modo in cui si raccolgono informazioni e si percepisce il mondo. Non è una misura di intelligenza: ci sono persone brillanti in entrambi i campi.",
+      "common_myths": [
+        "Mito: Gli intuitivi sono più intelligenti. Realtà: È un bias dei test — gli intuitivi si descrivono meglio nei questionari verbali.",
+        "Mito: I sensoriali sono banali. Realtà: Hanno una connessione con la realtà che gli intuitivi spesso invidiano.",
+        "Mito: L'N/S è fisso. Realtà: Possiamo sviluppare entrambi con l'esperienza."
+      ]
+    },
+    "TF": {
+      "title": "Pensiero / Sentimento",
+      "poles": {
+        "T": {
+          "label": "Pensiero",
+          "description": "I tipi T prendono decisioni primariamente attraverso la logica, l'analisi oggettiva e principi impersonali. Non «mancano di emozioni» — le hanno come tutti, ma tendono a non lasciarle dominare il processo decisionale. Valorizzano la coerenza logica, la verità e l'efficacia.",
+          "behavioral_markers": [
+            "Separano «cosa è corretto» da «come mi fa sentire»",
+            "Tendono a essere diretti nelle critiche — priorità alla verità",
+            "Valorizzano la competenza sopra l'armonia",
+            "Confortevoli con il disaccordo e il dibattito",
+            "Cercano la causa root dei problemi invece di placare le emozioni"
+          ]
+        },
+        "F": {
+          "label": "Sentimento",
+          "description": "I tipi F prendono decisioni attraverso i valori personali, la considerazione delle persone coinvolte e l'impatto emotivo. Non sono «illogici» — possono ragionare con grande precisione — ma il sistema decisionale è centrato su «cosa è bene per le persone», non solo su «cosa è corretto logicamente».",
+          "behavioral_markers": [
+            "Considerano sempre l'impatto emotivo delle decisioni",
+            "Tendono a evitare i conflitti per preservare l'armonia",
+            "Eccellenti nell'empatia e nel supporto emotivo",
+            "Valorizzano l'autenticità delle relazioni",
+            "Possono trovare difficile separarsi emotivamente da una decisione razionale"
+          ]
+        }
+      },
+      "spectrum_note": "T/F è la dicotomia con la distribuzione più diversa per genere nella popolazione: le donne tendono più verso F, gli uomini verso T — ma questa è una tendenza statistica, non un destino.",
+      "common_myths": [
+        "Mito: I T non hanno sentimenti. Realtà: Li hanno — li processano diversamente.",
+        "Mito: Gli F sono irrazionali. Realtà: La considerazione delle persone è un input razionale, non un'irrazionalità.",
+        "Mito: T è meglio per il lavoro, F per le relazioni. Realtà: Entrambi portano forze uniche in ogni contesto."
+      ]
+    },
+    "JP": {
+      "title": "Giudizio / Percezione",
+      "poles": {
+        "J": {
+          "label": "Giudizio",
+          "description": "I tipi J preferiscono struttura, pianificazione e chiusura. Amano avere piani definiti, scadenze rispettate, e ambienti organizzati. Non è rigidità — è l'espressione di un bisogno profondo di controllo sul proprio ambiente per funzionare al meglio.",
+          "behavioral_markers": [
+            "Pianificano in anticipo e rispettano i piani",
+            "Disagio con le scadenze non rispettate",
+            "Ambienti di lavoro/vita ordinati e organizzati",
+            "Preferiscono decisioni definitive all'ambiguità prolungata",
+            "Sentono che «finire le cose» dà soddisfazione"
+          ]
+        },
+        "P": {
+          "label": "Percezione",
+          "description": "I tipi P preferiscono flessibilità, adattabilità e apertura alle opzioni. Mal sopportano i piani rigidi — preferiscono rispondere al momento, adattarsi alle circostanze, mantenere le opzioni aperte finché possibile. Non è disorganizzazione — è un modo diverso di abitare il tempo.",
+          "behavioral_markers": [
+            "Rispondono bene all'improvvisazione e all'inaspettato",
+            "Procrastinano spesso, lavorano meglio sotto pressione",
+            "Ambienti creativi, a volte caotici",
+            "Difficoltà con le decisioni definitive — «e se cambia qualcosa?»",
+            "Trovano stimolante il processo più della conclusione"
+          ]
+        }
+      },
+      "spectrum_note": "J/P descrive come ci si orienta verso il mondo esterno, non quanto si è organizzati in assoluto. Un P molto Ti può essere mentalmente ordinatissimo ma caotico nell'ambiente fisico.",
+      "common_myths": [
+        "Mito: I J sono più organizzati. Realtà: I J amano i sistemi — ma non sempre li seguono perfettamente.",
+        "Mito: I P sono pigri. Realtà: Lavorano intensamente, solo in modo diverso (burst di energia, non pianificazione lineare).",
+        "Mito: J è meglio per il lavoro. Realtà: I P portano adattabilità e creatività che i J spesso non hanno."
+      ]
+    }
+  }
+}
