@@ -13,6 +13,7 @@ import '../../theme/app_theme.dart';
 import '../person_edit/person_edit_screen.dart';
 import '../content_viewer/content_viewer_screen.dart';
 import '../career_fit/career_fit_screen.dart';
+import '../quiz/quiz_screen.dart';
 
 class PersonDetailScreen extends ConsumerWidget {
   final int personId;
@@ -218,7 +219,20 @@ class _PersonalityTab extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
 
     if (mbtiProfile == null) {
-      return Center(child: Text(l10n.affinityNoProfile));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(l10n.affinityNoProfile),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(personId: person.id))),
+              icon: const Icon(Icons.quiz_outlined),
+              label: Text(l10n.quizStart),
+            ),
+          ],
+        ),
+      );
     }
 
     return FutureBuilder<({AffinityResult affinity, RelationshipReport report, RelationshipDynamicsContent textContent})?>(
@@ -231,28 +245,34 @@ class _PersonalityTab extends ConsumerWidget {
           children: [
             _FunctionStackCard(profile: mbtiProfile!),
             const SizedBox(height: 12),
-            FutureBuilder<List<PersonalityProfile>>(
-              future: ref.read(profileRepositoryProvider).getForPerson(person.id),
-              builder: (ctx, profileSnap) {
-                final profiles = profileSnap.data ?? [];
-                final profile = profiles.where((p) => p.system.name == 'mbti').firstOrNull;
-                if (profile == null) return const SizedBox.shrink();
-                
-                return Card(
-                  child: ListTile(
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
                     leading: const Icon(Icons.work_outline),
                     title: Text(l10n.careerFitTitle),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => CareerFitScreen(profile: profile),
-                        ),
-                      );
+                    onTap: () async {
+                      final profiles = await ref.read(profileRepositoryProvider).getForPerson(person.id);
+                      final profile = profiles.where((p) => p.system == PersonalitySystem.mbti).firstOrNull;
+                      if (profile != null && context.mounted) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CareerFitScreen(profile: profile),
+                          ),
+                        );
+                      }
                     },
                   ),
-                );
-              },
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.quiz_outlined),
+                    title: Text(l10n.mbtiSourceQuizShort), // Or a "Retry quiz" label
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => QuizScreen(personId: person.id))),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             if (data != null && !person.isSelf) ...[

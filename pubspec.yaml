@@ -61,3 +61,5 @@ flutter:
   assets:
     - assets/content/it/mbti.json
     - assets/content/en/mbti.json
+    - assets/quiz/it/
+    - assets/quiz/en/

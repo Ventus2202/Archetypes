@@ -8,6 +8,8 @@ import '../../../domain/personality_systems/mbti/mbti_profile.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/person_provider.dart';
 
+import '../quiz/quiz_screen.dart';
+
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -62,6 +64,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
+  Future<void> _openQuiz() async {
+    final type = await Navigator.of(context).push<MbtiType>(
+      MaterialPageRoute(builder: (_) => const QuizScreen()),
+    );
+    if (type != null) {
+      setState(() => _selectedType = type);
+      // Wait for build to complete before saving
+      WidgetsBinding.instance.addPostFrameCallback((_) => _save());
+    }
+  }
+
   Future<void> _save() async {
     if (_saving) return;
     setState(() => _saving = true);
@@ -78,7 +91,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     ));
 
     MbtiProfile? profile;
-    if (_method == 'manual' && _selectedType != null) {
+    if (_method == 'test' && _selectedType != null) {
+      profile = MbtiProfile.fromType(_selectedType!);
+    } else if (_method == 'manual' && _selectedType != null) {
       profile = MbtiProfile.fromType(_selectedType!);
     } else if (_method == 'granular') {
       final derived = _deriveTypeFromDichotomies();
@@ -92,7 +107,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         system: PersonalitySystem.mbti,
         data: profile.toJson(),
         confidence: 80,
-        source: _method == 'manual' ? ProfileSource.manual : ProfileSource.granular,
+        source: _method == 'manual'
+            ? ProfileSource.manual
+            : (_method == 'test' ? ProfileSource.quizMedium : ProfileSource.granular),
         updatedAt: DateTime.now(),
       ));
     }
@@ -137,23 +154,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     onMethodSelected: (m) => setState(() => _method = m),
                     l10n: l10n,
                   ),
-                  _method == 'granular'
-                      ? _GranularPage(
-                          dichotomies: _dichotomies,
-                          onChanged: (key, val) =>
-                              setState(() => _dichotomies[key] = val),
-                          l10n: l10n,
-                        )
-                      : _TypeGridPage(
-                          selectedType: _selectedType,
-                          onTypeSelected: (t) =>
-                              setState(() => _selectedType = t),
-                          l10n: l10n,
-                        ),
+                  _method == 'test'
+                      ? _StartQuizPage(l10n: l10n, onStart: _openQuiz)
+                      : (_method == 'granular'
+                          ? _GranularPage(
+                              dichotomies: _dichotomies,
+                              onChanged: (key, val) =>
+                                  setState(() => _dichotomies[key] = val),
+                              l10n: l10n,
+                            )
+                          : _TypeGridPage(
+                              selectedType: _selectedType,
+                              onTypeSelected: (t) =>
+                                  setState(() => _selectedType = t),
+                              l10n: l10n,
+                            )),
                 ],
               ),
             ),
-            _buildBottomBar(l10n, cs),
+            if (_method != 'test' || _page < 2) _buildBottomBar(l10n, cs),
           ],
         ),
       ),
@@ -517,6 +536,43 @@ class _GranularPage extends StatelessWidget {
   }
 }
 
+class _StartQuizPage extends StatelessWidget {
+  const _StartQuizPage({required this.l10n, required this.onStart});
+
+  final AppLocalizations l10n;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.quiz_outlined, size: 64, color: Colors.blue),
+          const SizedBox(height: 24),
+          Text(
+            l10n.onboardingMethodTest,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.onboardingMethodTestDesc,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 48),
+          FilledButton.icon(
+            onPressed: onStart,
+            icon: const Icon(Icons.play_arrow),
+            label: Text(l10n.quizStart),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DichotomySlider extends StatelessWidget {
   const _DichotomySlider({
     required this.label,
@@ -571,3 +627,5 @@ class _DichotomySlider extends StatelessWidget {
     );
   }
 }
+
+

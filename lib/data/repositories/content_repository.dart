@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import '../../domain/quiz/quiz_models.dart';
 
 class MbtiContent {
   final Map<String, dynamic> types;
@@ -136,6 +137,21 @@ class ContentRepository {
     
     _loadedLocale = languageCode;
     return _teamCache!;
+  }
+
+  Future<List<QuizQuestion>> loadQuizQuestions(String languageCode, QuizLength length) async {
+    final supportedLocales = ['it', 'en'];
+    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
+    final fileName = length.fileName;
+
+    try {
+      final raw = await rootBundle.loadString('assets/quiz/$locale/$fileName');
+      final parsed = json.decode(raw) as Map<String, dynamic>;
+      final questionsRaw = parsed['questions'] as List? ?? [];
+      return questionsRaw.map((q) => QuizQuestion.fromJson(q as Map<String, dynamic>)).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   void invalidateCache() {
