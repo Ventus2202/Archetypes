@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
 import '../../../core/constants.dart';
@@ -8,6 +10,8 @@ import '../../../domain/personality_systems/mbti/mbti_profile.dart';
 import '../../../domain/sharing/shared_profile.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/database_provider.dart';
+import '../../providers/person_provider.dart';
+import '../../providers/group_provider.dart';
 import '../person_edit/person_edit_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -118,14 +122,14 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.settingsExportData),
             subtitle: Text(l10n.settingsExportDesc),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showComingSoon(context),
+            onTap: () => _exportData(context, ref),
           ),
           ListTile(
             leading: const Icon(Icons.download_outlined),
             title: Text(l10n.settingsImportData),
             subtitle: Text(l10n.settingsImportDesc),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showComingSoon(context),
+            onTap: () => _importData(context, ref),
           ),
           const Divider(),
           ListTile(
@@ -161,7 +165,9 @@ class SettingsScreen extends ConsumerWidget {
       );
 
       final payload = shared.encode();
-      Share.share(l10n.shareProfileText(payload));
+      await SharePlus.instance.share(
+        ShareParams(text: l10n.shareProfileText(payload)),
+      );
     } catch (_) {}
   }
 
@@ -236,9 +242,73 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Funzionalità in arrivo')),
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
+    final service = ref.read(dataBackupServiceProvider);
+    try {
+      final file = await service.exportToZip();
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'Archetypes Backup',
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Errore esportazione: $e')));
+      }
+    }
+  }
+
+  Future<void> _importData(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final service = ref.read(dataBackupServiceProvider);
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['zip'],
     );
+
+    if (result == null || result.files.single.path == null) return;
+
+    if (!context.mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.settingsImportData),
+        content: const Text(
+            'Vuoi sostituire tutti i dati esistenti o aggiungere quelli nuovi?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.actionCancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Aggiungi')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Sostituisci')),
+        ],
+      ),
+    );
+
+    if (confirmed == null) return;
+
+    try {
+      final file = File(result.files.single.path!);
+      await service.importFromZip(file, replace: confirmed);
+      ref.invalidate(allPersonsProvider);
+      ref.invalidate(allGroupsProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Dati importati con successo')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Errore importazione: $e')));
+      }
+    }
   }
 }

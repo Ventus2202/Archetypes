@@ -34,12 +34,13 @@ dependencies:
 
   # Export / import ZIP
   archive: ^4.0.7
+  file_picker: ^8.1.4
 
   # Markdown rendering for educational cards
   flutter_markdown: ^0.7.6
 
   # Share profile payload
-  share_plus: ^6.0.0
+  share_plus: ^12.0.2
 
   # Icons
   cupertino_icons: ^1.0.8

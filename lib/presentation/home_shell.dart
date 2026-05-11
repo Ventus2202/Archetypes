@@ -15,7 +15,7 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
 
-  static const _screens = [
+  static const List<Widget> _screens = [
     GraphScreen(),
     PeopleListScreen(),
     TeamBuilderScreen(),
