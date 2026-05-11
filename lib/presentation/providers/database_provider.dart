@@ -4,6 +4,7 @@ import '../../data/repositories/person_repository.dart';
 import '../../data/repositories/profile_repository.dart';
 import '../../data/repositories/relationship_repository.dart';
 import '../../data/repositories/content_repository.dart';
+import '../../data/repositories/group_repository.dart';
 
 final databaseProvider = Provider<AppDatabase>(
   (ref) => throw UnimplementedError('Override databaseProvider in main.dart'),
@@ -19,6 +20,10 @@ final profileRepositoryProvider = Provider<ProfileRepository>(
 
 final relationshipRepositoryProvider = Provider<RelationshipRepository>(
   (ref) => RelationshipRepository(ref.watch(databaseProvider)),
+);
+
+final groupRepositoryProvider = Provider<GroupRepository>(
+  (ref) => GroupRepository(ref.watch(databaseProvider)),
 );
 
 final contentRepositoryProvider = Provider<ContentRepository>(

@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
 import '../../../domain/entities/person.dart';
 import '../../../domain/entities/personality_profile.dart';
@@ -26,6 +28,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
   PersonRole _role = PersonRole.friend;
   MbtiType? _mbtiType;
   int _mbtiConfidence = 80;
+  String? _avatarPath;
   bool _loading = false;
 
   @override
@@ -55,6 +58,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
     _nicknameCtrl.text = person.nickname ?? '';
     _notesCtrl.text = person.notes ?? '';
     _role = person.role;
+    _avatarPath = person.avatarPath;
 
     final profiles = await profileRepo.getForPerson(person.id);
     final mbti =
@@ -69,6 +73,18 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
     }
 
     if (mounted) setState(() {});
+  }
+
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+    );
+    if (image != null) {
+      setState(() => _avatarPath = image.path);
+    }
   }
 
   @override
@@ -99,6 +115,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
         nickname: _nicknameCtrl.text.trim().isEmpty
             ? null
             : _nicknameCtrl.text.trim(),
+        avatarPath: _avatarPath,
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
         role: _role,
         isSelf: false,
@@ -113,6 +130,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
           nickname: _nicknameCtrl.text.trim().isEmpty
               ? null
               : _nicknameCtrl.text.trim(),
+          avatarPath: _avatarPath,
           notes:
               _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
           role: _role,
@@ -178,6 +196,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isEditing = widget.personId != null;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -205,6 +224,33 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Center(
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  backgroundImage: _avatarPath != null
+                      ? FileImage(File(_avatarPath!))
+                      : null,
+                  child: _avatarPath == null
+                      ? Icon(Icons.person_outline,
+                          size: 40, color: cs.onSurfaceVariant)
+                      : null,
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: IconButton.filled(
+                    onPressed: _pickAvatar,
+                    icon: const Icon(Icons.camera_alt, size: 20),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           _SectionHeader(label: l10n.personName),
           TextField(
             controller: _nameCtrl,
