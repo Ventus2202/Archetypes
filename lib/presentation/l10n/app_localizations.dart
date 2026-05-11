@@ -968,11 +968,59 @@ abstract class AppLocalizations {
   /// **'Ripristina dati da un file ZIP'**
   String get settingsImportDesc;
 
+  /// No description provided for @settingsShareProfile.
+  ///
+  /// In it, this message translates to:
+  /// **'Condividi il mio profilo'**
+  String get settingsShareProfile;
+
+  /// No description provided for @settingsImportText.
+  ///
+  /// In it, this message translates to:
+  /// **'Importa da testo'**
+  String get settingsImportText;
+
+  /// No description provided for @settingsImportTextDesc.
+  ///
+  /// In it, this message translates to:
+  /// **'Incolla un codice profilo per aggiungere una persona'**
+  String get settingsImportTextDesc;
+
   /// No description provided for @settingsAbout.
   ///
   /// In it, this message translates to:
   /// **'Informazioni'**
   String get settingsAbout;
+
+  /// No description provided for @importDialogTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Importa profilo'**
+  String get importDialogTitle;
+
+  /// No description provided for @importDialogHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Incolla il codice qui...'**
+  String get importDialogHint;
+
+  /// No description provided for @importDialogError.
+  ///
+  /// In it, this message translates to:
+  /// **'Codice non valido o versione non supportata'**
+  String get importDialogError;
+
+  /// No description provided for @importPreviewTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Anteprima importazione'**
+  String get importPreviewTitle;
+
+  /// No description provided for @shareProfileText.
+  ///
+  /// In it, this message translates to:
+  /// **'Ecco il mio profilo Archetypes:\n\n{payload}'**
+  String shareProfileText(String payload);
 
   /// No description provided for @settingsVersion.
   ///

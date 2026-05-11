@@ -468,7 +468,34 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsImportDesc => 'Ripristina dati da un file ZIP';
 
   @override
+  String get settingsShareProfile => 'Condividi il mio profilo';
+
+  @override
+  String get settingsImportText => 'Importa da testo';
+
+  @override
+  String get settingsImportTextDesc =>
+      'Incolla un codice profilo per aggiungere una persona';
+
+  @override
   String get settingsAbout => 'Informazioni';
+
+  @override
+  String get importDialogTitle => 'Importa profilo';
+
+  @override
+  String get importDialogHint => 'Incolla il codice qui...';
+
+  @override
+  String get importDialogError => 'Codice non valido o versione non supportata';
+
+  @override
+  String get importPreviewTitle => 'Anteprima importazione';
+
+  @override
+  String shareProfileText(String payload) {
+    return 'Ecco il mio profilo Archetypes:\n\n$payload';
+  }
 
   @override
   String settingsVersion(String version) {

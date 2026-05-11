@@ -5,13 +5,15 @@ import '../../../domain/entities/person.dart';
 import '../../../domain/entities/personality_profile.dart';
 import '../../../domain/personality_systems/mbti/mbti_types.dart';
 import '../../../domain/personality_systems/mbti/mbti_profile.dart';
+import '../../../domain/sharing/shared_profile.dart';
 import '../../providers/person_provider.dart';
 import '../../providers/database_provider.dart';
 
 class PersonEditScreen extends ConsumerStatefulWidget {
   final int? personId;
+  final SharedProfile? sharedProfile;
 
-  const PersonEditScreen({super.key, required this.personId});
+  const PersonEditScreen({super.key, this.personId, this.sharedProfile});
 
   @override
   ConsumerState<PersonEditScreen> createState() => _PersonEditScreenState();
@@ -31,7 +33,16 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
     super.initState();
     if (widget.personId != null) {
       _loadExisting();
+    } else if (widget.sharedProfile != null) {
+      _loadFromShared();
     }
+  }
+
+  void _loadFromShared() {
+    final sp = widget.sharedProfile!;
+    _nameCtrl.text = sp.name;
+    _mbtiType = sp.type;
+    _mbtiConfidence = sp.confidence;
   }
 
   Future<void> _loadExisting() async {

@@ -38,6 +38,9 @@ dependencies:
   # Markdown rendering for educational cards
   flutter_markdown: ^0.7.6
 
+  # Share profile payload
+  share_plus: ^6.0.0
+
   # Icons
   cupertino_icons: ^1.0.8
 

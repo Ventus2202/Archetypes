@@ -195,7 +195,21 @@
   "settingsImportData": "Importa dati",
   "settingsExportDesc": "Salva tutti i tuoi dati come file ZIP",
   "settingsImportDesc": "Ripristina dati da un file ZIP",
+  "settingsShareProfile": "Condividi il mio profilo",
+  "settingsImportText": "Importa da testo",
+  "settingsImportTextDesc": "Incolla un codice profilo per aggiungere una persona",
   "settingsAbout": "Informazioni",
+
+  "importDialogTitle": "Importa profilo",
+  "importDialogHint": "Incolla il codice qui...",
+  "importDialogError": "Codice non valido o versione non supportata",
+  "importPreviewTitle": "Anteprima importazione",
+  "shareProfileText": "Ecco il mio profilo Archetypes:\n\n{payload}",
+  "@shareProfileText": {
+    "placeholders": {
+      "payload": { "type": "String" }
+    }
+  },
   "settingsVersion": "Versione {version}",
   "@settingsVersion": {
     "placeholders": {

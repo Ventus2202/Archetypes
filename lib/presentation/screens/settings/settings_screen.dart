@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
-import '../../providers/settings_provider.dart';
 import '../../../core/constants.dart';
+import '../../../domain/entities/personality_profile.dart';
+import '../../../domain/personality_systems/mbti/mbti_profile.dart';
+import '../../../domain/sharing/shared_profile.dart';
+import '../../providers/settings_provider.dart';
+import '../../providers/database_provider.dart';
+import '../person_edit/person_edit_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -78,6 +84,28 @@ class SettingsScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: Text(
+              'Profilo',
+              style: Theme.of(context)
+                  .textTheme
+                  .labelSmall
+                  ?.copyWith(color: cs.primary),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.share_outlined),
+            title: Text(l10n.settingsShareProfile),
+            onTap: () => _shareMyProfile(context, ref),
+          ),
+          ListTile(
+            leading: const Icon(Icons.content_paste_outlined),
+            title: Text(l10n.settingsImportText),
+            subtitle: Text(l10n.settingsImportTextDesc),
+            onTap: () => _importFromText(context, ref),
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: Text(
               'Dati',
               style: Theme.of(context)
                   .textTheme
@@ -108,6 +136,104 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _shareMyProfile(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final self = await ref.read(personRepositoryProvider).getSelf();
+    if (self == null) return;
+
+    final profiles =
+        await ref.read(profileRepositoryProvider).getForPerson(self.id);
+    final mbti = profiles
+        .where((p) => p.system == PersonalitySystem.mbti)
+        .firstOrNull;
+    if (mbti == null) return;
+
+    try {
+      final mbtiProfile =
+          MbtiProfile.fromJson(Map<String, dynamic>.from(mbti.data));
+
+      final shared = SharedProfile(
+        name: self.name,
+        type: mbtiProfile.type,
+        confidence: mbti.confidence,
+      );
+
+      final payload = shared.encode();
+      Share.share(l10n.shareProfileText(payload));
+    } catch (_) {}
+  }
+
+  Future<void> _importFromText(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final controller = TextEditingController();
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.importDialogTitle),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(hintText: l10n.importDialogHint),
+          maxLines: 5,
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.actionCancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, controller.text),
+              child: Text(l10n.actionConfirm)),
+        ],
+      ),
+    );
+
+    if (result == null || result.isEmpty) return;
+
+    final shared = SharedProfile.decode(result);
+    if (shared == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.importDialogError)));
+      }
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.importPreviewTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+                leading: const Icon(Icons.person),
+                title: Text(shared.name)),
+            ListTile(
+                leading: const Icon(Icons.psychology),
+                title: Text(shared.type.label)),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.actionCancel)),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.actionAdd)),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => PersonEditScreen(sharedProfile: shared)));
+    }
   }
 
   void _showComingSoon(BuildContext context) {

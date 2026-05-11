@@ -193,7 +193,21 @@
   "settingsImportData": "Import data",
   "settingsExportDesc": "Save all your data as a ZIP file",
   "settingsImportDesc": "Restore data from a ZIP file",
+  "settingsShareProfile": "Share my profile",
+  "settingsImportText": "Import from text",
+  "settingsImportTextDesc": "Paste a profile code to add a person",
   "settingsAbout": "About",
+
+  "importDialogTitle": "Import profile",
+  "importDialogHint": "Paste code here...",
+  "importDialogError": "Invalid code or unsupported version",
+  "importPreviewTitle": "Import preview",
+  "shareProfileText": "Here is my Archetypes profile:\n\n{payload}",
+  "@shareProfileText": {
+    "placeholders": {
+      "payload": { "type": "String" }
+    }
+  },
   "settingsVersion": "Version {version}",
   "@settingsVersion": {
     "placeholders": {

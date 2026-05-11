@@ -466,7 +466,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsImportDesc => 'Restore data from a ZIP file';
 
   @override
+  String get settingsShareProfile => 'Share my profile';
+
+  @override
+  String get settingsImportText => 'Import from text';
+
+  @override
+  String get settingsImportTextDesc => 'Paste a profile code to add a person';
+
+  @override
   String get settingsAbout => 'About';
+
+  @override
+  String get importDialogTitle => 'Import profile';
+
+  @override
+  String get importDialogHint => 'Paste code here...';
+
+  @override
+  String get importDialogError => 'Invalid code or unsupported version';
+
+  @override
+  String get importPreviewTitle => 'Import preview';
+
+  @override
+  String shareProfileText(String payload) {
+    return 'Here is my Archetypes profile:\n\n$payload';
+  }
 
   @override
   String settingsVersion(String version) {
