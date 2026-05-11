@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
 import 'screens/graph/graph_screen.dart';
 import 'screens/people_list/people_list_screen.dart';
+import 'screens/team_builder/team_builder_screen.dart';
 import 'screens/settings/settings_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -17,6 +18,7 @@ class _HomeShellState extends State<HomeShell> {
   static const _screens = [
     GraphScreen(),
     PeopleListScreen(),
+    TeamBuilderScreen(),
     SettingsScreen(),
   ];
 
@@ -42,6 +44,11 @@ class _HomeShellState extends State<HomeShell> {
             icon: const Icon(Icons.people_outline),
             selectedIcon: const Icon(Icons.people),
             label: l10n.navPeople,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.groups_outlined),
+            selectedIcon: const Icon(Icons.groups),
+            label: l10n.navTeamBuilder,
           ),
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),

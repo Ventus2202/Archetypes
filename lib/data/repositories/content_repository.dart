@@ -33,10 +33,19 @@ class CareerRolesContent {
   });
 }
 
+class TeamObjectivesContent {
+  final Map<String, dynamic> objectives;
+
+  const TeamObjectivesContent({
+    required this.objectives,
+  });
+}
+
 class ContentRepository {
   MbtiContent? _cache;
   RelationshipDynamicsContent? _dynamicsCache;
   CareerRolesContent? _careerCache;
+  TeamObjectivesContent? _teamCache;
   String? _loadedLocale;
 
   Future<MbtiContent> loadMbtiContent(String languageCode) async {
@@ -107,10 +116,33 @@ class ContentRepository {
     return _careerCache!;
   }
 
+  Future<TeamObjectivesContent> loadTeamObjectivesContent(String languageCode) async {
+    if (_teamCache != null && _loadedLocale == languageCode) return _teamCache!;
+
+    final supportedLocales = ['it', 'en'];
+    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
+
+    try {
+      final raw =
+          await rootBundle.loadString('assets/content/$locale/team_objectives.json');
+      final parsed = json.decode(raw) as Map<String, dynamic>;
+
+      _teamCache = TeamObjectivesContent(
+        objectives: Map<String, dynamic>.from(parsed['objectives'] as Map? ?? {}),
+      );
+    } catch (_) {
+      _teamCache = const TeamObjectivesContent(objectives: {});
+    }
+    
+    _loadedLocale = languageCode;
+    return _teamCache!;
+  }
+
   void invalidateCache() {
     _cache = null;
     _dynamicsCache = null;
     _careerCache = null;
+    _teamCache = null;
     _loadedLocale = null;
   }
 

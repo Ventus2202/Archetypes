@@ -21,7 +21,61 @@ class AppLocalizationsIt extends AppLocalizations {
   String get navSettings => 'Impostazioni';
 
   @override
+  String get navTeamBuilder => 'Team Builder';
+
+  @override
   String get actionAdd => 'Aggiungi';
+
+  @override
+  String get actionCalculate => 'Calcola';
+
+  @override
+  String get teamDisclaimer =>
+      'Suggerimenti basati su modello teorico — non sostituiscono valutazione professionale';
+
+  @override
+  String get teamObjectiveLabel => 'Obiettivo del Team';
+
+  @override
+  String get teamSizeLabel => 'Dimensione';
+
+  @override
+  String get teamEditSelection => 'Modifica selezione';
+
+  @override
+  String teamSelectCandidates(Object selected, Object size) {
+    return 'Seleziona candidati ($selected/$size)';
+  }
+
+  @override
+  String get teamNoResults => 'Nessun risultato disponibile';
+
+  @override
+  String get teamBestMatch => 'Miglior Match';
+
+  @override
+  String get teamAlternative => 'Alternativa';
+
+  @override
+  String get teamMembers => 'Membri';
+
+  @override
+  String get teamObjCreative => 'Ideazione e Creatività';
+
+  @override
+  String get teamObjExecution => 'Esecuzione e Consegna';
+
+  @override
+  String get teamObjCrisis => 'Gestione Crisi';
+
+  @override
+  String get teamObjInnovation => 'Innovazione Sistemica';
+
+  @override
+  String get teamObjSupport => 'Cura e Supporto';
+
+  @override
+  String get teamObjStrategy => 'Pianificazione Strategica';
 
   @override
   String get actionSave => 'Salva';

@@ -122,11 +122,113 @@ abstract class AppLocalizations {
   /// **'Impostazioni'**
   String get navSettings;
 
+  /// No description provided for @navTeamBuilder.
+  ///
+  /// In it, this message translates to:
+  /// **'Team Builder'**
+  String get navTeamBuilder;
+
   /// No description provided for @actionAdd.
   ///
   /// In it, this message translates to:
   /// **'Aggiungi'**
   String get actionAdd;
+
+  /// No description provided for @actionCalculate.
+  ///
+  /// In it, this message translates to:
+  /// **'Calcola'**
+  String get actionCalculate;
+
+  /// No description provided for @teamDisclaimer.
+  ///
+  /// In it, this message translates to:
+  /// **'Suggerimenti basati su modello teorico — non sostituiscono valutazione professionale'**
+  String get teamDisclaimer;
+
+  /// No description provided for @teamObjectiveLabel.
+  ///
+  /// In it, this message translates to:
+  /// **'Obiettivo del Team'**
+  String get teamObjectiveLabel;
+
+  /// No description provided for @teamSizeLabel.
+  ///
+  /// In it, this message translates to:
+  /// **'Dimensione'**
+  String get teamSizeLabel;
+
+  /// No description provided for @teamEditSelection.
+  ///
+  /// In it, this message translates to:
+  /// **'Modifica selezione'**
+  String get teamEditSelection;
+
+  /// No description provided for @teamSelectCandidates.
+  ///
+  /// In it, this message translates to:
+  /// **'Seleziona candidati ({selected}/{size})'**
+  String teamSelectCandidates(Object selected, Object size);
+
+  /// No description provided for @teamNoResults.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessun risultato disponibile'**
+  String get teamNoResults;
+
+  /// No description provided for @teamBestMatch.
+  ///
+  /// In it, this message translates to:
+  /// **'Miglior Match'**
+  String get teamBestMatch;
+
+  /// No description provided for @teamAlternative.
+  ///
+  /// In it, this message translates to:
+  /// **'Alternativa'**
+  String get teamAlternative;
+
+  /// No description provided for @teamMembers.
+  ///
+  /// In it, this message translates to:
+  /// **'Membri'**
+  String get teamMembers;
+
+  /// No description provided for @teamObjCreative.
+  ///
+  /// In it, this message translates to:
+  /// **'Ideazione e Creatività'**
+  String get teamObjCreative;
+
+  /// No description provided for @teamObjExecution.
+  ///
+  /// In it, this message translates to:
+  /// **'Esecuzione e Consegna'**
+  String get teamObjExecution;
+
+  /// No description provided for @teamObjCrisis.
+  ///
+  /// In it, this message translates to:
+  /// **'Gestione Crisi'**
+  String get teamObjCrisis;
+
+  /// No description provided for @teamObjInnovation.
+  ///
+  /// In it, this message translates to:
+  /// **'Innovazione Sistemica'**
+  String get teamObjInnovation;
+
+  /// No description provided for @teamObjSupport.
+  ///
+  /// In it, this message translates to:
+  /// **'Cura e Supporto'**
+  String get teamObjSupport;
+
+  /// No description provided for @teamObjStrategy.
+  ///
+  /// In it, this message translates to:
+  /// **'Pianificazione Strategica'**
+  String get teamObjStrategy;
 
   /// No description provided for @actionSave.
   ///

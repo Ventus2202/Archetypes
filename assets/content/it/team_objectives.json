@@ -1,0 +1,34 @@
+{
+  "objectives": {
+    "creative": {
+      "title": "Ideazione e Creatività",
+      "description": "Obiettivo focalizzato sull'esplorazione di possibilità, brainstorming e pensiero divergente.",
+      "ideal_profile": "Il team ideale eccelle nell'Intuizione (Ne/Ni) per generare visioni, e nel Sentimento (Fi/Fe) per connettersi emozionalmente all'idea."
+    },
+    "execution": {
+      "title": "Esecuzione e Consegna",
+      "description": "Obiettivo focalizzato sul portare a termine compiti, rispettare scadenze e mantenere l'ordine.",
+      "ideal_profile": "Il team ideale fa grande uso del Pensiero Estroverso (Te) per strutturare il lavoro e della Sensazione (Si/Se) per l'attenzione pratica."
+    },
+    "crisis": {
+      "title": "Gestione Crisi",
+      "description": "Obiettivo focalizzato sulla reazione immediata a problemi urgenti, richiedendo decisioni rapide e nervi saldi.",
+      "ideal_profile": "Il team ideale richiede forte Sensazione Estroversa (Se) per reagire all'immediato e logica analitica (Ti/Te) per risolvere l'emergenza."
+    },
+    "innovation": {
+      "title": "Innovazione Sistemica",
+      "description": "Obiettivo focalizzato sul reinventare sistemi complessi, prodotti o processi tecnologici.",
+      "ideal_profile": "Il team ideale combina l'esplorazione di possibilità (Ne/Ni) con il rigore analitico del Pensiero Introverso (Ti) o Estroverso (Te)."
+    },
+    "support": {
+      "title": "Cura e Supporto",
+      "description": "Obiettivo focalizzato sul benessere delle persone, sull'armonia del gruppo e sul supporto emotivo/pratico.",
+      "ideal_profile": "Il team ideale si affida profondamente al Sentimento Estroverso (Fe) e Introverso (Fi) combinato con la cura per i dettagli (Si)."
+    },
+    "strategy": {
+      "title": "Pianificazione Strategica",
+      "description": "Obiettivo focalizzato sulla definizione di visioni a lungo termine, analisi di mercato e architetture decisionali.",
+      "ideal_profile": "Il team ideale ha una spiccata Intuizione Introversa (Ni) per prevedere scenari futuri e Pensiero (Te/Ti) per strutturare la strategia."
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "objectives": {
+    "creative": {
+      "title": "Ideation and Creativity",
+      "description": "Objective focused on exploring possibilities, brainstorming, and divergent thinking.",
+      "ideal_profile": "The ideal team excels in Intuition (Ne/Ni) to generate visions, and Feeling (Fi/Fe) to emotionally connect to the idea."
+    },
+    "execution": {
+      "title": "Execution and Delivery",
+      "description": "Objective focused on completing tasks, meeting deadlines, and maintaining order.",
+      "ideal_profile": "The ideal team heavily uses Extraverted Thinking (Te) to structure work and Sensing (Si/Se) for practical attention."
+    },
+    "crisis": {
+      "title": "Crisis Management",
+      "description": "Objective focused on immediate reaction to urgent problems, requiring quick decisions and steady nerves.",
+      "ideal_profile": "The ideal team requires strong Extraverted Sensing (Se) to react to the immediate and analytical logic (Ti/Te) to resolve the emergency."
+    },
+    "innovation": {
+      "title": "Systemic Innovation",
+      "description": "Objective focused on reinventing complex systems, products, or technological processes.",
+      "ideal_profile": "The ideal team combines the exploration of possibilities (Ne/Ni) with the analytical rigor of Introverted Thinking (Ti) or Extraverted Thinking (Te)."
+    },
+    "support": {
+      "title": "Care and Support",
+      "description": "Objective focused on people's well-being, group harmony, and emotional/practical support.",
+      "ideal_profile": "The ideal team relies deeply on Extraverted Feeling (Fe) and Introverted Feeling (Fi) combined with attention to detail (Si)."
+    },
+    "strategy": {
+      "title": "Strategic Planning",
+      "description": "Objective focused on defining long-term visions, market analysis, and decision-making architectures.",
+      "ideal_profile": "The ideal team has strong Introverted Intuition (Ni) to foresee future scenarios and Thinking (Te/Ti) to structure the strategy."
+    }
+  }
+}
