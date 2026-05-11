@@ -2,6 +2,26 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Fresh PC Setup
+
+```powershell
+# 1. Install Flutter (no admin required)
+git clone --branch stable https://github.com/flutter/flutter.git C:\Users\<user>\flutter
+$env:PATH += ";C:\Users\<user>\flutter\bin"
+
+# 2. Clone repo and set up
+git clone https://github.com/Ventus2202/Archetypes.git
+cd Archetypes
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter gen-l10n
+flutter analyze   # should print "No issues found"
+```
+
+Steps 3–4 are **mandatory** — the project will not compile without the generated `.g.dart` and `app_localizations.dart` files.
+
+---
+
 ## Commands
 
 ```bash
