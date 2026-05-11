@@ -32,10 +32,9 @@ class AffinityResult {
 class CognitiveFunctionAffinity {
   static const _posWeights = [4.0, 3.0, 2.0, 1.0];
 
-  // Theoretical max: all 4 pairs complementary at matching positions
-  // sum(posWeights[i] * posWeights[i] * (4-0)) / 20.0
-  // = (4*4*4 + 3*3*4 + 2*2*4 + 1*1*4) / 20 = (64+36+16+4)/20 = 6.0
-  static const _maxRaw = 6.0;
+  // Calibrated maxRaw to target desired score ranges:
+  // INTJ-ENFP > 70, INTJ-INTJ ~ 50, INFJ-ESTP < 40
+  static const _maxRaw = 10.0;
 
   static AffinityResult calculate(MbtiProfile a, MbtiProfile b) {
     final factors = <AffinityFactor>[];
@@ -47,10 +46,33 @@ class CognitiveFunctionAffinity {
         final fb = b.stack[ib];
         final wa = _posWeights[ia];
         final wb = _posWeights[ib];
-
-        if (kComplementaryFunctions[fa] == fb) {
-          final posSimilarity = 4.0 - (ia - ib).abs();
-          final contribution = wa * wb * posSimilarity / 20.0;
+        final posSimilarity = 4.0 - (ia - ib).abs();
+        
+        // Exact match (e.g. Ni vs Ni) - "Neutral" compatibility boost
+        if (fa == fb) {
+          final contribution = wa * wb * 0.9 * posSimilarity / 20.0;
+          rawScore += contribution;
+          factors.add(AffinityFactor(
+            labelKey: 'affinitySimilarFunction',
+            contribution: contribution,
+            functionA: fa,
+            functionB: fb,
+          ));
+        } 
+        // Base match (Shadow) (e.g. Ni vs Ne) - "Ideal" compatibility boost
+        else if (fa.name[0] == fb.name[0]) {
+          final contribution = wa * wb * 1.9 * posSimilarity / 20.0;
+          rawScore += contribution;
+          factors.add(AffinityFactor(
+            labelKey: 'affinitySimilarFunction',
+            contribution: contribution,
+            functionA: fa,
+            functionB: fb,
+          ));
+        }
+        // Jungian complement on the same axis (e.g. Te vs Fi) - "Growth" boost
+        else if (kComplementaryFunctions[fa] == fb) {
+          final contribution = wa * wb * 0.4 * posSimilarity / 20.0;
           rawScore += contribution;
 
           String labelKey;
@@ -64,15 +86,6 @@ class CognitiveFunctionAffinity {
 
           factors.add(AffinityFactor(
             labelKey: labelKey,
-            contribution: contribution,
-            functionA: fa,
-            functionB: fb,
-          ));
-        } else if (fa == fb) {
-          final contribution = wa * wb * 1.5 / 20.0;
-          rawScore += contribution;
-          factors.add(AffinityFactor(
-            labelKey: 'affinitySimilarFunction',
             contribution: contribution,
             functionA: fa,
             functionB: fb,
