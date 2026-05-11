@@ -153,6 +153,9 @@
   "axisTF": "Thinking / Feeling",
   "axisJP": "Judging / Perceiving",
 
+  "careerFitTitle": "Ideal Roles",
+  "careerDisclaimer": "Suggestions based on cognitive function theory — they do not replace qualified professional guidance.",
+
   "graphTitle": "Relationship graph",
   "graphModeFree": "Free",
   "graphModeCluster": "By type",

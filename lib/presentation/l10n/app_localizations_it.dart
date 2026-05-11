@@ -352,6 +352,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get axisJP => 'Giudizio / Percezione';
 
   @override
+  String get careerFitTitle => 'Ruoli ideali';
+
+  @override
+  String get careerDisclaimer =>
+      'Suggerimenti basati sulla teoria delle funzioni cognitive — non sostituiscono un orientamento professionale qualificato.';
+
+  @override
   String get graphTitle => 'Grafo relazioni';
 
   @override

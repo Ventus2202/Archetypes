@@ -12,6 +12,7 @@ import '../../../data/repositories/content_repository.dart';
 import '../../theme/app_theme.dart';
 import '../person_edit/person_edit_screen.dart';
 import '../content_viewer/content_viewer_screen.dart';
+import '../career_fit/career_fit_screen.dart';
 
 class PersonDetailScreen extends ConsumerWidget {
   final int personId;
@@ -229,6 +230,30 @@ class _PersonalityTab extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             _FunctionStackCard(profile: mbtiProfile!),
+            const SizedBox(height: 12),
+            FutureBuilder<List<PersonalityProfile>>(
+              future: ref.read(profileRepositoryProvider).getForPerson(person.id),
+              builder: (ctx, profileSnap) {
+                final profiles = profileSnap.data ?? [];
+                final profile = profiles.where((p) => p.system.name == 'mbti').firstOrNull;
+                if (profile == null) return const SizedBox.shrink();
+                
+                return Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.work_outline),
+                    title: Text(l10n.careerFitTitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CareerFitScreen(profile: profile),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 12),
             if (data != null && !person.isSelf) ...[
               _AffinityCard(affinity: data.affinity, personName: person.displayName),

@@ -746,6 +746,18 @@ abstract class AppLocalizations {
   /// **'Giudizio / Percezione'**
   String get axisJP;
 
+  /// No description provided for @careerFitTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Ruoli ideali'**
+  String get careerFitTitle;
+
+  /// No description provided for @careerDisclaimer.
+  ///
+  /// In it, this message translates to:
+  /// **'Suggerimenti basati sulla teoria delle funzioni cognitive — non sostituiscono un orientamento professionale qualificato.'**
+  String get careerDisclaimer;
+
   /// No description provided for @graphTitle.
   ///
   /// In it, this message translates to:

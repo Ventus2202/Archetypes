@@ -1,0 +1,84 @@
+{
+  "roles": {
+    "researcher": {
+      "title": "Ricercatore",
+      "description": "I ricercatori esplorano l'ignoto, formulano ipotesi e costruiscono modelli teorici rigorosi. Eccellono nell'analisi approfondita e indipendente.",
+      "why_fit": "Un forte Pensiero Introverso (Ti) o Intuizione Introversa (Ni) permette di cogliere pattern invisibili e mantenere il rigore logico necessario per la ricerca a lungo termine."
+    },
+    "project_manager": {
+      "title": "Project Manager",
+      "description": "I project manager coordinano risorse, scadenze e persone per portare a termine iniziative complesse, bilanciando empatia ed efficienza.",
+      "why_fit": "Il Pensiero Estroverso (Te) offre la struttura e la pianificazione, mentre il Sentimento Estroverso (Fe) aiuta a navigare le dinamiche del team."
+    },
+    "software_engineer": {
+      "title": "Ingegnere del Software",
+      "description": "Gli ingegneri del software risolvono problemi logici complessi scrivendo codice manutenibile ed efficiente.",
+      "why_fit": "L'analisi strutturata (Ti/Te) combinata all'immaginazione per architetture sistemiche (Ni) favorisce la precisione necessaria nello sviluppo software."
+    },
+    "designer_ux": {
+      "title": "UX Designer",
+      "description": "I designer UX progettano esperienze utente intuitive ed empatiche, unendo creatività, logica visiva e comprensione umana.",
+      "why_fit": "L'empatia per l'utente finale (Fi/Fe) insieme all'esplorazione di possibilità (Ne/Ni) permette di creare soluzioni innovative e human-centric."
+    },
+    "product_manager": {
+      "title": "Product Manager",
+      "description": "I product manager guidano la visione di un prodotto, interpretando i bisogni del mercato e coordinando i team per realizzarli.",
+      "why_fit": "L'Intuizione Estroversa (Ne) coglie le opportunità del mercato, mentre il Pensiero Estroverso (Te) si assicura che il prodotto venga consegnato."
+    },
+    "sales": {
+      "title": "Vendite / Commerciale",
+      "description": "I professionisti delle vendite costruiscono relazioni, comprendono i bisogni dei clienti e negoziano accordi reciprocamente vantaggiosi.",
+      "why_fit": "Il Sentimento Estroverso (Fe) permette di creare sintonia istantanea, e la Sensazione Estroversa (Se) garantisce reattività nel momento presente."
+    },
+    "therapist": {
+      "title": "Terapeuta / Psicologo",
+      "description": "I terapeuti guidano le persone attraverso percorsi di guarigione emotiva e psicologica, offrendo ascolto e supporto profondo.",
+      "why_fit": "Il Sentimento Introverso (Fi) e l'Intuizione (Ni/Ne) offrono un'incredibile capacità di immedesimazione e comprensione delle dinamiche interiori altrui."
+    },
+    "teacher": {
+      "title": "Insegnante",
+      "description": "Gli insegnanti trasmettono conoscenza, ispirano gli studenti e creano un ambiente di apprendimento strutturato e accogliente.",
+      "why_fit": "Il Sentimento Estroverso (Fe) crea una classe armoniosa, mentre la Sensazione Introversa (Si) mantiene l'ordine e il rispetto per i programmi didattici."
+    },
+    "surgeon": {
+      "title": "Chirurgo",
+      "description": "I chirurghi operano in ambienti ad alta pressione, richiedendo precisione millimetrica, nervi saldi e decisioni rapide.",
+      "why_fit": "La Sensazione Estroversa (Se) garantisce un'eccellente coordinazione mano-occhio, supportata dalla fredda analisi logica (Ti/Te)."
+    },
+    "journalist": {
+      "title": "Giornalista",
+      "description": "I giornalisti indagano, intervistano e raccontano storie, muovendosi rapidamente per catturare le informazioni nel momento in cui accadono.",
+      "why_fit": "L'Intuizione Estroversa (Ne) vede i collegamenti tra gli eventi, mentre la Sensazione Estroversa (Se) li tiene ancorati alla realtà dei fatti."
+    },
+    "entrepreneur": {
+      "title": "Imprenditore",
+      "description": "Gli imprenditori avviano nuove attività, assumendosi i rischi necessari per trasformare una visione innovativa in un business reale.",
+      "why_fit": "L'orientamento all'azione (Te/Se) si unisce alla visione del potenziale futuro (Ne/Ni), spingendo costantemente l'innovazione in avanti."
+    },
+    "accountant": {
+      "title": "Contabile / Finanza",
+      "description": "I contabili assicurano la precisione finanziaria, la conformità normativa e la corretta tenuta dei registri economici.",
+      "why_fit": "La Sensazione Introversa (Si) offre un'estrema attenzione ai dettagli storici, unita al rigore del Pensiero (Te/Ti)."
+    },
+    "social_worker": {
+      "title": "Assistente Sociale",
+      "description": "Gli assistenti sociali intervengono in situazioni di bisogno, offrendo supporto pratico ed emotivo a individui e famiglie vulnerabili.",
+      "why_fit": "Una profonda empatia (Fe/Fi) e un forte senso pratico permettono di affrontare le crisi quotidiane con compassione e determinazione."
+    },
+    "data_analyst": {
+      "title": "Data Analyst",
+      "description": "I data analyst estraggono significato da enormi quantità di dati, fornendo insight logici per guidare le decisioni aziendali.",
+      "why_fit": "L'indagine logica profonda (Ti) e l'efficienza procedurale (Te), supportate dall'ordine dei dati (Si/Ni), sono fondamentali."
+    },
+    "creative_director": {
+      "title": "Direttore Creativo",
+      "description": "I direttori creativi guidano la visione artistica di campagne, brand o prodotti, coordinando talenti diversi verso un'unica estetica.",
+      "why_fit": "L'Intuizione (Ne/Ni) genera l'ispirazione visiva o concettuale, supportata dal Sentimento (Fi/Fe) per catturare l'emozione del pubblico."
+    },
+    "operations_manager": {
+      "title": "Operations Manager",
+      "description": "I manager delle operazioni ottimizzano i processi quotidiani, garantendo che le risorse aziendali siano utilizzate con la massima efficienza.",
+      "why_fit": "Il Pensiero Estroverso (Te) e la Sensazione (Si/Se) sono essenziali per mantenere il sistema logistico fluido e reattivo ai problemi."
+    }
+  }
+}

@@ -25,9 +25,18 @@ class RelationshipDynamicsContent {
   });
 }
 
+class CareerRolesContent {
+  final Map<String, dynamic> roles;
+
+  const CareerRolesContent({
+    required this.roles,
+  });
+}
+
 class ContentRepository {
   MbtiContent? _cache;
   RelationshipDynamicsContent? _dynamicsCache;
+  CareerRolesContent? _careerCache;
   String? _loadedLocale;
 
   Future<MbtiContent> loadMbtiContent(String languageCode) async {
@@ -76,9 +85,32 @@ class ContentRepository {
     return _dynamicsCache!;
   }
 
+  Future<CareerRolesContent> loadCareerRolesContent(String languageCode) async {
+    if (_careerCache != null && _loadedLocale == languageCode) return _careerCache!;
+
+    final supportedLocales = ['it', 'en'];
+    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
+
+    try {
+      final raw =
+          await rootBundle.loadString('assets/content/$locale/career_roles.json');
+      final parsed = json.decode(raw) as Map<String, dynamic>;
+
+      _careerCache = CareerRolesContent(
+        roles: Map<String, dynamic>.from(parsed['roles'] as Map? ?? {}),
+      );
+    } catch (_) {
+      _careerCache = const CareerRolesContent(roles: {});
+    }
+    
+    _loadedLocale = languageCode;
+    return _careerCache!;
+  }
+
   void invalidateCache() {
     _cache = null;
     _dynamicsCache = null;
+    _careerCache = null;
     _loadedLocale = null;
   }
 

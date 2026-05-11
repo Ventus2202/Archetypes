@@ -351,6 +351,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get axisJP => 'Judging / Perceiving';
 
   @override
+  String get careerFitTitle => 'Ideal Roles';
+
+  @override
+  String get careerDisclaimer =>
+      'Suggestions based on cognitive function theory — they do not replace qualified professional guidance.';
+
+  @override
   String get graphTitle => 'Relationship graph';
 
   @override

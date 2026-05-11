@@ -1,0 +1,84 @@
+{
+  "roles": {
+    "researcher": {
+      "title": "Researcher",
+      "description": "Researchers explore the unknown, formulate hypotheses, and build rigorous theoretical models. They excel in deep and independent analysis.",
+      "why_fit": "Strong Introverted Thinking (Ti) or Introverted Intuition (Ni) allows them to grasp invisible patterns and maintain the logical rigor needed for long-term research."
+    },
+    "project_manager": {
+      "title": "Project Manager",
+      "description": "Project managers coordinate resources, deadlines, and people to complete complex initiatives, balancing empathy and efficiency.",
+      "why_fit": "Extraverted Thinking (Te) provides structure and planning, while Extraverted Feeling (Fe) helps navigate team dynamics."
+    },
+    "software_engineer": {
+      "title": "Software Engineer",
+      "description": "Software engineers solve complex logical problems by writing maintainable and efficient code.",
+      "why_fit": "Structured analysis (Ti/Te) combined with imagination for systemic architectures (Ni) fosters the precision needed in software development."
+    },
+    "designer_ux": {
+      "title": "UX Designer",
+      "description": "UX designers create intuitive and empathetic user experiences, combining creativity, visual logic, and human understanding.",
+      "why_fit": "Empathy for the end-user (Fi/Fe) along with exploring possibilities (Ne/Ni) allows them to create innovative and human-centric solutions."
+    },
+    "product_manager": {
+      "title": "Product Manager",
+      "description": "Product managers guide the vision of a product, interpreting market needs and coordinating teams to realize them.",
+      "why_fit": "Extraverted Intuition (Ne) captures market opportunities, while Extraverted Thinking (Te) ensures the product is delivered."
+    },
+    "sales": {
+      "title": "Sales Professional",
+      "description": "Sales professionals build relationships, understand customer needs, and negotiate mutually beneficial agreements.",
+      "why_fit": "Extraverted Feeling (Fe) allows for instant rapport, and Extraverted Sensing (Se) ensures responsiveness in the present moment."
+    },
+    "therapist": {
+      "title": "Therapist / Psychologist",
+      "description": "Therapists guide people through emotional and psychological healing journeys, offering deep listening and support.",
+      "why_fit": "Introverted Feeling (Fi) and Intuition (Ni/Ne) offer an incredible ability to empathize and understand others' inner dynamics."
+    },
+    "teacher": {
+      "title": "Teacher",
+      "description": "Teachers impart knowledge, inspire students, and create a structured and welcoming learning environment.",
+      "why_fit": "Extraverted Feeling (Fe) creates a harmonious classroom, while Introverted Sensing (Si) maintains order and respect for educational programs."
+    },
+    "surgeon": {
+      "title": "Surgeon",
+      "description": "Surgeons operate in high-pressure environments, requiring pinpoint precision, steady nerves, and quick decisions.",
+      "why_fit": "Extraverted Sensing (Se) guarantees excellent hand-eye coordination, supported by cold logical analysis (Ti/Te)."
+    },
+    "journalist": {
+      "title": "Journalist",
+      "description": "Journalists investigate, interview, and tell stories, moving quickly to capture information as it happens.",
+      "why_fit": "Extraverted Intuition (Ne) sees the connections between events, while Extraverted Sensing (Se) keeps them grounded in reality."
+    },
+    "entrepreneur": {
+      "title": "Entrepreneur",
+      "description": "Entrepreneurs start new businesses, taking the necessary risks to turn an innovative vision into a real business.",
+      "why_fit": "Action orientation (Te/Se) joins with the vision of future potential (Ne/Ni), constantly pushing innovation forward."
+    },
+    "accountant": {
+      "title": "Accountant",
+      "description": "Accountants ensure financial accuracy, regulatory compliance, and proper bookkeeping.",
+      "why_fit": "Introverted Sensing (Si) provides extreme attention to historical details, combined with the rigor of Thinking (Te/Ti)."
+    },
+    "social_worker": {
+      "title": "Social Worker",
+      "description": "Social workers intervene in situations of need, offering practical and emotional support to vulnerable individuals and families.",
+      "why_fit": "Deep empathy (Fe/Fi) and a strong practical sense allow them to face daily crises with compassion and determination."
+    },
+    "data_analyst": {
+      "title": "Data Analyst",
+      "description": "Data analysts extract meaning from huge amounts of data, providing logical insights to drive business decisions.",
+      "why_fit": "Deep logical inquiry (Ti) and procedural efficiency (Te), supported by data order (Si/Ni), are fundamental."
+    },
+    "creative_director": {
+      "title": "Creative Director",
+      "description": "Creative directors guide the artistic vision of campaigns, brands, or products, coordinating diverse talents towards a single aesthetic.",
+      "why_fit": "Intuition (Ne/Ni) generates visual or conceptual inspiration, supported by Feeling (Fi/Fe) to capture the audience's emotion."
+    },
+    "operations_manager": {
+      "title": "Operations Manager",
+      "description": "Operations managers optimize daily processes, ensuring that company resources are used with maximum efficiency.",
+      "why_fit": "Extraverted Thinking (Te) and Sensing (Si/Se) are essential to keep the logistical system fluid and responsive to problems."
+    }
+  }
+}
