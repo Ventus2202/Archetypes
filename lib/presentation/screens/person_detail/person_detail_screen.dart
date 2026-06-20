@@ -14,6 +14,7 @@ import '../person_edit/person_edit_screen.dart';
 import '../content_viewer/content_viewer_screen.dart';
 import '../career_fit/career_fit_screen.dart';
 import '../quiz/quiz_screen.dart';
+import '../share/share_code_ui.dart';
 
 class PersonDetailScreen extends ConsumerWidget {
   final int personId;
@@ -78,6 +79,8 @@ class _PersonDetailContentState
       future: ref.read(profileRepositoryProvider).getForPerson(person.id),
       builder: (ctx, profileSnap) {
         final profiles = profileSnap.data ?? [];
+        final mbtiEntry =
+            profiles.where((p) => p.system == PersonalitySystem.mbti).firstOrNull;
         final mbtiProfile = _getMbtiProfile(profiles);
         final nodeColor = mbtiProfile != null
             ? AppTheme.mbtiTypeColor(mbtiProfile.type.label, brightness)
@@ -90,6 +93,13 @@ class _PersonDetailContentState
                 expandedHeight: 200,
                 pinned: true,
                 actions: [
+                  if (mbtiEntry != null)
+                    IconButton(
+                      icon: const Icon(Icons.share_outlined),
+                      tooltip: 'Condividi codice',
+                      onPressed: () =>
+                          showShareCodeSheet(context, ref, person, mbtiEntry),
+                    ),
                   if (!person.isSelf)
                     IconButton(
                       icon: const Icon(Icons.edit_outlined),

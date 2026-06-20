@@ -1,8 +1,5 @@
-import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'connection/connection.dart';
 
 part 'app_database.g.dart';
 
@@ -31,6 +28,10 @@ class PersonalityProfiles extends Table {
   IntColumn get confidence => integer().withDefault(const Constant(80))();
   TextColumn get source => text().withDefault(const Constant('manual'))();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  // Stable random id (hex) backing the 24-char share code. Null until the
+  // profile is first shared; the visible code is derived from this id plus the
+  // profile's current system/type/confidence/source.
+  TextColumn get shareId => text().nullable()();
 }
 
 @DataClassName('RelationshipEntry')
@@ -89,11 +90,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
-  static Future<AppDatabase> create() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'archetypes.db'));
-    return AppDatabase(NativeDatabase(file));
-  }
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(personalityProfiles, personalityProfiles.shareId);
+          }
+        },
+      );
+
+  static Future<AppDatabase> create() async => AppDatabase(openConnection());
 }

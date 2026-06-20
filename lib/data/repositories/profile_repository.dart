@@ -17,6 +17,7 @@ class ProfileRepository {
         confidence: e.confidence,
         source: ProfileSource.fromString(e.source),
         updatedAt: e.updatedAt,
+        shareId: e.shareId,
       );
 
   PersonalityProfilesCompanion _toCompanion(PersonalityProfile p) =>
@@ -28,6 +29,9 @@ class ProfileRepository {
         confidence: Value(p.confidence),
         source: Value(p.source.name),
         updatedAt: Value(p.updatedAt),
+        // Absent when null so an existing share id is never clobbered by an
+        // upsert from a profile object that didn't carry it.
+        shareId: p.shareId == null ? const Value.absent() : Value(p.shareId),
       );
 
   Future<List<PersonalityProfile>> getForPerson(int personId) async {
@@ -42,6 +46,13 @@ class ProfileRepository {
             ..where((t) => t.personId.equals(personId)))
           .watch()
           .map((rows) => rows.map(_fromEntry).toList());
+
+  Future<PersonalityProfile?> getByShareId(String shareId) async {
+    final row = await (_db.select(_db.personalityProfiles)
+          ..where((t) => t.shareId.equals(shareId)))
+        .getSingleOrNull();
+    return row == null ? null : _fromEntry(row);
+  }
 
   Future<int> upsert(PersonalityProfile profile) =>
       _db.into(_db.personalityProfiles).insertOnConflictUpdate(

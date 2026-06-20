@@ -7,6 +7,8 @@ import '../../providers/database_provider.dart';
 import '../../theme/app_theme.dart';
 import '../person_detail/person_detail_screen.dart';
 import '../person_edit/person_edit_screen.dart';
+import '../share/share_code_ui.dart';
+import '../chat/chat_screen.dart';
 
 class PeopleListScreen extends ConsumerStatefulWidget {
   const PeopleListScreen({super.key});
@@ -56,6 +58,18 @@ class _PeopleListScreenState extends ConsumerState<PeopleListScreen> {
                 }
               });
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.qr_code),
+            tooltip: 'Inserisci codice',
+            onPressed: () => showImportCodeDialog(context, ref),
+          ),
+          IconButton(
+            icon: const Icon(Icons.auto_awesome_outlined),
+            tooltip: 'Assistente',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ChatScreen()),
+            ),
           ),
         ],
       ),

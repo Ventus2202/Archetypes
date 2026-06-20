@@ -736,6 +736,17 @@ class $PersonalityProfilesTable extends PersonalityProfiles
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _shareIdMeta = const VerificationMeta(
+    'shareId',
+  );
+  @override
+  late final GeneratedColumn<String> shareId = GeneratedColumn<String>(
+    'share_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -745,6 +756,7 @@ class $PersonalityProfilesTable extends PersonalityProfiles
     confidence,
     source,
     updatedAt,
+    shareId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -801,6 +813,12 @@ class $PersonalityProfilesTable extends PersonalityProfiles
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('share_id')) {
+      context.handle(
+        _shareIdMeta,
+        shareId.isAcceptableOrUnknown(data['share_id']!, _shareIdMeta),
+      );
+    }
     return context;
   }
 
@@ -841,6 +859,10 @@ class $PersonalityProfilesTable extends PersonalityProfiles
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      shareId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}share_id'],
+      ),
     );
   }
 
@@ -859,6 +881,7 @@ class PersonalityProfileEntry extends DataClass
   final int confidence;
   final String source;
   final DateTime updatedAt;
+  final String? shareId;
   const PersonalityProfileEntry({
     required this.id,
     required this.personId,
@@ -867,6 +890,7 @@ class PersonalityProfileEntry extends DataClass
     required this.confidence,
     required this.source,
     required this.updatedAt,
+    this.shareId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -878,6 +902,9 @@ class PersonalityProfileEntry extends DataClass
     map['confidence'] = Variable<int>(confidence);
     map['source'] = Variable<String>(source);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || shareId != null) {
+      map['share_id'] = Variable<String>(shareId);
+    }
     return map;
   }
 
@@ -890,6 +917,9 @@ class PersonalityProfileEntry extends DataClass
       confidence: Value(confidence),
       source: Value(source),
       updatedAt: Value(updatedAt),
+      shareId: shareId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shareId),
     );
   }
 
@@ -906,6 +936,7 @@ class PersonalityProfileEntry extends DataClass
       confidence: serializer.fromJson<int>(json['confidence']),
       source: serializer.fromJson<String>(json['source']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      shareId: serializer.fromJson<String?>(json['shareId']),
     );
   }
   @override
@@ -919,6 +950,7 @@ class PersonalityProfileEntry extends DataClass
       'confidence': serializer.toJson<int>(confidence),
       'source': serializer.toJson<String>(source),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'shareId': serializer.toJson<String?>(shareId),
     };
   }
 
@@ -930,6 +962,7 @@ class PersonalityProfileEntry extends DataClass
     int? confidence,
     String? source,
     DateTime? updatedAt,
+    Value<String?> shareId = const Value.absent(),
   }) => PersonalityProfileEntry(
     id: id ?? this.id,
     personId: personId ?? this.personId,
@@ -938,6 +971,7 @@ class PersonalityProfileEntry extends DataClass
     confidence: confidence ?? this.confidence,
     source: source ?? this.source,
     updatedAt: updatedAt ?? this.updatedAt,
+    shareId: shareId.present ? shareId.value : this.shareId,
   );
   PersonalityProfileEntry copyWithCompanion(PersonalityProfilesCompanion data) {
     return PersonalityProfileEntry(
@@ -950,6 +984,7 @@ class PersonalityProfileEntry extends DataClass
           : this.confidence,
       source: data.source.present ? data.source.value : this.source,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      shareId: data.shareId.present ? data.shareId.value : this.shareId,
     );
   }
 
@@ -962,7 +997,8 @@ class PersonalityProfileEntry extends DataClass
           ..write('dataJson: $dataJson, ')
           ..write('confidence: $confidence, ')
           ..write('source: $source, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('shareId: $shareId')
           ..write(')'))
         .toString();
   }
@@ -976,6 +1012,7 @@ class PersonalityProfileEntry extends DataClass
     confidence,
     source,
     updatedAt,
+    shareId,
   );
   @override
   bool operator ==(Object other) =>
@@ -987,7 +1024,8 @@ class PersonalityProfileEntry extends DataClass
           other.dataJson == this.dataJson &&
           other.confidence == this.confidence &&
           other.source == this.source &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.shareId == this.shareId);
 }
 
 class PersonalityProfilesCompanion
@@ -999,6 +1037,7 @@ class PersonalityProfilesCompanion
   final Value<int> confidence;
   final Value<String> source;
   final Value<DateTime> updatedAt;
+  final Value<String?> shareId;
   const PersonalityProfilesCompanion({
     this.id = const Value.absent(),
     this.personId = const Value.absent(),
@@ -1007,6 +1046,7 @@ class PersonalityProfilesCompanion
     this.confidence = const Value.absent(),
     this.source = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.shareId = const Value.absent(),
   });
   PersonalityProfilesCompanion.insert({
     this.id = const Value.absent(),
@@ -1016,6 +1056,7 @@ class PersonalityProfilesCompanion
     this.confidence = const Value.absent(),
     this.source = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.shareId = const Value.absent(),
   }) : personId = Value(personId),
        dataJson = Value(dataJson);
   static Insertable<PersonalityProfileEntry> custom({
@@ -1026,6 +1067,7 @@ class PersonalityProfilesCompanion
     Expression<int>? confidence,
     Expression<String>? source,
     Expression<DateTime>? updatedAt,
+    Expression<String>? shareId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1035,6 +1077,7 @@ class PersonalityProfilesCompanion
       if (confidence != null) 'confidence': confidence,
       if (source != null) 'source': source,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (shareId != null) 'share_id': shareId,
     });
   }
 
@@ -1046,6 +1089,7 @@ class PersonalityProfilesCompanion
     Value<int>? confidence,
     Value<String>? source,
     Value<DateTime>? updatedAt,
+    Value<String?>? shareId,
   }) {
     return PersonalityProfilesCompanion(
       id: id ?? this.id,
@@ -1055,6 +1099,7 @@ class PersonalityProfilesCompanion
       confidence: confidence ?? this.confidence,
       source: source ?? this.source,
       updatedAt: updatedAt ?? this.updatedAt,
+      shareId: shareId ?? this.shareId,
     );
   }
 
@@ -1082,6 +1127,9 @@ class PersonalityProfilesCompanion
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (shareId.present) {
+      map['share_id'] = Variable<String>(shareId.value);
+    }
     return map;
   }
 
@@ -1094,7 +1142,8 @@ class PersonalityProfilesCompanion
           ..write('dataJson: $dataJson, ')
           ..write('confidence: $confidence, ')
           ..write('source: $source, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('shareId: $shareId')
           ..write(')'))
         .toString();
   }
@@ -3162,6 +3211,7 @@ typedef $$PersonalityProfilesTableCreateCompanionBuilder =
       Value<int> confidence,
       Value<String> source,
       Value<DateTime> updatedAt,
+      Value<String?> shareId,
     });
 typedef $$PersonalityProfilesTableUpdateCompanionBuilder =
     PersonalityProfilesCompanion Function({
@@ -3172,6 +3222,7 @@ typedef $$PersonalityProfilesTableUpdateCompanionBuilder =
       Value<int> confidence,
       Value<String> source,
       Value<DateTime> updatedAt,
+      Value<String?> shareId,
     });
 
 final class $$PersonalityProfilesTableReferences
@@ -3246,6 +3297,11 @@ class $$PersonalityProfilesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get shareId => $composableBuilder(
+    column: $table.shareId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$PersonsTableFilterComposer get personId {
     final $$PersonsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -3309,6 +3365,11 @@ class $$PersonalityProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get shareId => $composableBuilder(
+    column: $table.shareId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$PersonsTableOrderingComposer get personId {
     final $$PersonsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3361,6 +3422,9 @@ class $$PersonalityProfilesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get shareId =>
+      $composableBuilder(column: $table.shareId, builder: (column) => column);
 
   $$PersonsTableAnnotationComposer get personId {
     final $$PersonsTableAnnotationComposer composer = $composerBuilder(
@@ -3429,6 +3493,7 @@ class $$PersonalityProfilesTableTableManager
                 Value<int> confidence = const Value.absent(),
                 Value<String> source = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String?> shareId = const Value.absent(),
               }) => PersonalityProfilesCompanion(
                 id: id,
                 personId: personId,
@@ -3437,6 +3502,7 @@ class $$PersonalityProfilesTableTableManager
                 confidence: confidence,
                 source: source,
                 updatedAt: updatedAt,
+                shareId: shareId,
               ),
           createCompanionCallback:
               ({
@@ -3447,6 +3513,7 @@ class $$PersonalityProfilesTableTableManager
                 Value<int> confidence = const Value.absent(),
                 Value<String> source = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<String?> shareId = const Value.absent(),
               }) => PersonalityProfilesCompanion.insert(
                 id: id,
                 personId: personId,
@@ -3455,6 +3522,7 @@ class $$PersonalityProfilesTableTableManager
                 confidence: confidence,
                 source: source,
                 updatedAt: updatedAt,
+                shareId: shareId,
               ),
           withReferenceMapper: (p0) => p0
               .map(

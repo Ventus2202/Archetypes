@@ -37,18 +37,18 @@ flutter gen-l10n
 # Lint
 flutter analyze
 
-# Run tests
+# Run tests (domain engines have unit tests under test/domain/: affinity, career, team, quiz, sharing)
 flutter test
 
 # Run a single test file
-flutter test test/path/to/file_test.dart
+flutter test test/domain/quiz/quiz_engine_test.dart
 ```
 
 > Both `build_runner` and `gen-l10n` must be re-run on a fresh clone before the project compiles.
 
 ## Architecture
 
-Three-layer architecture: **data → domain → presentation**.
+Three-layer architecture: **data → domain → presentation**. The `domain` layer is pure Dart (no Flutter/Drift imports) and holds all the scoring engines; each feature engine is a stateless class with a static `calculate(...)` method that takes domain objects and returns a result object.
 
 ```
 lib/
@@ -58,16 +58,23 @@ lib/
 ├── data/
 │   ├── database/app_database.dart   # Drift schema (+ generated .g.dart)
 │   └── repositories/               # One repo per entity; convert Drift entries ↔ domain objects
+│                                   # (content, person, profile, relationship, group)
 ├── domain/
 │   ├── entities/               # Pure Dart: Person, PersonalityProfile, Relationship + enums
 │   ├── personality_systems/mbti/   # MbtiType, CognitiveFunction enums; kMbtiStacks constant map; MbtiProfile
-│   └── affinity/cognitive_function_affinity.dart   # Affinity algorithm (see below)
+│   ├── affinity/              # cognitive_function_affinity.dart (score) + relationship_dynamics.dart
+│   ├── career/               # CareerFit engine, CareerRole model, career_catalog.dart
+│   ├── team/                 # TeamOptimizer (objective-weighted team scoring) + team_models.dart
+│   ├── quiz/                 # QuizEngine (axis scoring → MbtiType) + quiz_models.dart
+│   └── sharing/             # SharedProfile (compact JSON payload) + data_backup.dart (ZIP export/import)
 └── presentation/
     ├── l10n/                   # Generated AppLocalizations + .arb source files
     ├── theme/app_theme.dart    # Material 3 light/dark + mbtiTypeColor() helper
-    ├── providers/              # Riverpod providers (database, repos, settings, person, profile)
+    ├── providers/              # Riverpod providers (database, repos, settings, person, profile, career, team, group)
     ├── home_shell.dart         # IndexedStack bottom-nav shell (Graph / People / Settings)
-    └── screens/                # One subdirectory per screen
+    └── screens/                # One subdirectory per screen (graph, people_list, person_detail,
+                                #   person_edit, onboarding, settings, content_viewer, quiz,
+                                #   career_fit, team_builder)
 ```
 
 ## Key Patterns
@@ -87,8 +94,15 @@ ARB source files live in `lib/presentation/l10n/`. Template is `app_it.arb`. Imp
 ### Affinity algorithm
 `CognitiveFunctionAffinity.calculate(profileA, profileB)` iterates all 4×4 function-pair combinations, scores complementary pairs (using `kComplementaryFunctions`) weighted by stack position (dominant=4 … inferior=1), and normalizes to 0–100. The `_maxRaw = 6.0` constant is the theoretical ceiling — adjust it if the scoring weights change.
 
+### Feature engines (domain layer)
+All four scoring features follow the same shape: a stateless engine with a static method, fed by domain objects derived from `MbtiProfile`, returning a plain result object. They never touch Drift or Flutter.
+- **`CareerFit.calculate(profile, role)`** — scores a role by summing `role.functionWeights` weighted by stack position multipliers `[1.0, 0.7, 0.4, 0.2]`, plus dichotomy-preference bonuses. Roles come from `career_catalog.dart`.
+- **`TeamOptimizer`** — uses `kTeamObjectiveWeights` (per-`TeamObjective` cognitive-function weight maps) plus pairwise affinity (reuses `CognitiveFunctionAffinity`) to score/assemble teams.
+- **`QuizEngine.calculateResult(questions, answers)`** — answers are 1–5 Likert; per question `score = (answer-3) * direction * weight` accumulated per axis (IE/NS/TF/JP), then thresholded into a 4-letter `MbtiType`. `calculateBreakdown` returns the raw axis scores. Quiz JSON lives in `assets/quiz/{it,en}/mbti_{short,medium,long}.json`.
+- **`SharedProfile`** — compact share/import payload `{"v":"arc1","n":...,"t":...,"c":...}`. `decode()` extracts the JSON even when embedded in surrounding text; bump `version` if the schema changes. `data_backup.dart` handles full ZIP export/import (`archive` package).
+
 ### Educational content
-`assets/content/{it,en}/mbti.json` contains all 16 types, 8 cognitive functions, and 4 dichotomies. `ContentRepository` loads and caches the JSON per locale. Access via `getTypeContent(content, "INTJ")`, `getFunctionContent(content, "Ni")`, `getDichotomyContent(content, "IE")`. The `ContentViewerScreen` takes a `contentKey` + `ContentViewerType` enum and dispatches to the correct section.
+`assets/content/{it,en}/` holds the localized JSON content, loaded and cached per locale by `ContentRepository`: `mbti.json` (16 types, 8 cognitive functions, 4 dichotomies), `relationship_dynamics.json`, `career_roles.json`, `team_objectives.json`. Domain engines emit translation **keys** (e.g. `FrictionPoint.titleKey`); the content JSON / ARB resolve them to localized strings. Access MBTI content via `getTypeContent(content, "INTJ")`, `getFunctionContent(content, "Ni")`, `getDichotomyContent(content, "IE")`. `ContentViewerScreen` takes a `contentKey` + `ContentViewerType` enum and dispatches to the correct section.
 
 ### Adding a new personality system (future)
 1. Add a value to `PersonalitySystem` enum (`personality_profile.dart`).

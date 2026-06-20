@@ -42,6 +42,12 @@ dependencies:
   # Share profile payload
   share_plus: ^12.0.2
 
+  # QR rendering for the 24-char share code
+  qr_flutter: ^4.1.0
+
+  # HTTP client for the chatbot proxy
+  http: ^1.2.2
+
   # Icons
   cupertino_icons: ^1.0.8
 

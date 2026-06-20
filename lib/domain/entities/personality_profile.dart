@@ -28,6 +28,8 @@ class PersonalityProfile {
   final int confidence;
   final ProfileSource source;
   final DateTime updatedAt;
+  // Stable hex id backing the 24-char share code; null until first shared.
+  final String? shareId;
 
   const PersonalityProfile({
     required this.id,
@@ -37,6 +39,7 @@ class PersonalityProfile {
     required this.confidence,
     required this.source,
     required this.updatedAt,
+    this.shareId,
   });
 
   PersonalityProfile copyWith({
@@ -47,6 +50,7 @@ class PersonalityProfile {
     int? confidence,
     ProfileSource? source,
     DateTime? updatedAt,
+    String? shareId,
   }) {
     return PersonalityProfile(
       id: id ?? this.id,
@@ -56,6 +60,7 @@ class PersonalityProfile {
       confidence: confidence ?? this.confidence,
       source: source ?? this.source,
       updatedAt: updatedAt ?? this.updatedAt,
+      shareId: shareId ?? this.shareId,
     );
   }
 }
