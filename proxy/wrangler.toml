@@ -1,0 +1,8 @@
+name = "archetypes-proxy"
+main = "cloudflare-worker.js"
+compatibility_date = "2025-09-01"
+
+# Secrets (set with `wrangler secret put <NAME>`, not here):
+#   CF_ACCOUNT_ID  - your Cloudflare account id
+#   CF_API_TOKEN   - API token with "Workers AI: Read"
+#   APP_TOKEN      - optional shared secret (x-app-token header)

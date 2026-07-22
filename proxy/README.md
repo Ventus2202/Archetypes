@@ -15,18 +15,18 @@ types, scores) reach the model.
 
 ## Deploy (Cloudflare Workers)
 
+`wrangler.toml` and `cloudflare-worker.js` are already here — run from `proxy/`:
+
 ```sh
-npm i -g wrangler
-wrangler login
-wrangler init archetypes-proxy   # or add cloudflare-worker.js to an existing project
-wrangler secret put CF_ACCOUNT_ID
-wrangler secret put CF_API_TOKEN
+cd proxy
+wrangler login                    # interactive: opens a browser to authorize
+wrangler secret put CF_ACCOUNT_ID # paste your account id
+wrangler secret put CF_API_TOKEN  # paste a token with "Workers AI: Read"
 wrangler secret put APP_TOKEN     # optional but recommended
 wrangler deploy
 ```
 
-Use `cloudflare-worker.js` as the worker entry point. After deploy you get a URL
-like `https://archetypes-proxy.<account>.workers.dev`.
+After deploy you get a URL like `https://archetypes-proxy.<account>.workers.dev`.
 
 > Alternatively, bind Workers AI directly (`[ai] binding = "AI"` in
 > `wrangler.toml`) and call `env.AI.run(...)` to avoid the API token — but the
