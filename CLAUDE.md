@@ -57,6 +57,8 @@ lib/
 ├── core/constants.dart         # App-wide string keys (Hive box names, etc.)
 ├── data/
 │   ├── database/app_database.dart   # Drift schema (+ generated .g.dart)
+│   ├── chat/                        # On-device chatbot: ChatClient (proxy), kChatTools,
+│   │                                #   ChatToolExecutor, ChatEngine (tool-calling loop)
 │   └── repositories/               # One repo per entity; convert Drift entries ↔ domain objects
 │                                   # (content, person, profile, relationship, group)
 ├── domain/
@@ -66,7 +68,8 @@ lib/
 │   ├── career/               # CareerFit engine, CareerRole model, career_catalog.dart
 │   ├── team/                 # TeamOptimizer (objective-weighted team scoring) + team_models.dart
 │   ├── quiz/                 # QuizEngine (axis scoring → MbtiType) + quiz_models.dart
-│   └── sharing/             # SharedProfile (compact JSON payload) + data_backup.dart (ZIP export/import)
+│   └── sharing/             # SharedProfile (JSON payload) + share_code.dart (24-char code)
+│                            #   + data_backup.dart (ZIP export/import)
 └── presentation/
     ├── l10n/                   # Generated AppLocalizations + .arb source files
     ├── theme/app_theme.dart    # Material 3 light/dark + mbtiTypeColor() helper
@@ -74,13 +77,13 @@ lib/
     ├── home_shell.dart         # IndexedStack bottom-nav shell (Graph / People / Settings)
     └── screens/                # One subdirectory per screen (graph, people_list, person_detail,
                                 #   person_edit, onboarding, settings, content_viewer, quiz,
-                                #   career_fit, team_builder)
+                                #   career_fit, team_builder, chat, share)
 ```
 
 ## Key Patterns
 
 ### Database (Drift)
-`app_database.dart` defines all tables. The `@DataClassName('PersonEntry')` annotation renames generated data classes to avoid collision with domain entity classes (e.g. `PersonEntry` vs `Person`). After any table change: **re-run build_runner**. Schema version lives in `AppDatabase.schemaVersion`; increment it and add a migration when modifying tables.
+`app_database.dart` defines all tables. The `@DataClassName('PersonEntry')` annotation renames generated data classes to avoid collision with domain entity classes (e.g. `PersonEntry` vs `Person`). After any table change: **re-run build_runner**. Schema version lives in `AppDatabase.schemaVersion` (currently `2`); increment it and add an `onUpgrade` step in `migration` when modifying tables — follow the existing v1→v2 step that `addColumn`s `personalityProfiles.shareId`.
 
 ### State management (Riverpod)
 `databaseProvider` is intentionally unimplemented — it **must** be overridden at startup via `ProviderScope(overrides: [databaseProvider.overrideWithValue(db)])` in `main.dart`. All repository providers depend on it. Settings (theme, locale) are persisted in Hive and exposed via `settingsProvider` (a `NotifierProvider`).
@@ -100,6 +103,10 @@ All four scoring features follow the same shape: a stateless engine with a stati
 - **`TeamOptimizer`** — uses `kTeamObjectiveWeights` (per-`TeamObjective` cognitive-function weight maps) plus pairwise affinity (reuses `CognitiveFunctionAffinity`) to score/assemble teams.
 - **`QuizEngine.calculateResult(questions, answers)`** — answers are 1–5 Likert; per question `score = (answer-3) * direction * weight` accumulated per axis (IE/NS/TF/JP), then thresholded into a 4-letter `MbtiType`. `calculateBreakdown` returns the raw axis scores. Quiz JSON lives in `assets/quiz/{it,en}/mbti_{short,medium,long}.json`.
 - **`SharedProfile`** — compact share/import payload `{"v":"arc1","n":...,"t":...,"c":...}`. `decode()` extracts the JSON even when embedded in surrounding text; bump `version` if the schema changes. `data_backup.dart` handles full ZIP export/import (`archive` package).
+- **`ShareCode`** — fixed-length 24-char Crockford Base32 code (15 bytes: version, system, MBTI type, confidence, source, 9-byte random id, checksum) for sharing a single profile; rendered as text + QR (`qr_flutter`). The name is *not* encoded — the importer types it. Persist only the stable id (`shareId` column, `idHex`) and rebuild the code from it plus the profile's current fields via `ShareCode.new`, so the code always reflects the latest data. Bump `version` if the byte layout changes.
+
+### Chatbot (on-device tool-calling, `data/chat/`)
+The chatbot answers questions about the people in the map (affinity, best pairs, teams, role fit). It holds **no credentials**: `ChatClient` POSTs OpenAI-style chat-completions to a Cloudflare Worker proxy, which injects Cloudflare creds and forwards to Workers AI (free-tier open model with function calling, default `@hf/nousresearch/hermes-2-pro-mistral-7b`). The proxy URL is `kChatProxyUrl`, supplied at build time with `--dart-define=CHAT_PROXY_URL=https://<worker>.workers.dev` (empty by default, so the chat is disabled until configured — `ChatClient.isConfigured`). `ChatEngine.send()` runs the tool loop (max 6 rounds); `kChatTools` are **thick** tools — each runs the full deterministic computation against the domain engines (`CognitiveFunctionAffinity`, `TeamOptimizer`, `CareerFit`) via `ChatToolExecutor` and returns only ranked/summarized results, so a small model just orchestrates and narrates and never does MBTI math. Only tool results (names, types, scores) leave the device. The system prompt and tool descriptions are Italian; keep responses concise and grounded in tool output.
 
 ### Educational content
 `assets/content/{it,en}/` holds the localized JSON content, loaded and cached per locale by `ContentRepository`: `mbti.json` (16 types, 8 cognitive functions, 4 dichotomies), `relationship_dynamics.json`, `career_roles.json`, `team_objectives.json`. Domain engines emit translation **keys** (e.g. `FrictionPoint.titleKey`); the content JSON / ARB resolve them to localized strings. Access MBTI content via `getTypeContent(content, "INTJ")`, `getFunctionContent(content, "Ni")`, `getDichotomyContent(content, "IE")`. `ContentViewerScreen` takes a `contentKey` + `ContentViewerType` enum and dispatches to the correct section.

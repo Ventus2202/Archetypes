@@ -65,11 +65,13 @@ class BackupData {
   static Map<String, dynamic> _profileToJson(PersonalityProfileEntry e) => {
     'id': e.id, 'personId': e.personId, 'system': e.system, 'dataJson': e.dataJson,
     'confidence': e.confidence, 'source': e.source, 'updatedAt': e.updatedAt.toIso8601String(),
+    'shareId': e.shareId,
   };
 
   static PersonalityProfileEntry _profileFromJson(Map<String, dynamic> j) => PersonalityProfileEntry(
     id: j['id'], personId: j['personId'], system: j['system'], dataJson: j['dataJson'],
     confidence: j['confidence'], source: j['source'], updatedAt: DateTime.parse(j['updatedAt']),
+    shareId: j['shareId'] as String?,
   );
 
   static Map<String, dynamic> _relationshipToJson(RelationshipEntry e) => {
