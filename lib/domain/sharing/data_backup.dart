@@ -1,9 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:drift/drift.dart' hide Column;
-import 'package:archive/archive_io.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:archive/archive.dart';
 import '../../data/database/app_database.dart';
 
 class BackupData {
@@ -121,7 +118,10 @@ class DataBackupService {
 
   DataBackupService(this.db);
 
-  Future<File> exportToZip() async {
+  /// Serializes the whole DB to ZIP bytes. Returning bytes (not a [File])
+  /// keeps this web-safe: the caller triggers a browser download or a native
+  /// share/save without touching `dart:io`.
+  Future<Uint8List> exportToBytes() async {
     final persons = await db.select(db.persons).get();
     final profiles = await db.select(db.personalityProfiles).get();
     final relationships = await db.select(db.relationships).get();
@@ -140,29 +140,23 @@ class DataBackupService {
     );
 
     final jsonContent = json.encode(backup.toJson());
-    
+
     // Avatars now live as bytes inside data.json (base64), so nothing else
     // needs to go into the archive.
+    final dataBytes = utf8.encode(jsonContent);
     final archive = Archive();
-    archive.addFile(ArchiveFile('data.json', jsonContent.length, utf8.encode(jsonContent)));
+    archive.addFile(ArchiveFile('data.json', dataBytes.length, dataBytes));
 
-    final zipBytes = ZipEncoder().encode(archive);
-
-    final tempDir = await getTemporaryDirectory();
-    final zipFile = File(p.join(tempDir.path, 'archetypes_backup_${DateTime.now().millisecondsSinceEpoch}.zip'));
-    await zipFile.writeAsBytes(zipBytes);
-    
-    return zipFile;
+    return ZipEncoder().encodeBytes(archive);
   }
 
-  Future<void> importFromZip(File zipFile, {bool replace = false}) async {
-    final bytes = await zipFile.readAsBytes();
-    final archive = ZipDecoder().decodeBytes(bytes);
+  Future<void> importFromBytes(Uint8List zipBytes, {bool replace = false}) async {
+    final archive = ZipDecoder().decodeBytes(zipBytes);
 
     final dataFile = archive.findFile('data.json');
     if (dataFile == null) throw Exception('Missing data.json in ZIP');
 
-    final jsonContent = utf8.decode(dataFile.content as List<int>);
+    final jsonContent = utf8.decode(dataFile.content);
     final backup = BackupData.fromJson(json.decode(jsonContent));
 
     if (backup.schemaVersion > db.schemaVersion) {

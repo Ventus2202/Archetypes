@@ -72,10 +72,12 @@ Verificato dal codice al 2026-07-22.
   (Da attivare: commit + push su GitHub.)
 - [ ] Aumentare copertura test: `QuizEngine.calculateBreakdown`, `CareerFit.calculateAll`,
   `TeamOptimizer` con `must_include`, `ChatToolExecutor` (con repo in-memory).
-- [~] Test di `DataBackupService`: coperto il round-trip di serializzazione
+- [x] Test di `DataBackupService`: oltre al round-trip di serializzazione
   (`BackupData.toJson`/`fromJson`, incl. `shareId` e `avatarBytes` base64) in
-  `data_backup_test.dart`; manca ancora il test end-to-end su file ZIP (export → import →
-  confronto DB, richiede DB in-memory + stub di `path_provider`).
+  `data_backup_test.dart`, ora c'è il test end-to-end sul ZIP reale
+  (`data_backup_service_test.dart`: `exportToBytes` → `importFromBytes` → confronto DB su
+  2 DB in-memory, + verifica del `replace`). Reso banale dal fix Epica 9: l'I/O è ora byte
+  puri, niente più `path_provider`/`dart:io` da stubbare.
 - [ ] **Test della migrazione DB v2→v3** (`avatarBytes`): oggi è verificato solo il
   round-trip base64 a livello di serializzazione, non l'`addColumn` reale. Usare il
   tooling schema-test di drift (dump dello schema + `verifySelfIntegrity`) per confermare
@@ -83,6 +85,11 @@ Verificato dal codice al 2026-07-22.
   per il passo v1→v2 (`shareId`), mai testato.
 - [ ] Verificare il **primo run** di CI e del deploy Pages su GitHub; se il pin
   `flutter-version: 3.41.9` non si risolve nell'action, allentare a solo `channel: stable`.
+- [ ] **Aggiornamento dipendenze controllato**: `flutter pub outdated` (2026-07-23) segnala
+  molti pacchetti major indietro (`share_plus` 12→13, `riverpod`/`riverpod_annotation` 2→3+
+  con generator, `file_picker` 8→10, `drift` minori) e due transitive **dismesse**
+  (`build_resolvers`, `build_runner_core`, catena `build_runner`). Pianificare un giro di
+  update a scaglioni con CI verde ad ogni passo (riverpod 3 è breaking → valutarlo a parte).
 
 ### 2. Nuovi sistemi di personalità (l'architettura è già pronta)
 
@@ -144,6 +151,10 @@ a ogni update).
   `--base-href "/Archetypes/"`.
   - [ ] **Setup una tantum su GitHub**: Settings → Pages → Source = "GitHub Actions",
     poi push del workflow su `main`. URL: `https://ventus2202.github.io/Archetypes/`.
+- [ ] **Valutare build web `--wasm`**: il build (2026-07-23) segnala "Wasm dry run succeeded"
+  e suggerisce `flutter build web --wasm` per performance. Da valutare per la PWA, tenendo
+  presente che richiede cross-origin isolation (header COOP/COEP) — vedi la nota correlata nel
+  backlog: GitHub Pages non imposta quegli header, quindi servirebbe un hosting alternativo.
 - [ ] Build **release Android** firmata + istruzioni keystore (canale secondario).
 - [ ] Setup **iOS / TestFlight** (canale secondario).
 - [ ] Icona app e branding coerenti su tutte le piattaforme.
@@ -160,12 +171,15 @@ a ogni update).
 Con la PWA come **canale primario**, va sistemato il codice che usa `dart:io` / percorsi su
 filesystem, non disponibili su web. Scoperto ispezionando il codice in questa sessione.
 
-- [!] **Backup/restore su web**: `data_backup.dart` e `settings_screen.dart` usano `dart:io`
-  (`File`) + `path_provider` (temp/documents) → export/import ZIP **non funziona nella PWA**.
-  Riscrivere in termini di bytes + `file_picker`/download del browser (o disabilitare la UI
-  su web con fallback al codice di condivisione). Nota: gli avatar ora viaggiano come base64
-  dentro `data.json` (niente più file `avatars/` nello ZIP), quindi resta solo da rendere
-  web-safe l'I/O dello ZIP stesso.
+- [x] **Backup/restore su web**: `DataBackupService` riscritto in byte puri
+  (`exportToBytes()` → `Uint8List`, `importFromBytes(Uint8List)`); rimossi
+  `dart:io`/`path`/`path_provider`, `archive_io` → `archive` (web-safe). Export in
+  `settings_screen.dart` ora fa branch: web → download del browser via helper a import
+  condizionale (`lib/core/platform/file_download.dart` con Blob + anchor su `package:web`,
+  perché `file_picker.saveFile` **non è implementato su web**); nativo → share sheet con
+  `XFile.fromData` (niente più file temporaneo). Import usa `pickFiles(withData: true)` +
+  `.bytes` (il `.path` è sempre `null` su web). `web` promosso a dipendenza diretta. Build
+  web di release OK (`--base-href "/Archetypes/"`, wasm dry-run OK), analyze pulito, 39 test.
 - [x] **Avatar su web**: gli avatar ora si salvano come **bytes nel DB** (nuova colonna
   `Persons.avatarBytes`, schema v2→v3 con `addColumn`). `person_edit_screen.dart` legge i
   bytes con `image.readAsBytes()` e li renderizza con `MemoryImage`; `graph_screen.dart` usa
@@ -181,8 +195,14 @@ filesystem, non disponibili su web. Scoperto ispezionando il codice in questa se
   leggere il file puntato da `avatarPath` e salvarne i bytes (gli avatar vecchi ora non si
   renderizzano più finché non li si ri-seleziona). Fatto questo, valutare la rimozione della
   colonna `avatarPath` ormai morta.
-- [ ] Audit di tutti gli `import 'dart:io'` nei layer presentation/data per altri punti
-  native-only.
+- [x] Audit di tutti gli `import 'dart:io'` nei layer presentation/data: l'unico rimasto è
+  `data/database/connection/native.dart`, già correttamente isolato dietro import
+  condizionale (`connection.dart`: `dart.library.io` → native, `dart.library.js_interop` →
+  `web.dart`, fallback `unsupported.dart`). Confermato dal build web che compila senza errori.
+- [ ] **Feedback UX export su web**: nel branch `kIsWeb`, `downloadBytes()` avvia il
+  download del browser in modo silenzioso, senza conferma (sul nativo la share sheet è già
+  feedback visibile). Mostrare uno snackbar tipo "Backup scaricato" dopo il download in
+  `settings_screen._exportData`.
 - [ ] **Prompt di aggiornamento in-app**: ascoltare l'update del service worker e mostrare
   "nuova versione disponibile, ricarica" (senza, l'auto-update PWA scatta solo al
   caricamento successivo).
@@ -211,6 +231,10 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
 - Verifica manuale end-to-end del fix avatar su web (dev server `web` su :8080): aggiungi
   persona → scegli immagine → controlla che compaia nel grafo e nel dettaglio, e che
   sopravviva a un export/import di backup.
+- Verifica manuale del **backup a runtime** (il round-trip byte/ZIP è coperto dai test, ma
+  la UI no): su **web** esporta → controlla che il browser scarichi lo `.zip` → reimportalo;
+  su **mobile** verifica la share sheet (`XFile.fromData`) in export e `pickFiles(withData:
+  true)` in import. È il caveat lasciato aperto dal fix del 2026-07-23.
 - Layout repo: il progetto Flutter è annidato in `Archetypes/` sotto una cartella che
   contiene `.claude` e `GEMINI.md`. Questo crea attrito coi tool (es. `.claude/launch.json`
   deve usare un wrapper `cmd /c "cd /d ... && flutter run"` per entrare nella sottocartella).
@@ -244,3 +268,11 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   rimosso `dart:io`/`FileImage` dalle schermate; backup avatar via base64 in `data.json`
   (eliminato il ramo file `avatars/` nello ZIP + commenti-appunto). build_runner + gen-l10n
   rigenerati, `flutter analyze` pulito, 37 test verdi (2 nuovi round-trip avatar).
+- 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
+  passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
+  `archive_io` → `archive`. Nuovo helper download browser a import condizionale
+  (`core/platform/file_download*.dart`, Blob+anchor su `package:web`), perché
+  `file_picker.saveFile` non esiste su web. `settings_screen` fa branch web/nativo per export
+  e usa `withData:true` + `.bytes` per import. `web` promosso a dep diretta. Chiusi anche il
+  test end-to-end di `DataBackupService` (Epica 1) e l'audit `dart:io` (Epica 9). Verifiche:
+  analyze pulito, 39 test verdi (2 nuovi), **build web release OK** (wasm dry-run OK).

@@ -1,10 +1,11 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
 import '../../../core/constants.dart';
+import '../../../core/platform/file_download.dart';
 import '../../../domain/entities/personality_profile.dart';
 import '../../../domain/personality_systems/mbti/mbti_profile.dart';
 import '../../../domain/sharing/shared_profile.dart';
@@ -245,13 +246,23 @@ class SettingsScreen extends ConsumerWidget {
   Future<void> _exportData(BuildContext context, WidgetRef ref) async {
     final service = ref.read(dataBackupServiceProvider);
     try {
-      final file = await service.exportToZip();
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: 'Archetypes Backup',
-        ),
-      );
+      final bytes = await service.exportToBytes();
+      final fileName =
+          'archetypes_backup_${DateTime.now().millisecondsSinceEpoch}.zip';
+      if (kIsWeb) {
+        // No dart:io / temp file on web: hand the bytes to a browser download.
+        await downloadBytes(bytes, fileName, 'application/zip');
+      } else {
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [
+              XFile.fromData(bytes,
+                  mimeType: 'application/zip', name: fileName),
+            ],
+            text: 'Archetypes Backup',
+          ),
+        );
+      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -267,9 +278,11 @@ class SettingsScreen extends ConsumerWidget {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['zip'],
+      withData: true, // load bytes on all platforms; `path` is null on web.
     );
 
-    if (result == null || result.files.single.path == null) return;
+    final bytes = result?.files.single.bytes;
+    if (bytes == null) return;
 
     if (!context.mounted) return;
 
@@ -296,8 +309,7 @@ class SettingsScreen extends ConsumerWidget {
     if (confirmed == null) return;
 
     try {
-      final file = File(result.files.single.path!);
-      await service.importFromZip(file, replace: confirmed);
+      await service.importFromBytes(bytes, replace: confirmed);
       ref.invalidate(allPersonsProvider);
       ref.invalidate(allGroupsProvider);
       if (context.mounted) {
