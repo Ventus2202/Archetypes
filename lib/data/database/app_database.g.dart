@@ -52,6 +52,18 @@ class $PersonsTable extends Persons with TableInfo<$PersonsTable, PersonEntry> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _avatarBytesMeta = const VerificationMeta(
+    'avatarBytes',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> avatarBytes =
+      GeneratedColumn<Uint8List>(
+        'avatar_bytes',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _birthDateMeta = const VerificationMeta(
     'birthDate',
   );
@@ -133,6 +145,7 @@ class $PersonsTable extends Persons with TableInfo<$PersonsTable, PersonEntry> {
     name,
     nickname,
     avatarPath,
+    avatarBytes,
     birthDate,
     gender,
     role,
@@ -174,6 +187,15 @@ class $PersonsTable extends Persons with TableInfo<$PersonsTable, PersonEntry> {
       context.handle(
         _avatarPathMeta,
         avatarPath.isAcceptableOrUnknown(data['avatar_path']!, _avatarPathMeta),
+      );
+    }
+    if (data.containsKey('avatar_bytes')) {
+      context.handle(
+        _avatarBytesMeta,
+        avatarBytes.isAcceptableOrUnknown(
+          data['avatar_bytes']!,
+          _avatarBytesMeta,
+        ),
       );
     }
     if (data.containsKey('birth_date')) {
@@ -246,6 +268,10 @@ class $PersonsTable extends Persons with TableInfo<$PersonsTable, PersonEntry> {
         DriftSqlType.string,
         data['${effectivePrefix}avatar_path'],
       ),
+      avatarBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}avatar_bytes'],
+      ),
       birthDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}birth_date'],
@@ -288,6 +314,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
   final String name;
   final String? nickname;
   final String? avatarPath;
+  final Uint8List? avatarBytes;
   final DateTime? birthDate;
   final String? gender;
   final String role;
@@ -300,6 +327,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
     required this.name,
     this.nickname,
     this.avatarPath,
+    this.avatarBytes,
     this.birthDate,
     this.gender,
     required this.role,
@@ -318,6 +346,9 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
     }
     if (!nullToAbsent || avatarPath != null) {
       map['avatar_path'] = Variable<String>(avatarPath);
+    }
+    if (!nullToAbsent || avatarBytes != null) {
+      map['avatar_bytes'] = Variable<Uint8List>(avatarBytes);
     }
     if (!nullToAbsent || birthDate != null) {
       map['birth_date'] = Variable<DateTime>(birthDate);
@@ -347,6 +378,9 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
       avatarPath: avatarPath == null && nullToAbsent
           ? const Value.absent()
           : Value(avatarPath),
+      avatarBytes: avatarBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarBytes),
       birthDate: birthDate == null && nullToAbsent
           ? const Value.absent()
           : Value(birthDate),
@@ -375,6 +409,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
       name: serializer.fromJson<String>(json['name']),
       nickname: serializer.fromJson<String?>(json['nickname']),
       avatarPath: serializer.fromJson<String?>(json['avatarPath']),
+      avatarBytes: serializer.fromJson<Uint8List?>(json['avatarBytes']),
       birthDate: serializer.fromJson<DateTime?>(json['birthDate']),
       gender: serializer.fromJson<String?>(json['gender']),
       role: serializer.fromJson<String>(json['role']),
@@ -392,6 +427,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
       'name': serializer.toJson<String>(name),
       'nickname': serializer.toJson<String?>(nickname),
       'avatarPath': serializer.toJson<String?>(avatarPath),
+      'avatarBytes': serializer.toJson<Uint8List?>(avatarBytes),
       'birthDate': serializer.toJson<DateTime?>(birthDate),
       'gender': serializer.toJson<String?>(gender),
       'role': serializer.toJson<String>(role),
@@ -407,6 +443,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
     String? name,
     Value<String?> nickname = const Value.absent(),
     Value<String?> avatarPath = const Value.absent(),
+    Value<Uint8List?> avatarBytes = const Value.absent(),
     Value<DateTime?> birthDate = const Value.absent(),
     Value<String?> gender = const Value.absent(),
     String? role,
@@ -419,6 +456,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
     name: name ?? this.name,
     nickname: nickname.present ? nickname.value : this.nickname,
     avatarPath: avatarPath.present ? avatarPath.value : this.avatarPath,
+    avatarBytes: avatarBytes.present ? avatarBytes.value : this.avatarBytes,
     birthDate: birthDate.present ? birthDate.value : this.birthDate,
     gender: gender.present ? gender.value : this.gender,
     role: role ?? this.role,
@@ -435,6 +473,9 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
       avatarPath: data.avatarPath.present
           ? data.avatarPath.value
           : this.avatarPath,
+      avatarBytes: data.avatarBytes.present
+          ? data.avatarBytes.value
+          : this.avatarBytes,
       birthDate: data.birthDate.present ? data.birthDate.value : this.birthDate,
       gender: data.gender.present ? data.gender.value : this.gender,
       role: data.role.present ? data.role.value : this.role,
@@ -454,6 +495,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
           ..write('name: $name, ')
           ..write('nickname: $nickname, ')
           ..write('avatarPath: $avatarPath, ')
+          ..write('avatarBytes: $avatarBytes, ')
           ..write('birthDate: $birthDate, ')
           ..write('gender: $gender, ')
           ..write('role: $role, ')
@@ -471,6 +513,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
     name,
     nickname,
     avatarPath,
+    $driftBlobEquality.hash(avatarBytes),
     birthDate,
     gender,
     role,
@@ -487,6 +530,7 @@ class PersonEntry extends DataClass implements Insertable<PersonEntry> {
           other.name == this.name &&
           other.nickname == this.nickname &&
           other.avatarPath == this.avatarPath &&
+          $driftBlobEquality.equals(other.avatarBytes, this.avatarBytes) &&
           other.birthDate == this.birthDate &&
           other.gender == this.gender &&
           other.role == this.role &&
@@ -501,6 +545,7 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
   final Value<String> name;
   final Value<String?> nickname;
   final Value<String?> avatarPath;
+  final Value<Uint8List?> avatarBytes;
   final Value<DateTime?> birthDate;
   final Value<String?> gender;
   final Value<String> role;
@@ -513,6 +558,7 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
     this.name = const Value.absent(),
     this.nickname = const Value.absent(),
     this.avatarPath = const Value.absent(),
+    this.avatarBytes = const Value.absent(),
     this.birthDate = const Value.absent(),
     this.gender = const Value.absent(),
     this.role = const Value.absent(),
@@ -526,6 +572,7 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
     required String name,
     this.nickname = const Value.absent(),
     this.avatarPath = const Value.absent(),
+    this.avatarBytes = const Value.absent(),
     this.birthDate = const Value.absent(),
     this.gender = const Value.absent(),
     this.role = const Value.absent(),
@@ -539,6 +586,7 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
     Expression<String>? name,
     Expression<String>? nickname,
     Expression<String>? avatarPath,
+    Expression<Uint8List>? avatarBytes,
     Expression<DateTime>? birthDate,
     Expression<String>? gender,
     Expression<String>? role,
@@ -552,6 +600,7 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
       if (name != null) 'name': name,
       if (nickname != null) 'nickname': nickname,
       if (avatarPath != null) 'avatar_path': avatarPath,
+      if (avatarBytes != null) 'avatar_bytes': avatarBytes,
       if (birthDate != null) 'birth_date': birthDate,
       if (gender != null) 'gender': gender,
       if (role != null) 'role': role,
@@ -567,6 +616,7 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
     Value<String>? name,
     Value<String?>? nickname,
     Value<String?>? avatarPath,
+    Value<Uint8List?>? avatarBytes,
     Value<DateTime?>? birthDate,
     Value<String?>? gender,
     Value<String>? role,
@@ -580,6 +630,7 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
       name: name ?? this.name,
       nickname: nickname ?? this.nickname,
       avatarPath: avatarPath ?? this.avatarPath,
+      avatarBytes: avatarBytes ?? this.avatarBytes,
       birthDate: birthDate ?? this.birthDate,
       gender: gender ?? this.gender,
       role: role ?? this.role,
@@ -604,6 +655,9 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
     }
     if (avatarPath.present) {
       map['avatar_path'] = Variable<String>(avatarPath.value);
+    }
+    if (avatarBytes.present) {
+      map['avatar_bytes'] = Variable<Uint8List>(avatarBytes.value);
     }
     if (birthDate.present) {
       map['birth_date'] = Variable<DateTime>(birthDate.value);
@@ -636,6 +690,7 @@ class PersonsCompanion extends UpdateCompanion<PersonEntry> {
           ..write('name: $name, ')
           ..write('nickname: $nickname, ')
           ..write('avatarPath: $avatarPath, ')
+          ..write('avatarBytes: $avatarBytes, ')
           ..write('birthDate: $birthDate, ')
           ..write('gender: $gender, ')
           ..write('role: $role, ')
@@ -2588,6 +2643,7 @@ typedef $$PersonsTableCreateCompanionBuilder =
       required String name,
       Value<String?> nickname,
       Value<String?> avatarPath,
+      Value<Uint8List?> avatarBytes,
       Value<DateTime?> birthDate,
       Value<String?> gender,
       Value<String> role,
@@ -2602,6 +2658,7 @@ typedef $$PersonsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String?> nickname,
       Value<String?> avatarPath,
+      Value<Uint8List?> avatarBytes,
       Value<DateTime?> birthDate,
       Value<String?> gender,
       Value<String> role,
@@ -2705,6 +2762,11 @@ class $$PersonsTableFilterComposer
 
   ColumnFilters<String> get avatarPath => $composableBuilder(
     column: $table.avatarPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get avatarBytes => $composableBuilder(
+    column: $table.avatarBytes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2848,6 +2910,11 @@ class $$PersonsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<Uint8List> get avatarBytes => $composableBuilder(
+    column: $table.avatarBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get birthDate => $composableBuilder(
     column: $table.birthDate,
     builder: (column) => ColumnOrderings(column),
@@ -2904,6 +2971,11 @@ class $$PersonsTableAnnotationComposer
 
   GeneratedColumn<String> get avatarPath => $composableBuilder(
     column: $table.avatarPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get avatarBytes => $composableBuilder(
+    column: $table.avatarBytes,
     builder: (column) => column,
   );
 
@@ -3043,6 +3115,7 @@ class $$PersonsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> nickname = const Value.absent(),
                 Value<String?> avatarPath = const Value.absent(),
+                Value<Uint8List?> avatarBytes = const Value.absent(),
                 Value<DateTime?> birthDate = const Value.absent(),
                 Value<String?> gender = const Value.absent(),
                 Value<String> role = const Value.absent(),
@@ -3055,6 +3128,7 @@ class $$PersonsTableTableManager
                 name: name,
                 nickname: nickname,
                 avatarPath: avatarPath,
+                avatarBytes: avatarBytes,
                 birthDate: birthDate,
                 gender: gender,
                 role: role,
@@ -3069,6 +3143,7 @@ class $$PersonsTableTableManager
                 required String name,
                 Value<String?> nickname = const Value.absent(),
                 Value<String?> avatarPath = const Value.absent(),
+                Value<Uint8List?> avatarBytes = const Value.absent(),
                 Value<DateTime?> birthDate = const Value.absent(),
                 Value<String?> gender = const Value.absent(),
                 Value<String> role = const Value.absent(),
@@ -3081,6 +3156,7 @@ class $$PersonsTableTableManager
                 name: name,
                 nickname: nickname,
                 avatarPath: avatarPath,
+                avatarBytes: avatarBytes,
                 birthDate: birthDate,
                 gender: gender,
                 role: role,

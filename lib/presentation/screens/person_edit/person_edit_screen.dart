@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,7 +28,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
   PersonRole _role = PersonRole.friend;
   MbtiType? _mbtiType;
   int _mbtiConfidence = 80;
-  String? _avatarPath;
+  Uint8List? _avatarBytes;
   bool _loading = false;
 
   @override
@@ -58,7 +58,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
     _nicknameCtrl.text = person.nickname ?? '';
     _notesCtrl.text = person.notes ?? '';
     _role = person.role;
-    _avatarPath = person.avatarPath;
+    _avatarBytes = person.avatarBytes;
 
     final profiles = await profileRepo.getForPerson(person.id);
     final mbti =
@@ -83,7 +83,10 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
       maxHeight: 512,
     );
     if (image != null) {
-      setState(() => _avatarPath = image.path);
+      // Read bytes so avatars work on web too (no filesystem path there) and
+      // travel inside the DB / backup instead of a separate file.
+      final bytes = await image.readAsBytes();
+      if (mounted) setState(() => _avatarBytes = bytes);
     }
   }
 
@@ -115,7 +118,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
         nickname: _nicknameCtrl.text.trim().isEmpty
             ? null
             : _nicknameCtrl.text.trim(),
-        avatarPath: _avatarPath,
+        avatarBytes: _avatarBytes,
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
         role: _role,
         isSelf: false,
@@ -130,7 +133,7 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
           nickname: _nicknameCtrl.text.trim().isEmpty
               ? null
               : _nicknameCtrl.text.trim(),
-          avatarPath: _avatarPath,
+          avatarBytes: _avatarBytes,
           notes:
               _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
           role: _role,
@@ -230,10 +233,10 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: cs.surfaceContainerHighest,
-                  backgroundImage: _avatarPath != null
-                      ? FileImage(File(_avatarPath!))
+                  backgroundImage: _avatarBytes != null
+                      ? MemoryImage(_avatarBytes!)
                       : null,
-                  child: _avatarPath == null
+                  child: _avatarBytes == null
                       ? Icon(Icons.person_outline,
                           size: 40, color: cs.onSurfaceVariant)
                       : null,

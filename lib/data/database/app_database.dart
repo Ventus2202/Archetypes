@@ -8,7 +8,10 @@ class Persons extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
   TextColumn get nickname => text().nullable()();
+  // Legacy filesystem path (mobile only, pre-v3). New avatars are stored as
+  // bytes in [avatarBytes] so they render on web too and survive backup.
   TextColumn get avatarPath => text().nullable()();
+  BlobColumn get avatarBytes => blob().nullable()();
   DateTimeColumn get birthDate => dateTime().nullable()();
   TextColumn get gender => text().nullable()();
   TextColumn get role => text().withDefault(const Constant('other'))();
@@ -90,7 +93,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -98,6 +101,9 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.addColumn(personalityProfiles, personalityProfiles.shareId);
+          }
+          if (from < 3) {
+            await m.addColumn(persons, persons.avatarBytes);
           }
         },
       );

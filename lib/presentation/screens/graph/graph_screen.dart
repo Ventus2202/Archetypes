@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
@@ -430,14 +429,14 @@ class _PersonNode extends ConsumerWidget {
                 color: nodeColor,
                 width: isSelf ? 3 : 2,
               ),
-              image: person.avatarPath != null
+              image: person.avatarBytes != null
                   ? DecorationImage(
-                      image: FileImage(File(person.avatarPath!)),
+                      image: MemoryImage(person.avatarBytes!),
                       fit: BoxFit.cover,
                     )
                   : null,
             ),
-            child: person.avatarPath == null
+            child: person.avatarBytes == null
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

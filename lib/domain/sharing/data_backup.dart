@@ -49,6 +49,7 @@ class BackupData {
 
   static Map<String, dynamic> _personToJson(PersonEntry e) => {
     'id': e.id, 'name': e.name, 'nickname': e.nickname, 'avatarPath': e.avatarPath,
+    'avatarBytes': e.avatarBytes != null ? base64Encode(e.avatarBytes!) : null,
     'birthDate': e.birthDate?.toIso8601String(), 'gender': e.gender, 'role': e.role,
     'notes': e.notes, 'firstMetDate': e.firstMetDate?.toIso8601String(),
     'isSelf': e.isSelf, 'createdAt': e.createdAt.toIso8601String(),
@@ -56,6 +57,7 @@ class BackupData {
 
   static PersonEntry _personFromJson(Map<String, dynamic> j) => PersonEntry(
     id: j['id'], name: j['name'], nickname: j['nickname'], avatarPath: j['avatarPath'],
+    avatarBytes: j['avatarBytes'] != null ? base64Decode(j['avatarBytes'] as String) : null,
     birthDate: j['birthDate'] != null ? DateTime.parse(j['birthDate']) : null,
     gender: j['gender'], role: j['role'], notes: j['notes'],
     firstMetDate: j['firstMetDate'] != null ? DateTime.parse(j['firstMetDate']) : null,
@@ -139,23 +141,13 @@ class DataBackupService {
 
     final jsonContent = json.encode(backup.toJson());
     
+    // Avatars now live as bytes inside data.json (base64), so nothing else
+    // needs to go into the archive.
     final archive = Archive();
     archive.addFile(ArchiveFile('data.json', jsonContent.length, utf8.encode(jsonContent)));
 
-    for (final person in persons) {
-      if (person.avatarPath != null) {
-        final file = File(person.avatarPath!);
-        if (await file.exists()) {
-          final bytes = await file.readAsBytes();
-          final ext = p.extension(person.avatarPath!);
-          archive.addFile(ArchiveFile('avatars/${person.id}$ext', bytes.length, bytes));
-        }
-      }
-    }
-
     final zipBytes = ZipEncoder().encode(archive);
-    // Remove the check if analyzer says it's never null
-    
+
     final tempDir = await getTemporaryDirectory();
     final zipFile = File(p.join(tempDir.path, 'archetypes_backup_${DateTime.now().millisecondsSinceEpoch}.zip'));
     await zipFile.writeAsBytes(zipBytes);
@@ -188,32 +180,14 @@ class DataBackupService {
       });
     }
 
-    final appDocDir = await getApplicationDocumentsDirectory();
-    final avatarDir = Directory(p.join(appDocDir.path, 'avatars'));
-    if (!await avatarDir.exists()) await avatarDir.create(recursive: true);
-
     await db.transaction(() async {
       for (final g in backup.groups) {
         await db.into(db.groups).insert(g, mode: InsertMode.insertOrReplace);
       }
 
       for (final pEntry in backup.persons) {
-        String? newAvatarPath = pEntry.avatarPath;
-        if (pEntry.avatarPath != null) {
-           final ext = p.extension(pEntry.avatarPath!);
-           final archivedAvatar = archive.findFile('avatars/${pEntry.id}$ext');
-           if (archivedAvatar != null) {
-              final newFile = File(p.join(avatarDir.path, '${pEntry.id}$ext'));
-              await newFile.writeAsBytes(archivedAvatar.content as List<int>);
-              newAvatarPath = newFile.path;
-           }
-        }
-        
-        // Use Companion for insertOrReplace to avoid type mismatch if needed, 
-        // but here pEntry is PersonEntry and insert() accepts it.
-        // If we want to change avatarPath, we must create a Companion.
-        final companion = pEntry.toCompanion(true).copyWith(avatarPath: Value(newAvatarPath));
-        await db.into(db.persons).insert(companion, mode: InsertMode.insertOrReplace);
+        // Avatar bytes ride along inside pEntry (deserialized from data.json).
+        await db.into(db.persons).insert(pEntry, mode: InsertMode.insertOrReplace);
       }
 
       for (final pr in backup.profiles) {

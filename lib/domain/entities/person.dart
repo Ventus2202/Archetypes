@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 enum PersonRole {
   family,
   friend,
@@ -15,6 +17,7 @@ class Person {
   final String name;
   final String? nickname;
   final String? avatarPath;
+  final Uint8List? avatarBytes;
   final DateTime? birthDate;
   final String? gender;
   final PersonRole role;
@@ -28,6 +31,7 @@ class Person {
     required this.name,
     this.nickname,
     this.avatarPath,
+    this.avatarBytes,
     this.birthDate,
     this.gender,
     required this.role,
@@ -44,6 +48,7 @@ class Person {
     String? name,
     String? nickname,
     String? avatarPath,
+    Uint8List? avatarBytes,
     DateTime? birthDate,
     String? gender,
     PersonRole? role,
@@ -57,6 +62,7 @@ class Person {
       name: name ?? this.name,
       nickname: nickname ?? this.nickname,
       avatarPath: avatarPath ?? this.avatarPath,
+      avatarBytes: avatarBytes ?? this.avatarBytes,
       birthDate: birthDate ?? this.birthDate,
       gender: gender ?? this.gender,
       role: role ?? this.role,

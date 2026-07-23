@@ -1,8 +1,18 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:archetypes/data/database/app_database.dart';
 import 'package:archetypes/domain/sharing/data_backup.dart';
+
+PersonEntry _person({Uint8List? avatarBytes}) => PersonEntry(
+      id: 1,
+      name: 'Ada',
+      role: 'friend',
+      avatarBytes: avatarBytes,
+      isSelf: false,
+      createdAt: DateTime.parse('2026-07-23T10:00:00.000'),
+    );
 
 void main() {
   group('BackupData serialization', () {
@@ -59,6 +69,43 @@ void main() {
       });
 
       expect(restored.profiles.single.shareId, isNull);
+    });
+
+    test('avatar bytes survive a base64 toJson/fromJson round-trip', () {
+      final avatar = Uint8List.fromList([0, 1, 2, 250, 255, 128]);
+      final backup = BackupData(
+        persons: [_person(avatarBytes: avatar)],
+        profiles: const [],
+        relationships: const [],
+        groups: const [],
+        personGroups: const [],
+        events: const [],
+        schemaVersion: 3,
+      );
+
+      final restored = BackupData.fromJson(
+        jsonDecode(jsonEncode(backup.toJson())) as Map<String, dynamic>,
+      );
+
+      expect(restored.persons.single.avatarBytes, avatar);
+    });
+
+    test('person without avatar bytes decodes as null', () {
+      final backup = BackupData(
+        persons: [_person()],
+        profiles: const [],
+        relationships: const [],
+        groups: const [],
+        personGroups: const [],
+        events: const [],
+        schemaVersion: 3,
+      );
+
+      final restored = BackupData.fromJson(
+        jsonDecode(jsonEncode(backup.toJson())) as Map<String, dynamic>,
+      );
+
+      expect(restored.persons.single.avatarBytes, isNull);
     });
   });
 }
