@@ -154,8 +154,33 @@ di affinità registrato accanto a `CognitiveFunctionAffinity`.
 
 ### 5. Quiz e profili
 
+Le prime quattro voci sono emerse leggendo `onboarding_screen.dart` il 2026-07-26, mentre si
+rendeva il test in-app il metodo consigliato. Ora che il quiz è il percorso di default,
+pesano più di prima.
+
+- [!] **`confidence` è hardcoded a 80 per tutte e tre le sorgenti**
+  (`onboarding_screen.dart:111`). Un risultato del quiz e un tipo autodichiarato a occhio
+  finiscono nel DB indistinguibili. `QuizEngine.calculateBreakdown` esiste, calcola quanto
+  è netto ogni asse, e il suo output viene **buttato via**: `_openQuiz` riceve solo un
+  `MbtiType` da `QuizScreen`. Derivare la confidence dal breakdown (asse netto → alta,
+  asse in bilico → bassa). È il presupposto di metà delle feature che leggono `confidence`.
+- [!] **`source` è hardcoded a `ProfileSource.quizMedium`** (`onboarding_screen.dart:114`)
+  a prescindere dal quiz effettivamente svolto: `QuizScreen` non restituisce quale delle tre
+  lunghezze (short/medium/long) sia stata usata. Chi fa il test breve o quello lungo si
+  ritrova il profilo etichettato come medio. Far tornare la lunghezza insieme al tipo.
+- [ ] **Nessuna via d'uscita dalla pagina di avvio del quiz**: `onboarding_screen.dart:175`
+  nasconde la bottom bar quando `_method == 'test' && _page == 2`, e `_StartQuizPage` non
+  ha un controllo "Indietro" proprio. Chi arriva lì può solo iniziare il test, non tornare
+  a cambiare metodo. Era un caso di nicchia finché il default era `manual`; ora è il
+  percorso predefinito.
+- [ ] **Pareggi del `QuizEngine` risolti in silenzio verso ENFP**: ogni asse usa `>= 0` per
+  il primo polo (`quiz_engine.dart:28-31`), quindi un questionario tutto neutro dà ENFP
+  senza alcun segnale che il risultato sia indeterminato. Decidere un tie-break esplicito
+  o restituire una confidence bassa.
 - [ ] Implementare la sorgente `ProfileSource.granular` (assessment per funzione, non solo
-  per asse).
+  per asse). Nota: il percorso granulare **funziona già** a livello di asse
+  (`_deriveTypeFromDichotomies` deriva il tipo dai 4 slider); manca solo il livello per
+  singola funzione cognitiva.
 - [ ] Schermata di confronto: profilo manuale vs risultato quiz, con ricalcolo `confidence`.
 - [ ] Retake del quiz con storicizzazione dei risultati.
 
@@ -287,7 +312,26 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
 - Modalità "confronto" fianco a fianco tra due persone.
 - Onboarding con import diretto da codice condiviso.
 - `.gitattributes` per normalizzare i fine-riga (LF nel repo) ed evitare gli avvisi
-  LF→CRLF su Windows.
+  LF→CRLF su Windows. (Confermato il 2026-07-26: l'avviso è comparso su **ogni** file di
+  **ogni** commit della sessione. È rumore costante, non un caso isolato.)
+- **Walkthrough end-to-end sulla PWA da telefono**, ora che è online: onboarding completo →
+  aggiungi persona → grafo → quiz → export/import del backup. Finora la PWA è verificata
+  solo lato server (HTTP 200 sui file giusti + stringhe presenti nel bundle); nessuno ha
+  mai percorso l'app intera su un dispositivo reale.
+- **Documentare il setup di sviluppo** in `CLAUDE.md` (sezione "Fresh PC Setup"): aprire
+  Claude Code su `Archetypes/` (non sulla cartella genitore) perché è lì che stanno
+  `.claude/` e `.mcp.json`, e fare `gh auth login` — senza, le query sulle GitHub Actions
+  ricadono sull'API pubblica e si vedono solo gli esiti degli step, non i log dei job.
+- Verifica su come i widget test possono sostituire lo screenshot: in questa sessione la
+  pane del browser non era visibile, quindi il compositing non partiva e gli screenshot
+  andavano in timeout. Il ripiego (`onboarding_method_widget_test.dart`) asserisce sulla
+  **geometria renderizzata** — `tester.getCenter(...)` per verificare che un badge stia
+  sulla card giusta e che l'ordine verticale sia quello atteso. Vale la pena adottarlo come
+  pattern per le verifiche UI: è più solido di uno screenshot e non richiede la pane.
+- `CareerFit.calculate` fa `.clamp(0.0, 100.0)` su un punteggio che può essere negativo
+  (le preferenze di dicotomia non soddisfatte sottraggono). Più ruoli pessimi possono
+  quindi appiattirsi tutti su 0.0 e diventare indistinguibili nel ranking. Da verificare
+  con dati reali se succede davvero, e in caso normalizzare invece di troncare.
 - Cross-origin isolation su GitHub Pages: senza header COOP/COEP, drift wasm usa il
   fallback IndexedDB invece di OPFS. Valutare un hosting che imposti gli header se
   servono performance/OPFS.
@@ -378,6 +422,13 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   che diventa la root di lavoro. Sblocca i 3 server MCP di `.mcp.json` (mai caricati finora
   perché stavano sotto la root), toglie il wrapper `cmd /c` da `launch.json` e mette la
   config di sviluppo sotto version control. Serve riaprire Claude Code su `Archetypes/`.
+- 2026-07-26 — Chiusura sessione: aggiunte alla roadmap le voci emerse leggendo il codice
+  durante il lavoro sull'onboarding. Due `[!]` in Epica 5 (`confidence` hardcoded a 80 per
+  ogni sorgente, `source` sempre `quizMedium`) che svuotano di significato la scelta appena
+  fatta di consigliare il quiz; più il vicolo cieco della pagina di avvio quiz e il
+  tie-break implicito verso ENFP. Nel backlog: walkthrough reale da telefono, setup di
+  sviluppo da documentare, pattern dei widget test sulla geometria, dubbio sul clamp di
+  `CareerFit`.
 - 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
   passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
   `archive_io` → `archive`. Nuovo helper download browser a import condizionale
