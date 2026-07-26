@@ -153,6 +153,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Answer a questionnaire to discover your type';
 
   @override
+  String get onboardingMethodRecommended => 'Recommended';
+
+  @override
   String get onboardingMethodGranular => 'Granular input';
 
   @override

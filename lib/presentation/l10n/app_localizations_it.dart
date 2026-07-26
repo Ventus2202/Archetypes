@@ -153,6 +153,9 @@ class AppLocalizationsIt extends AppLocalizations {
       'Rispondi a un questionario per scoprire il tuo tipo';
 
   @override
+  String get onboardingMethodRecommended => 'Consigliato';
+
+  @override
   String get onboardingMethodGranular => 'Inserimento granulare';
 
   @override

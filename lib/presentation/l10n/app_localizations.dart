@@ -374,6 +374,12 @@ abstract class AppLocalizations {
   /// **'Rispondi a un questionario per scoprire il tuo tipo'**
   String get onboardingMethodTestDesc;
 
+  /// No description provided for @onboardingMethodRecommended.
+  ///
+  /// In it, this message translates to:
+  /// **'Consigliato'**
+  String get onboardingMethodRecommended;
+
   /// No description provided for @onboardingMethodGranular.
   ///
   /// In it, this message translates to:

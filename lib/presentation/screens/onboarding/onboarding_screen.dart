@@ -23,7 +23,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final FocusNode _nameFocus = FocusNode();
 
   int _page = 0;
-  String _method = 'manual';
+  // The in-app test is the recommended path: it produces a real profile with a
+  // confidence value instead of a self-declared type.
+  String _method = 'test';
   MbtiType? _selectedType;
   final Map<String, double> _dichotomies = {'ie': 0, 'ns': 0, 'tf': 0, 'jp': 0};
   bool _saving = false;
@@ -307,21 +309,23 @@ class _MethodPage extends StatelessWidget {
           Text(l10n.onboardingChooseMethod,
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 24),
-          _MethodCard(
-            method: 'manual',
-            selected: selectedMethod == 'manual',
-            title: l10n.onboardingMethodManual,
-            description: l10n.onboardingMethodManualDesc,
-            icon: Icons.style_outlined,
-            onTap: onMethodSelected,
-          ),
-          const SizedBox(height: 12),
+          // Recommended option first, and preselected in the parent state.
           _MethodCard(
             method: 'test',
             selected: selectedMethod == 'test',
             title: l10n.onboardingMethodTest,
             description: l10n.onboardingMethodTestDesc,
             icon: Icons.quiz_outlined,
+            badge: l10n.onboardingMethodRecommended,
+            onTap: onMethodSelected,
+          ),
+          const SizedBox(height: 12),
+          _MethodCard(
+            method: 'manual',
+            selected: selectedMethod == 'manual',
+            title: l10n.onboardingMethodManual,
+            description: l10n.onboardingMethodManualDesc,
+            icon: Icons.style_outlined,
             onTap: onMethodSelected,
           ),
           const SizedBox(height: 12),
@@ -347,6 +351,7 @@ class _MethodCard extends StatelessWidget {
     required this.description,
     required this.icon,
     required this.onTap,
+    this.badge,
   });
 
   final String method;
@@ -355,6 +360,9 @@ class _MethodCard extends StatelessWidget {
   final String description;
   final IconData icon;
   final ValueChanged<String> onTap;
+
+  /// Optional label rendered next to the title (e.g. "Recommended").
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -382,11 +390,41 @@ class _MethodCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: selected ? cs.primary : null,
-                            fontWeight: FontWeight.bold,
-                          )),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(title,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(
+                                  color: selected ? cs.primary : null,
+                                  fontWeight: FontWeight.bold,
+                                )),
+                      ),
+                      if (badge != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: cs.primary.withAlpha(38),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            badge!,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   Text(description,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,

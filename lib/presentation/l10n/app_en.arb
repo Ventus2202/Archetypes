@@ -49,6 +49,7 @@
   "onboardingMethodManualDesc": "Choose your MBTI type directly",
   "onboardingMethodTest": "In-app test",
   "onboardingMethodTestDesc": "Answer a questionnaire to discover your type",
+  "onboardingMethodRecommended": "Recommended",
   "onboardingMethodGranular": "Granular input",
   "onboardingMethodGranularDesc": "Specify dichotomy and cognitive function values directly",
   "onboardingSelectType": "Select your MBTI type",
