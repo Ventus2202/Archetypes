@@ -1,3 +1,7 @@
+# Claude Code: launch.json and .mcp.json are shared dev config and are
+# tracked; settings.local.json is per-machine (personal permissions).
+.claude/settings.local.json
+
 # Miscellaneous
 *.class
 *.log

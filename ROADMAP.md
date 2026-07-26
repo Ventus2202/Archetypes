@@ -305,10 +305,14 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   la UI no): su **web** esporta → controlla che il browser scarichi lo `.zip` → reimportalo;
   su **mobile** verifica la share sheet (`XFile.fromData`) in export e `pickFiles(withData:
   true)` in import. È il caveat lasciato aperto dal fix del 2026-07-23.
-- Layout repo: il progetto Flutter è annidato in `Archetypes/` sotto una cartella che
-  contiene `.claude` e `GEMINI.md`. Questo crea attrito coi tool (es. `.claude/launch.json`
-  deve usare un wrapper `cmd /c "cd /d ... && flutter run"` per entrare nella sottocartella).
-  Valutare se appiattire la struttura o spostare `.claude` dentro `Archetypes/`.
+- ~~Layout repo~~ **risolto il 2026-07-26**: `.claude/` spostata dentro `Archetypes/`, che
+  ora è la root da aprire in Claude Code. Conseguenze: (1) i 3 server MCP in `.mcp.json`
+  (dart, context7, github) finalmente si caricano — stavano un livello sotto la root e non
+  venivano mai letti, non era un problema di approvazione come annotato il 22/07;
+  (2) `launch.json` non ha più il wrapper `cmd /c "cd /d ..."`, chiama `flutter` diretto;
+  (3) `.claude/launch.json` e `.mcp.json` sono versionati, `settings.local.json` è in
+  `.gitignore` perché è per-macchina. Resta fuori dal repo solo `GEMINI.md` (vuoto) nella
+  cartella genitore.
 
 ---
 
@@ -368,7 +372,12 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   in cima, badge "Consigliato", preselezionata; gli altri metodi restano a un tap. Nuova
   stringa `onboardingMethodRecommended` IT/EN + widget test sulla geometria renderizzata
   (3 test). Verifiche: analyze pulito, 70 test verdi (67→70). Pushate su `main` tutte le
-  sessioni arretrate (24/07, 25/07, 26/07), che erano rimaste solo in locale.
+  sessioni arretrate (24/07, 25/07, 26/07), che erano rimaste solo in locale. CI e deploy
+  verdi sul push; verificato che il bundle pubblicato contenga la stringa "Consigliato".
+- 2026-07-26 — Backlog: **layout repo sistemato**. `.claude/` spostata in `Archetypes/`,
+  che diventa la root di lavoro. Sblocca i 3 server MCP di `.mcp.json` (mai caricati finora
+  perché stavano sotto la root), toglie il wrapper `cmd /c` da `launch.json` e mette la
+  config di sviluppo sotto version control. Serve riaprire Claude Code su `Archetypes/`.
 - 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
   passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
   `archive_io` → `archive`. Nuovo helper download browser a import condizionale
