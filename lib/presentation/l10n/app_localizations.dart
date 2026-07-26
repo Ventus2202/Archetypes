@@ -1172,6 +1172,12 @@ abstract class AppLocalizations {
   /// **'Si è verificato un errore'**
   String get errorGeneric;
 
+  /// No description provided for @retry.
+  ///
+  /// In it, this message translates to:
+  /// **'Riprova'**
+  String get retry;
+
   /// No description provided for @errorNotFound.
   ///
   /// In it, this message translates to:

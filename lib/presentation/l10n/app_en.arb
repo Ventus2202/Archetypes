@@ -252,6 +252,7 @@
   "contentChallengingGrowth": "Challenging growth",
 
   "errorGeneric": "An error occurred",
+  "retry": "Retry",
   "errorNotFound": "Content not found",
   "errorImportFailed": "Import failed",
   "errorExportFailed": "Export failed",

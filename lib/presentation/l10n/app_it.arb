@@ -254,6 +254,7 @@
   "contentChallengingGrowth": "Crescita stimolante",
 
   "errorGeneric": "Si è verificato un errore",
+  "retry": "Riprova",
   "errorNotFound": "Contenuto non trovato",
   "errorImportFailed": "Importazione fallita",
   "errorExportFailed": "Esportazione fallita",

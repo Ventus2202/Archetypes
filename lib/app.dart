@@ -46,9 +46,59 @@ class _AppGate extends ConsumerWidget {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, _) => const HomeShell(),
+      // A real failure of getSelf() (e.g. DB error) must not silently drop the
+      // user into the HomeShell as if onboarding were complete: surface it with
+      // a retry that re-runs the provider.
+      error: (error, _) => _GateError(
+        error: error,
+        onRetry: () => ref.invalidate(hasOnboardedProvider),
+      ),
       data: (onboarded) =>
           onboarded ? const HomeShell() : const OnboardingScreen(),
+    );
+  }
+}
+
+class _GateError extends StatelessWidget {
+  const _GateError({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: scheme.error),
+              const SizedBox(height: 16),
+              Text(
+                l10n.errorGeneric,
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '$error',
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: Text(l10n.retry),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

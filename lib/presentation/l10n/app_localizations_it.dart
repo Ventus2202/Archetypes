@@ -579,6 +579,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get errorGeneric => 'Si è verificato un errore';
 
   @override
+  String get retry => 'Riprova';
+
+  @override
   String get errorNotFound => 'Contenuto non trovato';
 
   @override
