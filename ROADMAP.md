@@ -61,8 +61,13 @@ Verificato dal codice al 2026-07-22.
 - [x] **Bug backup**: `data_backup.dart` non serializzava `shareId` nei profili → i codici di
   condivisione andavano persi al restore. Aggiunto `shareId` a `_profileToJson` /
   `_profileFromJson` (retrocompatibile: i backup vecchi lo leggono come `null`).
-- [ ] `_AppGate` (`app.dart`) ingoia l'errore di `hasOnboardedProvider` mostrando comunque
-  la HomeShell: distinguere errore reale da "non ancora onboardato".
+- [x] `_AppGate` (`app.dart`) ingoiava l'errore di `hasOnboardedProvider` mostrando comunque
+  la HomeShell (utente in un'app rotta, senza feedback). Ora il ramo `error:` mostra una
+  schermata dedicata (`_GateError`: icona, messaggio, dettaglio errore) con un pulsante
+  **Riprova** che fa `ref.invalidate(hasOnboardedProvider)`. Nuova stringa l10n `retry`
+  (IT/EN). Widget test di regressione (`test/widgets/app_gate_widget_test.dart`) che pompa il
+  vero `ArchetypesApp` e verifica: errore → schermata errore (no HomeShell), non-onboardato →
+  OnboardingScreen.
 - [x] Pulire i commenti-appunto lasciati in `data_backup.dart`
   ("Remove the check if analyzer says...", "Use Companion...") — rimossi riscrivendo la
   gestione avatar (ora base64 nel `data.json`).
@@ -70,8 +75,29 @@ Verificato dal codice al 2026-07-22.
   `flutter pub get` → `dart run build_runner build` → `flutter gen-l10n` →
   `flutter analyze` → `flutter test`. Flutter fissato a 3.41.9, cache abilitata.
   (Da attivare: commit + push su GitHub.)
-- [ ] Aumentare copertura test: `QuizEngine.calculateBreakdown`, `CareerFit.calculateAll`,
-  `TeamOptimizer` con `must_include`, `ChatToolExecutor` (con repo in-memory).
+- [x] Aumentare copertura test: `QuizEngine.calculateBreakdown` (era già coperto),
+  `CareerFit.calculateAll` (catalogo completo, ordinamento decrescente, clamp 0–100 su tutti
+  e 16 i tipi, coerenza con `calculate()`), `TeamOptimizer` (teamSize > candidati, max 3
+  composizioni ordinate, must-include su entrambi i percorsi), `ChatToolExecutor`
+  (14 test su DB in-memory + repo reali, tutti e 7 i tool + path d'errore).
+  45 → 67 test. Emerso e corretto il bug `must_include_id` (sotto).
+- [x] **Bug `must_include_id` del chatbot**: `ChatToolExecutor._optimizeTeam` filtrava le
+  top-3 composizioni *dopo* `findBest`, con `orElse: () => comps.first` → se la persona
+  richiesta non capitava nelle prime 3 il vincolo spariva in silenzio e l'utente riceveva un
+  team senza di sé ("un team con me"). Sul percorso greedy (>12 candidati) `findBest`
+  restituisce una sola composizione, quindi il vincolo saltava quasi sempre. Ora
+  `TeamOptimizer.findBest` accetta `mustIncludePersonId` e lo applica come vincolo vero
+  (filtro delle combinazioni sul percorso esaustivo, seed del greedy sull'altro); se la
+  persona non è tra i candidati restituisce lista vuota e il tool risponde con un errore
+  esplicito invece di un fallback muto.
+- [ ] **Testabilità delle schermate con stream drift**: `PeopleListScreen` (e potenzialmente
+  il grafo) si sottoscrivono a un `.watch()` drift che sotto il fake clock di `flutter_test`
+  non va mai idle → `pumpAndSettle` va in hang (vedi nota in `share_import_widget_test.dart`).
+  È un blocco reale all'aumento di copertura widget: introdurre un helper/pattern per pompare
+  quelle schermate (o disaccoppiare lo stream in test) prima di poterle coprire.
+- [x] **Cleanup analyze**: rimosso l'`unnecessary_import` `dart:typed_data` in
+  `test/domain/sharing/data_backup_service_test.dart:1` (`Uint8List` arriva già da
+  `drift/drift.dart`, riga 5). `flutter analyze` di nuovo pulito ("No issues found").
 - [x] Test di `DataBackupService`: oltre al round-trip di serializzazione
   (`BackupData.toJson`/`fromJson`, incl. `shareId` e `avatarBytes` base64) in
   `data_backup_test.dart`, ora c'è il test end-to-end sul ZIP reale
@@ -145,12 +171,38 @@ di affinità registrato accanto a `CognitiveFunctionAffinity`.
 Canale primario scelto: **PWA su GitHub Pages** con auto-update (niente APK da inviare
 a ogni update).
 
+- [x] **Blocco risolto (2026-07-26): la PWA è online.** Scelta la via (a): repo reso
+  **pubblico**, poi Settings → Pages → Source = "GitHub Actions" (`has_pages: true`) e
+  deploy lanciato a mano con `workflow_dispatch`. Run verde (build 1m58s + deploy 10s).
+  Verificato lato server: `index.html` 200 con `<base href="/Archetypes/">` corretto,
+  `main.dart.js` 3.98 MB, `sqlite3.wasm` 731 KB, `manifest.json` + service worker, asset di
+  contenuto e quiz tutti 200. **URL: https://ventus2202.github.io/Archetypes/**
+  (Nota: `assets/AssetManifest.json` dà 404 ma è atteso, Flutter recente usa
+  `AssetManifest.bin.json`.) Testo storico del blocco:
+- [ ] ~~**Blocco: la PWA dà 404 perché il repo è privato**~~. Scoperto in sessione (2026-07-25):
+  `https://ventus2202.github.io/Archetypes/` risponde "There isn't a GitHub Pages site here"
+  perché `Ventus2202/Archetypes` è **privato** e GitHub Pages sul piano gratuito pubblica
+  solo da repo **pubblici** (confermato: la pagina del repo dà 404 anche senza login → il
+  deploy step del workflow fallisce). Prima del setup Pages va **decisa** una via:
+  - **(a) rendere il repo pubblico** — sicuro: audit in sessione, nessun segreto committato
+    (le credenziali Cloudflare vivono solo nei `wrangler secret`, nessun `.env`/token nei
+    file). Poi Settings → Pages → Source = "GitHub Actions".
+  - **(b) hosting alternativo** compatibile con repo privati (Cloudflare Pages / Netlify /
+    Vercel; build `flutter build web --release`, output `build/web`). Cloudflare Pages
+    chiuderebbe anche la nota COOP/COEP del backlog (header per wasm/OPFS).
 - [x] **Web + PWA deploy automatico su GitHub Pages** (`.github/workflows/deploy-web.yml`):
   ogni push su `main` builda e pubblica l'app; update automatico per tutti al reload,
   installabile sulla home (manifest + service worker). Build verificato in locale con
   `--base-href "/Archetypes/"`.
-  - [ ] **Setup una tantum su GitHub**: Settings → Pages → Source = "GitHub Actions",
-    poi push del workflow su `main`. URL: `https://ventus2202.github.io/Archetypes/`.
+  - [x] **Setup una tantum su GitHub**: fatto il 2026-07-26. Source = "GitHub Actions",
+    primo deploy verde. URL: `https://ventus2202.github.io/Archetypes/`.
+- [ ] **La chat è disattivata nel build web pubblicato**: `CHAT_PROXY_URL` si passa via
+  `--dart-define` a build time e `deploy-web.yml:49` non lo fa, quindi
+  `ChatClient.isConfigured` è `false` sulla PWA. Aggiungere il define al workflow (URL del
+  Worker da GitHub secret/variable) oppure documentare che la chat è solo su build locali.
+- [ ] **Action GitHub su Node 20 deprecato**: i run segnalano che `actions/checkout@v4`,
+  `actions/upload-artifact@v4` e `actions/deploy-pages@v4` girano forzate su Node 24.
+  Non rompe nulla ora; alzare a `@v5` prima che la forzatura sparisca.
 - [ ] **Valutare build web `--wasm`**: il build (2026-07-23) segnala "Wasm dry run succeeded"
   e suggerisce `flutter build web --wasm` per performance. Da valutare per la PWA, tenendo
   presente che richiede cross-origin isolation (header COOP/COEP) — vedi la nota correlata nel
@@ -165,6 +217,10 @@ a ogni update).
   quiz JSON, chatbot e backup sono già fatti).
 - [ ] Aggiungere screenshot delle schermate principali.
 - [ ] Allineare `README` e `CLAUDE.md` quando cambia l'architettura.
+- [x] **`CLAUDE.md` disallineato sullo schema DB**: diceva `schemaVersion` "currently `2`"
+  e citava solo la migration v1→v2 (`shareId`), ma lo schema reale è **v3**
+  (`app_database.dart:96`). Aggiornato a v3 con entrambi gli step (v1→v2 `shareId`,
+  v2→v3 `avatarBytes`) e la nota che `persons.avatarPath` è legacy.
 
 ### 9. Compatibilità web (PWA) — priorità alta
 
@@ -187,10 +243,14 @@ filesystem, non disponibili su web. Scoperto ispezionando il codice in questa se
   schermate → funzionano su web. La vecchia colonna `avatarPath` resta per gli avatar legacy
   mobile (non renderizzati finché non li si ri-seleziona). Backup: avatar serializzati base64
   in `data.json`. Test: round-trip base64 in `data_backup_test.dart`.
-- [ ] **Compressione/limite peso avatar**: ora ogni avatar vive come bytes nel DB e, in
-  base64, dentro **ogni** backup ZIP. `image_picker` limita solo le dimensioni a 512px, non
-  l'encoding → un PNG può pesare centinaia di KB. Ricomprimere in JPEG (o cap sui byte)
-  prima di salvare, per non gonfiare DB e backup.
+- [x] **Compressione/limite peso avatar**: nuovo helper Dart puro
+  `lib/core/media/avatar_codec.dart` (`compressAvatar`, `package:image` ^4.9.1) che
+  ridimensiona a 512px il lato lungo (aspect ratio preservato) e ricomprime in JPEG q80;
+  chiamato in `person_edit_screen._pickAvatar` dopo `readAsBytes()`. Web-safe (niente
+  `dart:io`), robusto (decode in `try/catch` → su byte corrotti/indecodificabili restituisce
+  l'input invariato; tiene il più piccolo tra JPEG e originale). Test
+  `test/core/media/avatar_codec_test.dart` (4: JPEG+cap landscape, cap portrait, no-op su
+  immagine già piccola, input non decodificabile). Un PNG da centinaia di KB scende a decine.
 - [ ] **Migrazione avatar legacy** `avatarPath` → `avatarBytes`: al primo avvio su mobile,
   leggere il file puntato da `avatarPath` e salvarne i bytes (gli avatar vecchi ora non si
   renderizzano più finché non li si ri-seleziona). Fatto questo, valutare la rimozione della
@@ -215,6 +275,9 @@ filesystem, non disponibili su web. Scoperto ispezionando il codice in questa se
 
 Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
 
+- Messaggi d'errore user-friendly + logging/crash-reporting: la schermata `_GateError`
+  (`app.dart`) stampa la stringa d'eccezione grezza all'utente e nessun errore viene loggato.
+  Valutare copy amichevole + un minimo di observability.
 - Ricerca/filtro persone nella lista.
 - Statistiche aggregate (distribuzione tipi nella propria rete).
 - Note vocali / allegati sugli eventi.
@@ -231,6 +294,13 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
 - Verifica manuale end-to-end del fix avatar su web (dev server `web` su :8080): aggiungi
   persona → scegli immagine → controlla che compaia nel grafo e nel dettaglio, e che
   sopravviva a un export/import di backup.
+- Compressione avatar off-thread: `compressAvatar` (`core/media/avatar_codec.dart`, sessione
+  2026-07-25) decodifica + ridimensiona sul **main isolate**. Su mobile il picker pre-riduce
+  a 512px quindi è rapido, ma su web `image_picker_for_web` non ridimensiona in modo
+  affidabile → una foto full-res arriva intera a `decodeImage`+resize sul main thread,
+  possibile jank sul pick. Valutare un cap dimensionale prima del decode (o `compute`, che su
+  web resta comunque sul main). Collegato: `package:image` include tutti i decoder (li prova
+  in `decodeImage`), quindi non è tree-shakeable → verificare l'impatto sul bundle web della PWA.
 - Verifica manuale del **backup a runtime** (il round-trip byte/ZIP è coperto dai test, ma
   la UI no): su **web** esporta → controlla che il browser scarichi lo `.zip` → reimportalo;
   su **mobile** verifica la share sheet (`XFile.fromData`) in export e `pickFiles(withData:
@@ -268,6 +338,37 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   rimosso `dart:io`/`FileImage` dalle schermate; backup avatar via base64 in `data.json`
   (eliminato il ramo file `avatars/` nello ZIP + commenti-appunto). build_runner + gen-l10n
   rigenerati, `flutter analyze` pulito, 37 test verdi (2 nuovi round-trip avatar).
+- 2026-07-24 — Epica 1: fix `_AppGate` (`app.dart`). Il ramo `error:` non mostra più
+  silenziosamente la HomeShell su errore reale di `getSelf()`; nuova `_GateError` con
+  messaggio + **Riprova** (`ref.invalidate`), stringa l10n `retry` IT/EN, `flutter gen-l10n`
+  rigenerato. Widget test `test/widgets/app_gate_widget_test.dart` (2 test) sul vero
+  `ArchetypesApp`. `flutter analyze` pulito sul codice toccato (resta 1 `info`
+  `unnecessary_import` preesistente in `data_backup_service_test.dart`), 41 test verdi (39→41).
+- 2026-07-25 — Epica 9: **compressione avatar**. Aggiunto `package:image` (^4.9.1) e helper
+  Dart puro `core/media/avatar_codec.dart` (`compressAvatar`): resize a 512px + JPEG q80,
+  web-safe, decode in `try/catch`. Collegato in `person_edit_screen._pickAvatar`. Warm-up
+  Epica 1: rimosso l'`unnecessary_import` in `data_backup_service_test.dart` → analyze di
+  nuovo pulito. Verifiche: `flutter analyze` pulito, 45 test verdi (41→45, +4 avatar codec).
+- 2026-07-26 — Epica 1: **copertura test dei motori + bug del chatbot**. Nuovo
+  `test/data/chat/chat_tool_executor_test.dart` (14 test su DB in-memory con repo reali:
+  tutti e 7 i tool, id come stringa, path d'errore); estesi `career_fit_test` (invarianti di
+  `calculateAll` su tutti e 16 i tipi) e `team_optimizer_test` (limiti, ordinamento,
+  must-include). Il test must-include ha scoperto un bug reale: `must_include_id` era
+  applicato come filtro *post* `findBest` sulle sole top-3, con fallback muto → "un team con
+  me" restituiva team senza l'utente (sempre, sul percorso greedy >12 candidati). Fix: il
+  vincolo è ora dentro `TeamOptimizer.findBest` (`mustIncludePersonId`), con errore esplicito
+  se la persona non è tra i candidati. Epica 8: `CLAUDE.md` allineato allo schema DB v3.
+  Verifiche: `flutter analyze` pulito, 67 test verdi (45→67).
+- 2026-07-26 — Epica 7 `[!]` **chiusa: la PWA è online**. Repo reso pubblico, Pages abilitato
+  con Source = "GitHub Actions", primo deploy verde su
+  https://ventus2202.github.io/Archetypes/ (verificato via HTTP: index + base-href,
+  `main.dart.js`, `sqlite3.wasm`, manifest, service worker, asset di contenuto). Emersi due
+  item nuovi: chat disattivata nel build web (manca `--dart-define` nel workflow) e action
+  su Node 20 deprecato. Epica 5 (UI): l'onboarding ora **consiglia il test in-app** — card
+  in cima, badge "Consigliato", preselezionata; gli altri metodi restano a un tap. Nuova
+  stringa `onboardingMethodRecommended` IT/EN + widget test sulla geometria renderizzata
+  (3 test). Verifiche: analyze pulito, 70 test verdi (67→70). Pushate su `main` tutte le
+  sessioni arretrate (24/07, 25/07, 26/07), che erano rimaste solo in locale.
 - 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
   passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
   `archive_io` → `archive`. Nuovo helper download browser a import condizionale

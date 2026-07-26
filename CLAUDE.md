@@ -83,7 +83,7 @@ lib/
 ## Key Patterns
 
 ### Database (Drift)
-`app_database.dart` defines all tables. The `@DataClassName('PersonEntry')` annotation renames generated data classes to avoid collision with domain entity classes (e.g. `PersonEntry` vs `Person`). After any table change: **re-run build_runner**. Schema version lives in `AppDatabase.schemaVersion` (currently `2`); increment it and add an `onUpgrade` step in `migration` when modifying tables — follow the existing v1→v2 step that `addColumn`s `personalityProfiles.shareId`.
+`app_database.dart` defines all tables. The `@DataClassName('PersonEntry')` annotation renames generated data classes to avoid collision with domain entity classes (e.g. `PersonEntry` vs `Person`). After any table change: **re-run build_runner**. Schema version lives in `AppDatabase.schemaVersion` (currently `3`); increment it and add an `onUpgrade` step in `migration` when modifying tables — follow the existing steps: v1→v2 `addColumn`s `personalityProfiles.shareId`, v2→v3 `addColumn`s `persons.avatarBytes` (avatars are stored as bytes in the DB so they work on web; `persons.avatarPath` is legacy and no longer rendered).
 
 ### State management (Riverpod)
 `databaseProvider` is intentionally unimplemented — it **must** be overridden at startup via `ProviderScope(overrides: [databaseProvider.overrideWithValue(db)])` in `main.dart`. All repository providers depend on it. Settings (theme, locale) are persisted in Hive and exposed via `settingsProvider` (a `NotifierProvider`).
