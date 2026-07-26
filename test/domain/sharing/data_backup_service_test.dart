@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:archetypes/data/database/app_database.dart';
 import 'package:archetypes/domain/sharing/data_backup.dart';
 import 'package:drift/drift.dart';

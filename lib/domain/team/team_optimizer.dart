@@ -51,20 +51,37 @@ class TeamOptimizer {
     },
   };
 
+  /// [mustIncludePersonId] pins a person into every returned team ("a team with
+  /// me"). It is a hard constraint: if that person is not among [candidates] the
+  /// result is empty rather than a team without them.
   static List<TeamComposition> findBest({
     required List<({Person person, MbtiProfile profile})> candidates,
     required TeamObjective objective,
     required int teamSize,
+    int? mustIncludePersonId,
   }) {
     if (candidates.length < teamSize) return [];
+
+    ({Person person, MbtiProfile profile})? pinned;
+    if (mustIncludePersonId != null) {
+      pinned = candidates
+          .where((c) => c.person.id == mustIncludePersonId)
+          .firstOrNull;
+      if (pinned == null) return [];
+    }
 
     List<List<({Person person, MbtiProfile profile})>> combos = [];
     if (candidates.length > 12) {
       // Greedy approach
-      combos.add(_greedySelection(candidates, objective, teamSize));
+      combos.add(_greedySelection(candidates, objective, teamSize, pinned));
       // Add a couple of variations? Just greedy is fine per prompt
     } else {
       combos = _generateCombinations(candidates, teamSize);
+      if (pinned != null) {
+        combos = combos
+            .where((c) => c.any((m) => m.person.id == mustIncludePersonId))
+            .toList();
+      }
     }
 
     final compositions = combos.map((c) => _evaluateTeam(c, objective)).toList();
@@ -76,25 +93,29 @@ class TeamOptimizer {
   static List<({Person person, MbtiProfile profile})> _greedySelection(
       List<({Person person, MbtiProfile profile})> candidates,
       TeamObjective objective,
-      int teamSize) {
-    
+      int teamSize,
+      ({Person person, MbtiProfile profile})? pinned) {
+
     final selected = <({Person person, MbtiProfile profile})>[];
     final remaining = List<({Person person, MbtiProfile profile})>.from(candidates);
 
-    // Pick first candidate: highest individual function coverage score
-    ({Person person, MbtiProfile profile})? bestFirst;
-    double bestFirstScore = -1;
-    for (final c in remaining) {
-      final score = _calculateFunctionCoverage([c], objective).score;
-      if (score > bestFirstScore) {
-        bestFirstScore = score;
-        bestFirst = c;
+    // Seed: the pinned member if any, otherwise the highest individual
+    // function coverage score.
+    ({Person person, MbtiProfile profile})? bestFirst = pinned;
+    if (bestFirst == null) {
+      double bestFirstScore = -1;
+      for (final c in remaining) {
+        final score = _calculateFunctionCoverage([c], objective).score;
+        if (score > bestFirstScore) {
+          bestFirstScore = score;
+          bestFirst = c;
+        }
       }
     }
 
     if (bestFirst != null) {
       selected.add(bestFirst);
-      remaining.remove(bestFirst);
+      remaining.removeWhere((c) => c.person.id == bestFirst!.person.id);
     }
 
     // Iteratively add members maximizing overall score

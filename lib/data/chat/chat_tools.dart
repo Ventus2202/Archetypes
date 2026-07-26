@@ -231,21 +231,24 @@ class ChatToolExecutor {
     );
     final size = _int(input['team_size']) ?? 3;
     final all = await _peopleWithProfiles();
+    final mustId = _int(input['must_include_id']);
+    // The constraint is enforced inside the optimizer: filtering the top-3
+    // results afterwards silently dropped it whenever the pinned person did not
+    // happen to land in them (always, on the >12-candidate greedy path).
     final comps = TeamOptimizer.findBest(
       candidates: all,
       objective: objective,
       teamSize: size,
+      mustIncludePersonId: mustId,
     );
     if (comps.isEmpty) {
-      return jsonEncode({'error': 'persone con profilo insufficienti'});
+      return jsonEncode({
+        'error': mustId != null && all.every((e) => e.person.id != mustId)
+            ? 'la persona richiesta non ha un profilo MBTI o l\'id è errato'
+            : 'persone con profilo insufficienti',
+      });
     }
-    final mustId = _int(input['must_include_id']);
-    final chosen = mustId == null
-        ? comps.first
-        : comps.firstWhere(
-            (c) => c.members.any((m) => m.id == mustId),
-            orElse: () => comps.first,
-          );
+    final chosen = comps.first;
     return jsonEncode({
       'team': chosen.members.map((m) => m.displayName).toList(),
       'score': chosen.overallScore.round(),
