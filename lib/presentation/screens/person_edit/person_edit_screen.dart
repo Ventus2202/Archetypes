@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:archetypes/core/media/avatar_codec.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
 import '../../../domain/entities/person.dart';
 import '../../../domain/entities/personality_profile.dart';
@@ -84,8 +85,9 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
     );
     if (image != null) {
       // Read bytes so avatars work on web too (no filesystem path there) and
-      // travel inside the DB / backup instead of a separate file.
-      final bytes = await image.readAsBytes();
+      // travel inside the DB / backup instead of a separate file. Recompress to
+      // a small JPEG so a single photo doesn't bloat the DB and every backup.
+      final bytes = compressAvatar(await image.readAsBytes());
       if (mounted) setState(() => _avatarBytes = bytes);
     }
   }
