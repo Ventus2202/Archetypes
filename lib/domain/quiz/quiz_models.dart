@@ -1,3 +1,6 @@
+import '../entities/personality_profile.dart';
+import '../personality_systems/mbti/mbti_types.dart';
+
 class QuizQuestion {
   final String id;
   final String text;
@@ -34,4 +37,33 @@ enum QuizLength {
         QuizLength.medium => 'mbti_medium.json',
         QuizLength.long => 'mbti_long.json',
       };
+
+  /// The profile source to persist for a profile produced by this quiz length.
+  ProfileSource get source => switch (this) {
+        QuizLength.short => ProfileSource.quizShort,
+        QuizLength.medium => ProfileSource.quizMedium,
+        QuizLength.long => ProfileSource.quizLong,
+      };
+}
+
+/// Everything a completed quiz hands back to whoever started it: not just the
+/// type, but which quiz produced it and how decisive the answers were.
+class QuizResult {
+  final MbtiType type;
+  final QuizLength length;
+
+  /// Per-axis normalized score (0..1), see [QuizEngine.calculateBreakdown].
+  final Map<String, double> breakdown;
+
+  /// 50..100, see `confidenceFromAxisBalance`.
+  final int confidence;
+
+  const QuizResult({
+    required this.type,
+    required this.length,
+    required this.breakdown,
+    required this.confidence,
+  });
+
+  ProfileSource get source => length.source;
 }

@@ -224,6 +224,7 @@
   "quizMediumDesc": "~50 domande · 12 min",
   "quizLong": "Test completo",
   "quizLongDesc": "~80 domande · 20 min",
+  "quizMostAccurate": "Più accurato",
   "quizStart": "Inizia il test",
   "quizQuestion": "Domanda {current} di {total}",
   "@quizQuestion": {

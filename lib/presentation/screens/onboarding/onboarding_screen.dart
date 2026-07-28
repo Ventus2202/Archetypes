@@ -5,6 +5,8 @@ import '../../../domain/entities/person.dart';
 import '../../../domain/entities/personality_profile.dart';
 import '../../../domain/personality_systems/mbti/mbti_types.dart';
 import '../../../domain/personality_systems/mbti/mbti_profile.dart';
+import '../../../domain/personality_systems/mbti/mbti_confidence.dart';
+import '../../../domain/quiz/quiz_models.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/person_provider.dart';
 
@@ -27,6 +29,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // confidence value instead of a self-declared type.
   String _method = 'test';
   MbtiType? _selectedType;
+
+  /// Set only on the quiz path: carries the quiz length and the confidence
+  /// derived from the answers, so the saved profile is not indistinguishable
+  /// from a type picked by hand.
+  QuizResult? _quizResult;
   final Map<String, double> _dichotomies = {'ie': 0, 'ns': 0, 'tf': 0, 'jp': 0};
   bool _saving = false;
 
@@ -67,11 +74,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _openQuiz() async {
-    final type = await Navigator.of(context).push<MbtiType>(
+    final result = await Navigator.of(context).push<QuizResult>(
       MaterialPageRoute(builder: (_) => const QuizScreen()),
     );
-    if (type != null) {
-      setState(() => _selectedType = type);
+    if (result != null) {
+      setState(() {
+        _quizResult = result;
+        _selectedType = result.type;
+      });
       // Wait for build to complete before saving
       WidgetsBinding.instance.addPostFrameCallback((_) => _save());
     }
@@ -92,14 +102,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       createdAt: DateTime.now(),
     ));
 
+    // Each method carries its own evidence, so confidence and source come from
+    // the method that actually produced the type.
     MbtiProfile? profile;
-    if (_method == 'test' && _selectedType != null) {
-      profile = MbtiProfile.fromType(_selectedType!);
+    int confidence = kSelfDeclaredConfidence;
+    ProfileSource source = ProfileSource.manual;
+
+    if (_method == 'test' && _quizResult != null) {
+      profile = MbtiProfile.fromType(_quizResult!.type);
+      confidence = _quizResult!.confidence;
+      source = _quizResult!.source;
+    } else if (_method == 'granular') {
+      profile = MbtiProfile.fromType(_deriveTypeFromDichotomies());
+      confidence = confidenceFromDichotomySliders(_dichotomies.values);
+      source = ProfileSource.granular;
     } else if (_method == 'manual' && _selectedType != null) {
       profile = MbtiProfile.fromType(_selectedType!);
-    } else if (_method == 'granular') {
-      final derived = _deriveTypeFromDichotomies();
-      profile = MbtiProfile.fromType(derived);
     }
 
     if (profile != null) {
@@ -108,10 +126,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         personId: personId,
         system: PersonalitySystem.mbti,
         data: profile.toJson(),
-        confidence: 80,
-        source: _method == 'manual'
-            ? ProfileSource.manual
-            : (_method == 'test' ? ProfileSource.quizMedium : ProfileSource.granular),
+        confidence: confidence,
+        source: source,
         updatedAt: DateTime.now(),
       ));
     }
@@ -157,7 +173,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     l10n: l10n,
                   ),
                   _method == 'test'
-                      ? _StartQuizPage(l10n: l10n, onStart: _openQuiz)
+                      ? _StartQuizPage(
+                          l10n: l10n,
+                          onStart: _openQuiz,
+                          onBack: _goBack,
+                        )
                       : (_method == 'granular'
                           ? _GranularPage(
                               dichotomies: _dichotomies,
@@ -575,10 +595,18 @@ class _GranularPage extends StatelessWidget {
 }
 
 class _StartQuizPage extends StatelessWidget {
-  const _StartQuizPage({required this.l10n, required this.onStart});
+  const _StartQuizPage({
+    required this.l10n,
+    required this.onStart,
+    required this.onBack,
+  });
 
   final AppLocalizations l10n;
   final VoidCallback onStart;
+
+  /// The parent hides the shared bottom bar on this page, so the way back to the
+  /// method choice has to live here.
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -604,6 +632,12 @@ class _StartQuizPage extends StatelessWidget {
             onPressed: onStart,
             icon: const Icon(Icons.play_arrow),
             label: Text(l10n.quizStart),
+          ),
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back),
+            label: Text(l10n.actionBack),
           ),
         ],
       ),

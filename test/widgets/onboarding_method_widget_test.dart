@@ -100,4 +100,28 @@ void main() {
     // The recommendation badge stays put regardless of what is selected.
     expect(find.text('Consigliato'), findsOneWidget);
   });
+
+  testWidgets('dalla pagina di avvio del quiz si può tornare indietro',
+      (tester) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await tester.pumpWidget(wrap(db));
+    await tester.pumpAndSettle();
+    await goToMethodPage(tester);
+
+    // Test method is preselected, so "Avanti" lands on the start-quiz page,
+    // where the shared bottom bar is hidden.
+    await tester.tap(find.text('Avanti'));
+    await tester.pumpAndSettle();
+    expect(find.text('Inizia il test'), findsOneWidget);
+    expect(find.text('Avanti'), findsNothing);
+
+    await tester.tap(find.text('Indietro'));
+    await tester.pumpAndSettle();
+
+    // Back on the method page, free to pick something else.
+    expect(find.text('Selezione manuale'), findsOneWidget);
+    expect(find.text('Avanti'), findsOneWidget);
+  });
 }

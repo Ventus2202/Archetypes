@@ -1,7 +1,26 @@
+import '../personality_systems/mbti/mbti_confidence.dart';
 import '../personality_systems/mbti/mbti_types.dart';
 import 'quiz_models.dart';
 
 class QuizEngine {
+  /// Full outcome of a quiz run: type, per-axis breakdown and the confidence
+  /// derived from it. Prefer this over calling the three pieces separately, so
+  /// callers can persist a profile that says which quiz produced it and how
+  /// clear-cut the answers were.
+  static QuizResult evaluate(
+    List<QuizQuestion> questions,
+    Map<String, int> answers,
+    QuizLength length,
+  ) {
+    final breakdown = calculateBreakdown(questions, answers);
+    return QuizResult(
+      type: calculateResult(questions, answers),
+      length: length,
+      breakdown: breakdown,
+      confidence: confidenceFromAxisBalance(breakdown.values),
+    );
+  }
+
   static MbtiType calculateResult(List<QuizQuestion> questions, Map<String, int> answers) {
     final axisScores = <String, double>{
       'IE': 0.0,
@@ -22,9 +41,11 @@ class QuizEngine {
     }
 
     String typeCode = '';
-    
-    // IE: > 0 is E, < 0 is I. If 0, default to I? 
-    // Usually, test builders default to I, N, T, J or something.
+
+    // A tie (score exactly 0) falls to the first pole, so an all-neutral
+    // questionnaire deterministically yields ENFP. That is not a claim about
+    // the person: `evaluate` reports such a run with the minimum confidence,
+    // which is the signal callers must read.
     typeCode += axisScores['IE']! >= 0 ? 'E' : 'I';
     typeCode += axisScores['NS']! >= 0 ? 'N' : 'S';
     typeCode += axisScores['TF']! >= 0 ? 'F' : 'T';

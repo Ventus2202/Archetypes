@@ -521,6 +521,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quizLongDesc => '~80 questions · 20 min';
 
   @override
+  String get quizMostAccurate => 'Most accurate';
+
+  @override
   String get quizStart => 'Start the test';
 
   @override

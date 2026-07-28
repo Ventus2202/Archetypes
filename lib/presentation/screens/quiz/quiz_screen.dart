@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
 import '../../../domain/quiz/quiz_models.dart';
 import '../../../domain/quiz/quiz_engine.dart';
-import '../../../domain/personality_systems/mbti/mbti_types.dart';
 import '../../../domain/personality_systems/mbti/mbti_profile.dart';
 import '../../../domain/entities/personality_profile.dart';
 import '../../providers/database_provider.dart';
@@ -33,6 +32,9 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
       _questions = questions;
       _currentIndex = 0;
       _answers.clear();
+      // Without this, a retake after "cancel" on the results page lands straight
+      // back on the results with no answers (a fake ENFP at minimum confidence).
+      _isComplete = false;
     });
   }
 
@@ -101,6 +103,10 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                 title: l10n.quizLong,
                 desc: l10n.quizLongDesc,
                 icon: Icons.hourglass_full,
+                // More questions per axis, so the resulting confidence is the
+                // highest the quiz can produce: say so instead of leaving the
+                // user to infer it from the question count.
+                badge: l10n.quizMostAccurate,
                 onTap: () => _startQuiz(QuizLength.long),
               ),
             ],
@@ -178,8 +184,9 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
   }
 
   Widget _buildResults(BuildContext context, AppLocalizations l10n) {
-    final resultType = QuizEngine.calculateResult(_questions!, _answers);
-    final breakdown = QuizEngine.calculateBreakdown(_questions!, _answers);
+    final result =
+        QuizEngine.evaluate(_questions!, _answers, _selectedLength!);
+    final breakdown = result.breakdown;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.quizResults)),
@@ -188,7 +195,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
         child: Column(
           children: [
             Text(
-              l10n.quizResultType(resultType.label),
+              l10n.quizResultType(result.type.label),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -205,7 +212,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             _AxisResult(label: l10n.mbtiDichotomyJP, value: breakdown['JP'] ?? 0.5, left: 'J', right: 'P'),
             const SizedBox(height: 48),
             FilledButton.icon(
-              onPressed: () => _saveAndExit(resultType),
+              onPressed: () => _saveAndExit(result),
               icon: const Icon(Icons.check),
               label: Text(l10n.actionSave),
             ),
@@ -220,7 +227,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     );
   }
 
-  Future<void> _saveAndExit(MbtiType type) async {
+  Future<void> _saveAndExit(QuizResult result) async {
     final profileRepo = ref.read(profileRepositoryProvider);
     final personRepo = ref.read(personRepositoryProvider);
 
@@ -231,7 +238,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     }
 
     if (targetPersonId != null) {
-      final mbtiProfile = MbtiProfile.fromType(type);
+      final mbtiProfile = MbtiProfile.fromType(result.type);
       final existing = await profileRepo.getForPerson(targetPersonId);
       final mbti = existing.where((p) => p.system == PersonalitySystem.mbti).firstOrNull;
 
@@ -240,17 +247,19 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
         personId: targetPersonId,
         system: PersonalitySystem.mbti,
         data: mbtiProfile.toJson(),
-        confidence: 90,
-        source: ProfileSource.quizMedium, // Could be more specific
+        confidence: result.confidence,
+        source: result.source,
         updatedAt: DateTime.now(),
       ));
-      
+
       ref.invalidate(allPersonsProvider);
       ref.invalidate(personByIdProvider(targetPersonId));
     }
 
     if (mounted) {
-      Navigator.of(context).pop(type);
+      // During onboarding no self person exists yet, so nothing was saved here:
+      // the caller persists the profile from this result.
+      Navigator.of(context).pop(result);
     }
   }
 }
@@ -261,16 +270,51 @@ class _LengthCard extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _LengthCard({required this.title, required this.desc, required this.icon, required this.onTap});
+  /// Optional label rendered next to the title (e.g. "Most accurate").
+  final String? badge;
+
+  const _LengthCard({
+    required this.title,
+    required this.desc,
+    required this.icon,
+    required this.onTap,
+    this.badge,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         onTap: onTap,
-        leading: Icon(icon, size: 32, color: Theme.of(context).colorScheme.primary),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        leading: Icon(icon, size: 32, color: cs.primary),
+        title: Row(
+          children: [
+            Flexible(
+              child: Text(title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            if (badge != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: cs.primary.withAlpha(38),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  badge!,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ],
+        ),
         subtitle: Text(desc),
         trailing: const Icon(Icons.chevron_right),
       ),

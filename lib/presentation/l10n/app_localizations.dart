@@ -1070,6 +1070,12 @@ abstract class AppLocalizations {
   /// **'~80 domande · 20 min'**
   String get quizLongDesc;
 
+  /// No description provided for @quizMostAccurate.
+  ///
+  /// In it, this message translates to:
+  /// **'Più accurato'**
+  String get quizMostAccurate;
+
   /// No description provided for @quizStart.
   ///
   /// In it, this message translates to:
