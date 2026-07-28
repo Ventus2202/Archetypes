@@ -99,6 +99,10 @@ Verificato dal codice al 2026-07-22.
   `OnboardingScreen` e `QuizScreen`, che leggono su tap, pompano senza problemi con
   `pumpAndSettle` (4 widget test girano su di esse). La lista bloccata è quindi più corta del
   temuto: `PeopleListScreen` e il grafo.
+  Precisato ancora il 2026-07-28: a bloccare è **sottoscriversi** allo stream, non toccarlo.
+  `PersonEditScreen` fa `ref.invalidate(allPersonsProvider)` (uno `StreamProvider` su
+  `watchAll()`) e pompa lo stesso senza problemi, perché in test nessuno lo ascolta. Quindi il
+  criterio per sapere se una schermata è testabile è "la watcha nel `build`?", non "la nomina?".
 - [x] **Cleanup analyze**: rimosso l'`unnecessary_import` `dart:typed_data` in
   `test/domain/sharing/data_backup_service_test.dart:1` (`Uint8List` arriva già da
   `drift/drift.dart`, riga 5). `flutter analyze` di nuovo pulito ("No issues found").
@@ -124,18 +128,17 @@ Verificato dal codice al 2026-07-22.
   (a) tenerli committati e aggiungere `git diff --exit-code` dopo i due generatori in CI,
   così una rigenerazione dimenticata rompe la build; (b) metterli in `.gitignore` e
   affidarsi ai generatori in setup/CI. Vedi la voce collegata in Epica 8.
-- [ ] **Nessun test legge un profilo dal DB dopo un quiz**: il fix del 2026-07-27
-  (confidence/source reali) è coperto solo a livello di engine — `QuizEngine.evaluate` e la
-  formula della confidence. I due percorsi che *scrivono* il profilo,
-  `QuizScreen._saveAndExit` e `onboarding._save`, non hanno test: nulla impedisce a un
-  refactor di rimettere una costante nell'`upsert`. Serve un test che simuli un quiz e
-  rilegga `source`/`confidence` dal DB in-memory (il pattern dei repo reali di
-  `chat_tool_executor_test.dart` funziona già).
-- [ ] **`_save()` senza gestione errori nell'onboarding e in `person_edit`**: se
-  `personRepo.insert` o l'`upsert` lanciano, l'eccezione async resta non gestita e `_saving`
-  non torna mai `false` → spinner infinito, pulsante disabilitato, utente bloccato
-  nell'onboarding senza alcun messaggio. Stessa classe del bug `_AppGate` già chiuso:
-  `try/catch` + snackbar e `_saving = false` nel `finally`.
+- [x] **Nessun test legge un profilo dal DB dopo un quiz** — chiuso il 2026-07-28. Nuovo
+  `test/widgets/profile_provenance_widget_test.dart`: pompa il vero `QuizScreen` su un DB
+  in-memory, risponde a tutte le domande del test breve *contro* la `direction` di ciascuna
+  (metà sono reverse-scored: rispondere "5" a tutto è un pareggio perfetto su ogni asse) e
+  rilegge la riga dal DB → tipo `ISTJ`, `source = quizShort`, `confidence = 100`. Il tipo
+  atteso è volutamente diverso dall'ENFP del tie-break, così un engine che degenera non passa.
+- [x] **`_save()` senza gestione errori nell'onboarding e in `person_edit`** — chiuso il
+  2026-07-28: entrambi ora avvolgono il corpo in `try/catch` con snackbar `errorGeneric`
+  (stringa già esistente, niente nuova l10n). `person_edit` rimette `_loading = false` nel
+  `finally`; l'onboarding lo fa solo nel `catch`, perché in caso di successo è il gate a
+  smontare la schermata e riabilitare il pulsante nel frattempo sarebbe sbagliato.
 - [ ] Verificare il **primo run** di CI e del deploy Pages su GitHub; se il pin
   `flutter-version: 3.41.9` non si risolve nell'action, allentare a solo `channel: stable`.
 - [ ] **Aggiornamento dipendenze controllato**: `flutter pub outdated` (2026-07-23) segnala
@@ -208,15 +211,31 @@ profilo salvato dal quiz ora registra confidence e sorgente reali.
 - [x] **Bug trovato lavorando sul quiz**: `_startQuiz` non azzerava `_isComplete`, quindi
   "Annulla" sui risultati + un nuovo test riportava subito alla pagina risultati con zero
   risposte → profilo ENFP finto a confidence minima. Una riga.
-- [!] **`person_edit` riscrive ogni profilo come `manual` e disfa il fix di oggi**:
-  `person_edit_screen.dart:160` passa `source: ProfileSource.manual` fisso e
-  `confidence: _mbtiConfidence` (il valore *caricato* dal profilo esistente), e il blocco
-  gira a ogni salvataggio perché la guardia è solo `if (_mbtiType != null)` e `_mbtiType`
-  viene inizializzato dal profilo esistente. Quindi: fai il test lungo (`quizLong`,
-  confidence 93) → apri la scheda per cambiare il **nickname** → salvi → il profilo diventa
-  `manual` con confidence 93, cioè un tipo "autodichiarato" che millanta la certezza di un
-  quiz. Al secondo salvataggio la provenienza del quiz è persa per sempre. Riscrivere
-  `source`/`confidence` solo se il tipo è stato davvero cambiato a mano.
+- [x] **`person_edit` riscriveva ogni profilo come `manual` e disfaceva il fix del 27/07** —
+  chiuso il 2026-07-28. Il blocco girava a ogni salvataggio (guardia solo
+  `if (_mbtiType != null)`, con `_mbtiType` inizializzato dal profilo esistente) scrivendo
+  `source: manual` fisso e la confidence *caricata*: bastava aprire la scheda per cambiare il
+  nickname perché un `quizLong` a 93 diventasse un "autodichiarato" che millantava la
+  certezza di un quiz. Fix: la schermata tiene ora uno snapshot di com'era il profilo al
+  caricamento (`_loadedType` / `_loadedConfidence`) e `_save` scrive `manual` **solo** se il
+  tipo è diverso da quello caricato; altrimenti conserva il `source` già in DB. In più il
+  `_TypeSelector` riporta lo slider a `kSelfDeclaredConfidence` appena il tipo cambia (e lo
+  ripristina se si ritorna sull'originale), così un tipo scelto a occhio non eredita più la
+  certezza di un quiz nemmeno a schermo. Il default del campo passa da `80` a
+  `kSelfDeclaredConfidence`. Due widget test di regressione in
+  `test/widgets/profile_provenance_widget_test.dart`.
+- [!] **I tre "test" del quiz sono lo stesso identico file da 16 domande.** Scoperto il
+  2026-07-28 mentre si scriveva il test end-to-end sul quiz: `assets/quiz/it/mbti_short.json`,
+  `mbti_medium.json` e `mbti_long.json` hanno lo **stesso hash SHA256** (idem per `en/`), 16
+  domande ciascuno — 4 per asse. Ma la UI promette "~20 domande · 5 min", "~50 domande ·
+  12 min", "~80 domande · 20 min", e dal 27/07 la card del test completo porta il badge
+  **"Più accurato"**. Sono affermazioni false, oggi live sulla PWA pubblicata: scegliere il
+  test completo dà esattamente le stesse 16 domande del breve, quindi la stessa confidence,
+  e `ProfileSource.quizShort/Medium/Long` distingue in DB tre percorsi identici. È il
+  presupposto mancante di tutto il lavoro su confidence e sorgente delle ultime due sessioni.
+  Va scritto il contenuto vero (medium ~50, long ~80, IT+EN) — finché non c'è, il badge e le
+  descrizioni mentono. Fino ad allora l'unica alternativa onesta è allineare la copy alle 16
+  domande reali e togliere il badge, ma è un ripiego: la funzionalità promessa è il contenuto.
 - [ ] **La fedeltà dell'evidenza si ferma alla confidence**: `MbtiProfile.fromType` fissa
   `dichotomies` a ±70 e i pesi funzione a `[90,70,45,25]` per **ogni** sorgente, quindi il
   breakdown del quiz e la posizione reale degli slider granulari vengono buttati via nel
@@ -224,11 +243,28 @@ profilo salvato dal quiz ora registra confidence e sorgente reali.
   (2026-07-27) è oggi l'unica traccia di quell'evidenza. Salvare le dicotomie reali quando
   il metodo le conosce. È il prerequisito della schermata di confronto e del livello
   per-funzione qui sotto.
+- [!] **Un asset del quiz illeggibile fa crashare la schermata invece di dare un errore.**
+  `ContentRepository.loadQuizQuestions` (`content_repository.dart:152`) inghiotte qualsiasi
+  errore e restituisce `[]`; `_startQuiz` salva quella lista vuota e imposta `_selectedLength`,
+  quindi `build` scivola fino a `_buildQuestion`, che fa `_questions![_currentIndex]` su una
+  lista vuota. **Verificato il 2026-07-28** con una sonda usa-e-getta (override di
+  `contentRepositoryProvider` con un repo che ritorna `[]`): `RangeError (length): Invalid
+  value: Valid value range is empty: 0`, cioè schermo rosso, e senza via d'uscita perché
+  `_selectedLength` è ormai valorizzato. Basta un asset mancante nel bundle, un JSON malformato
+  o una chiave `questions` assente — sulla PWA anche solo un file non scaricato. Serve un ramo
+  esplicito su lista vuota (messaggio + ritorno alla scelta della lunghezza); la stessa classe
+  di bug di `_AppGate`, già chiusa altrove.
 - [ ] **Copy sbagliata sulla scelta della lunghezza del quiz** (`quiz_screen.dart:73-81`):
   l'AppBar usa `mbtiSourceQuizShort` ("Test breve") — con il commento-appunto
   `// Or a generic title` — su una pagina che offre tutte e tre le lunghezze, e il titolo
   interno riusa `onboardingChooseMethod` ("Come vuoi inserire la tua personalità?"), che
   parla del metodo, non della durata. Servono due stringhe l10n nuove (IT+EN).
+  Confermato dal vivo il 2026-07-28: il widget test ha dovuto disambiguare "Test breve" tra
+  l'AppBar e la card, perché la stessa stringa compare due volte sulla stessa pagina.
+- [ ] **Stringa italiana hardcoded in `person_edit`**: `person_edit_screen.dart` mostra
+  `'Inserisci un nome'` come snackbar di validazione invece di una chiave l10n, quindi in EN
+  esce in italiano. Notato il 2026-07-28 lavorando sullo stesso `_save`; lasciato fuori
+  perché richiede una nuova chiave ARB + `gen-l10n`.
 - [ ] Implementare la sorgente `ProfileSource.granular` (assessment per funzione, non solo
   per asse). Nota: il percorso granulare **funziona già** a livello di asse
   (`_deriveTypeFromDichotomies` deriva il tipo dai 4 slider); manca solo il livello per
@@ -401,6 +437,26 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   un codice condiviso e nello slider di `person_edit`. Da fine sessione 2026-07-27 la cosa
   pesa di più: il badge "Più accurato" sul test completo **promette** una precisione
   maggiore che poi nessuna schermata mostra all'utente.
+  Il 2026-07-28 è emerso il caso che rende la mancanza concreta: il questionario è ben
+  costruito, metà delle domande sono reverse-scored, quindi **rispondere "5" a tutto dà un
+  pareggio perfetto su ogni asse** → ENFP a confidence 50, il minimo (scoperto perché il primo
+  tentativo di widget test faceva esattamente così). Chi risponde in automatico — acquiescence
+  bias, un comportamento reale sui questionari — vede una pagina risultati che annuncia "Sei
+  ENFP" a caratteri grandi, identica in tutto a quella di un profilo netto. La confidence 50 è
+  già il segnale giusto e viene salvata in DB, ma nessuna schermata la legge: la pagina
+  risultati dovrebbe dire che il risultato è in bilico, non solo mostrare un numero.
+- **Pattern: le schermate che si chiudono da sole vanno pompate sopra una route host.**
+  `QuizScreen` e `PersonEditScreen` finiscono con `Navigator.pop()`, quindi montarle come
+  `home:` di `MaterialApp` significa far poppare la route radice. In
+  `profile_provenance_widget_test.dart` (2026-07-28) sono spinte su una `Scaffold` host con un
+  pulsante "apri": il pop torna a una route vera e il test può proseguire. Vale come pattern
+  accanto a quello sulla geometria renderizzata, per le prossime schermate con `pop()` finale.
+- **`_loadExisting` di `person_edit` nasconde un profilo illeggibile**: il
+  `catch (_) {}` attorno a `MbtiProfile.fromJson` (`person_edit_screen.dart`) fa sparire il
+  tipo dal form senza dire nulla, e la persona sembra semplicemente senza MBTI. Il dato in DB
+  non viene distrutto (con `_mbtiType` nullo il blocco di scrittura non parte, e dopo il fix di
+  oggi nemmeno il `source` verrebbe toccato), quindi non è urgente — ma è un fallimento muto
+  della stessa famiglia di quelli già chiusi in `_AppGate` e nel backup.
 - **Il badge a pillola è duplicato**: stesso `Container` (alpha 38, radius 999, `labelSmall`
   w600) in `_MethodCard` (`onboarding_screen.dart`) e in `_LengthCard`
   (`quiz_screen.dart`). Due copie si tollerano; alla terza estrarre un piccolo widget
@@ -412,7 +468,9 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
 - **Default `confidence` a 80 nel DB**: `app_database.dart:31` ha ancora
   `withDefault(const Constant(80))`, ereditato da quando tutto era 80. Nessuno scrive più
   profili senza confidence esplicita, quindi è solo un valore fantasma: valutare se
-  abbassarlo o togliere il default.
+  abbassarlo o togliere il default. Dal 2026-07-28 è rimasto l'**ultimo** 80 hardcoded del
+  percorso profili: anche `person_edit._mbtiConfidence` partiva da 80 e ora nasce a
+  `kSelfDeclaredConfidence`.
 - `CareerFit.calculate` fa `.clamp(0.0, 100.0)` su un punteggio che può essere negativo
   (le preferenze di dicotomia non soddisfatte sottraggono). Più ruoli pessimi possono
   quindi appiattirsi tutti su 0.0 e diventare indistinguibili nel ranking. Da verificare
@@ -545,6 +603,30 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   dimenticata passa verde (Epica 1) e la frase "the project will not compile without" in
   `CLAUDE.md`/`README` è falsa (Epica 8). Chiarito anche il perimetro del blocco sui test
   widget: solo le schermate con `.watch()`, non tutte.
+- 2026-07-28 — Epica 5 `[!]` **chiuso: il percorso di scrittura del profilo MBTI non mente
+  più**. `person_edit` non declassa più a `manual` ogni profilo a ogni salvataggio: la
+  schermata confronta il tipo con uno snapshot di quello caricato e riscrive `source` solo se
+  l'utente lo ha davvero ri-scelto, altrimenti conserva la provenienza in DB; lo slider della
+  confidence scende a `kSelfDeclaredConfidence` nel momento in cui il tipo cambia, così il
+  93 di un `quizLong` non finisce su una scelta a occhio. Epica 1: `_save()` di onboarding e
+  `person_edit` ora hanno `try/catch` + snackbar (`errorGeneric`) e non lasciano più lo
+  spinner infinito; nuovo `test/widgets/profile_provenance_widget_test.dart` (3 test) che
+  pompa `QuizScreen` e `PersonEditScreen` su DB in-memory e **rilegge la riga dal DB** — era
+  l'unico modo di coprire il fix del 27/07, invisibile ai test di engine. Trovato scrivendo
+  quei test: **i tre file del quiz sono byte-identici, 16 domande**, mentre la UI promette
+  20/50/80 e bolla il lungo come "Più accurato" (nuovo `[!]` in Epica 5). Verifiche: analyze
+  pulito, 87 test verdi (84→87).
+- 2026-07-28 — Chiusura sessione: registrate le voci emerse dal lavoro sui test. Un secondo
+  `[!]` in Epica 5, **verificato con una sonda usa-e-getta** e non solo letto: se un asset del
+  quiz non si carica, `loadQuizQuestions` ritorna `[]` e `_buildQuestion` va in `RangeError`
+  su lista vuota → schermo rosso senza via d'uscita. Nel backlog: rispondere "5" a tutto dà un
+  pareggio perfetto (il questionario ha metà domande reverse-scored) e quindi un ENFP a
+  confidence 50 presentato con la stessa enfasi di un tipo netto — il che rende concreta la
+  voce sul mostrare la confidence; il pattern della route host per le schermate che fanno
+  `pop()`; il `catch (_) {}` muto in `_loadExisting`. Precisato il perimetro del blocco sui
+  widget test: pesa **sottoscriversi** allo stream, non toccarlo — `PersonEditScreen`
+  invalida `allPersonsProvider` e pompa lo stesso. Annotata la stringa italiana hardcoded in
+  `person_edit` (Epica 5). Nessun commit: in working tree restano anche i 13 file del 27/07.
 - 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
   passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
   `archive_io` → `archive`. Nuovo helper download browser a import condizionale

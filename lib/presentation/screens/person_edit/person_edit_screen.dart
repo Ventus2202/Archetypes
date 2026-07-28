@@ -8,6 +8,7 @@ import '../../../domain/entities/person.dart';
 import '../../../domain/entities/personality_profile.dart';
 import '../../../domain/personality_systems/mbti/mbti_types.dart';
 import '../../../domain/personality_systems/mbti/mbti_profile.dart';
+import '../../../domain/personality_systems/mbti/mbti_confidence.dart';
 import '../../../domain/sharing/shared_profile.dart';
 import '../../providers/person_provider.dart';
 import '../../providers/database_provider.dart';
@@ -28,9 +29,15 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
   final _notesCtrl = TextEditingController();
   PersonRole _role = PersonRole.friend;
   MbtiType? _mbtiType;
-  int _mbtiConfidence = 80;
+  int _mbtiConfidence = kSelfDeclaredConfidence;
   Uint8List? _avatarBytes;
   bool _loading = false;
+
+  /// The MBTI profile as it was loaded from the DB. `_save` compares against it
+  /// to tell a type the user actually re-picked here from one that is simply
+  /// still on screen while they edit a nickname: only the former is `manual`.
+  MbtiType? _loadedType;
+  int? _loadedConfidence;
 
   @override
   void initState() {
@@ -70,6 +77,8 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
             MbtiProfile.fromJson(Map<String, dynamic>.from(mbti.data));
         _mbtiType = profile.type;
         _mbtiConfidence = mbti.confidence;
+        _loadedType = profile.type;
+        _loadedConfidence = mbti.confidence;
       } catch (_) {}
     }
 
@@ -112,60 +121,80 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
     final personRepo = ref.read(personRepositoryProvider);
     final profileRepo = ref.read(profileRepositoryProvider);
 
-    int personId;
-    if (widget.personId == null) {
-      personId = await personRepo.insert(Person(
-        id: 0,
-        name: _nameCtrl.text.trim(),
-        nickname: _nicknameCtrl.text.trim().isEmpty
-            ? null
-            : _nicknameCtrl.text.trim(),
-        avatarBytes: _avatarBytes,
-        notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-        role: _role,
-        isSelf: false,
-        createdAt: DateTime.now(),
-      ));
-    } else {
-      personId = widget.personId!;
-      final existing = await personRepo.getById(personId);
-      if (existing != null) {
-        await personRepo.update(existing.copyWith(
+    try {
+      int personId;
+      if (widget.personId == null) {
+        personId = await personRepo.insert(Person(
+          id: 0,
           name: _nameCtrl.text.trim(),
           nickname: _nicknameCtrl.text.trim().isEmpty
               ? null
               : _nicknameCtrl.text.trim(),
           avatarBytes: _avatarBytes,
-          notes:
-              _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+          notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
           role: _role,
+          isSelf: false,
+          createdAt: DateTime.now(),
+        ));
+      } else {
+        personId = widget.personId!;
+        final existing = await personRepo.getById(personId);
+        if (existing != null) {
+          await personRepo.update(existing.copyWith(
+            name: _nameCtrl.text.trim(),
+            nickname: _nicknameCtrl.text.trim().isEmpty
+                ? null
+                : _nicknameCtrl.text.trim(),
+            avatarBytes: _avatarBytes,
+            notes:
+                _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+            role: _role,
+          ));
+        }
+      }
+
+      if (_mbtiType != null) {
+        final profile = MbtiProfile.fromType(_mbtiType!);
+        final existingProfiles =
+            await profileRepo.getForPerson(personId);
+        final existingMbti = existingProfiles
+            .where((p) => p.system == PersonalitySystem.mbti)
+            .firstOrNull;
+
+        // Saving this screen for any other reason (a nickname, a note, an
+        // avatar) must not relabel a quiz result as self-declared: only a type
+        // the user re-picked here becomes `manual`. Otherwise the profile keeps
+        // the provenance it already had.
+        final source = _mbtiType != _loadedType
+            ? ProfileSource.manual
+            : (existingMbti?.source ?? ProfileSource.manual);
+
+        await profileRepo.upsert(PersonalityProfile(
+          id: existingMbti?.id ?? 0,
+          personId: personId,
+          system: PersonalitySystem.mbti,
+          data: profile.toJson(),
+          confidence: _mbtiConfidence,
+          source: source,
+          updatedAt: DateTime.now(),
         ));
       }
+
+      ref.invalidate(allPersonsProvider);
+      ref.invalidate(personByIdProvider(personId));
+
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      // Without this the spinner spins forever and the save button stays
+      // disabled, leaving the user stuck on the form with no explanation.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).errorGeneric)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
-
-    if (_mbtiType != null) {
-      final profile = MbtiProfile.fromType(_mbtiType!);
-      final existingProfiles =
-          await profileRepo.getForPerson(personId);
-      final existingMbti = existingProfiles
-          .where((p) => p.system == PersonalitySystem.mbti)
-          .firstOrNull;
-
-      await profileRepo.upsert(PersonalityProfile(
-        id: existingMbti?.id ?? 0,
-        personId: personId,
-        system: PersonalitySystem.mbti,
-        data: profile.toJson(),
-        confidence: _mbtiConfidence,
-        source: ProfileSource.manual,
-        updatedAt: DateTime.now(),
-      ));
-    }
-
-    ref.invalidate(allPersonsProvider);
-    ref.invalidate(personByIdProvider(personId));
-
-    if (mounted) Navigator.of(context).pop();
   }
 
   Future<void> _delete() async {
@@ -284,7 +313,16 @@ class _PersonEditScreenState extends ConsumerState<PersonEditScreen> {
           _SectionHeader(label: l10n.mbtiTypeLabel),
           _TypeSelector(
             selected: _mbtiType,
-            onChanged: (t) => setState(() => _mbtiType = t),
+            onChanged: (t) => setState(() {
+              _mbtiType = t;
+              // A type picked by hand must not inherit the confidence a quiz
+              // earned, so the slider drops to the self-declared value as soon
+              // as the choice changes — and goes back if they pick the original
+              // type again.
+              _mbtiConfidence = (t != null && t == _loadedType)
+                  ? (_loadedConfidence ?? kSelfDeclaredConfidence)
+                  : kSelfDeclaredConfidence;
+            }),
           ),
           if (_mbtiType != null) ...[
             const SizedBox(height: 12),

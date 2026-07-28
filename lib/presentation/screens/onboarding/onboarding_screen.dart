@@ -94,47 +94,59 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final personRepo = ref.read(personRepositoryProvider);
     final profileRepo = ref.read(profileRepositoryProvider);
 
-    final personId = await personRepo.insert(Person(
-      id: 0,
-      name: _nameCtrl.text.trim(),
-      role: PersonRole.other,
-      isSelf: true,
-      createdAt: DateTime.now(),
-    ));
-
-    // Each method carries its own evidence, so confidence and source come from
-    // the method that actually produced the type.
-    MbtiProfile? profile;
-    int confidence = kSelfDeclaredConfidence;
-    ProfileSource source = ProfileSource.manual;
-
-    if (_method == 'test' && _quizResult != null) {
-      profile = MbtiProfile.fromType(_quizResult!.type);
-      confidence = _quizResult!.confidence;
-      source = _quizResult!.source;
-    } else if (_method == 'granular') {
-      profile = MbtiProfile.fromType(_deriveTypeFromDichotomies());
-      confidence = confidenceFromDichotomySliders(_dichotomies.values);
-      source = ProfileSource.granular;
-    } else if (_method == 'manual' && _selectedType != null) {
-      profile = MbtiProfile.fromType(_selectedType!);
-    }
-
-    if (profile != null) {
-      await profileRepo.upsert(PersonalityProfile(
+    try {
+      final personId = await personRepo.insert(Person(
         id: 0,
-        personId: personId,
-        system: PersonalitySystem.mbti,
-        data: profile.toJson(),
-        confidence: confidence,
-        source: source,
-        updatedAt: DateTime.now(),
+        name: _nameCtrl.text.trim(),
+        role: PersonRole.other,
+        isSelf: true,
+        createdAt: DateTime.now(),
       ));
-    }
 
-    ref.invalidate(hasOnboardedProvider);
-    ref.invalidate(selfPersonProvider);
-    ref.invalidate(allPersonsProvider);
+      // Each method carries its own evidence, so confidence and source come from
+      // the method that actually produced the type.
+      MbtiProfile? profile;
+      int confidence = kSelfDeclaredConfidence;
+      ProfileSource source = ProfileSource.manual;
+
+      if (_method == 'test' && _quizResult != null) {
+        profile = MbtiProfile.fromType(_quizResult!.type);
+        confidence = _quizResult!.confidence;
+        source = _quizResult!.source;
+      } else if (_method == 'granular') {
+        profile = MbtiProfile.fromType(_deriveTypeFromDichotomies());
+        confidence = confidenceFromDichotomySliders(_dichotomies.values);
+        source = ProfileSource.granular;
+      } else if (_method == 'manual' && _selectedType != null) {
+        profile = MbtiProfile.fromType(_selectedType!);
+      }
+
+      if (profile != null) {
+        await profileRepo.upsert(PersonalityProfile(
+          id: 0,
+          personId: personId,
+          system: PersonalitySystem.mbti,
+          data: profile.toJson(),
+          confidence: confidence,
+          source: source,
+          updatedAt: DateTime.now(),
+        ));
+      }
+
+      ref.invalidate(hasOnboardedProvider);
+      ref.invalidate(selfPersonProvider);
+      ref.invalidate(allPersonsProvider);
+    } catch (_) {
+      // The gate only leaves this screen once the person exists, so a silent
+      // failure here strands the user on the last page with a dead button and
+      // a spinner that never stops.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).errorGeneric)),
+        );
+        setState(() => _saving = false);
+      }
+    }
   }
 
   MbtiType _deriveTypeFromDichotomies() {
