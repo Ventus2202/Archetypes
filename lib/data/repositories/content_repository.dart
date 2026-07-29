@@ -42,124 +42,107 @@ class TeamObjectivesContent {
   });
 }
 
+/// Loads the localized JSON content bundled in `assets/`.
+///
+/// Two rules hold for every loader here:
+///
+/// * **Caches are keyed by locale.** Until 2026-07-29 the four caches shared a
+///   single `_loadedLocale` that each loader overwrote with its own language, so
+///   one loader running in English was enough to make the guard pass for a cache
+///   filled in Italian: after a language switch the MBTI cards came back in the
+///   old language. Keying by locale also means switching back and forth is free.
+/// * **Failures propagate.** A missing or malformed asset throws; callers show
+///   an explicit error. Returning empty content instead (what four of the five
+///   loaders used to do) turned a broken asset into a blank screen with no
+///   explanation, and it is the same silent-failure class already fixed in
+///   `_AppGate` and in the quiz screen.
 class ContentRepository {
-  MbtiContent? _cache;
-  RelationshipDynamicsContent? _dynamicsCache;
-  CareerRolesContent? _careerCache;
-  TeamObjectivesContent? _teamCache;
-  String? _loadedLocale;
+  ContentRepository({AssetBundle? bundle}) : _bundle = bundle ?? rootBundle;
+
+  final AssetBundle _bundle;
+
+  final Map<String, MbtiContent> _mbtiCache = {};
+  final Map<String, RelationshipDynamicsContent> _dynamicsCache = {};
+  final Map<String, CareerRolesContent> _careerCache = {};
+  final Map<String, TeamObjectivesContent> _teamCache = {};
+
+  static const _supportedLocales = ['it', 'en'];
+
+  static String _resolveLocale(String languageCode) =>
+      _supportedLocales.contains(languageCode) ? languageCode : 'en';
+
+  Future<Map<String, dynamic>> _loadJson(String path) async {
+    final raw = await _bundle.loadString(path);
+    return json.decode(raw) as Map<String, dynamic>;
+  }
 
   Future<MbtiContent> loadMbtiContent(String languageCode) async {
-    if (_cache != null && _loadedLocale == languageCode) return _cache!;
+    final locale = _resolveLocale(languageCode);
+    final cached = _mbtiCache[locale];
+    if (cached != null) return cached;
 
-    final supportedLocales = ['it', 'en'];
-    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
+    final parsed = await _loadJson('assets/content/$locale/mbti.json');
 
-    final raw =
-        await rootBundle.loadString('assets/content/$locale/mbti.json');
-    final parsed = json.decode(raw) as Map<String, dynamic>;
-
-    _cache = MbtiContent(
+    return _mbtiCache[locale] = MbtiContent(
       types: Map<String, dynamic>.from(parsed['types'] as Map? ?? {}),
       functions: Map<String, dynamic>.from(parsed['functions'] as Map? ?? {}),
       dichotomies:
           Map<String, dynamic>.from(parsed['dichotomies'] as Map? ?? {}),
     );
-    _loadedLocale = languageCode;
-    return _cache!;
   }
 
-  Future<RelationshipDynamicsContent> loadDynamicsContent(String languageCode) async {
-    if (_dynamicsCache != null && _loadedLocale == languageCode) return _dynamicsCache!;
+  Future<RelationshipDynamicsContent> loadDynamicsContent(
+      String languageCode) async {
+    final locale = _resolveLocale(languageCode);
+    final cached = _dynamicsCache[locale];
+    if (cached != null) return cached;
 
-    final supportedLocales = ['it', 'en'];
-    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
+    final parsed =
+        await _loadJson('assets/content/$locale/relationship_dynamics.json');
 
-    try {
-      final raw =
-          await rootBundle.loadString('assets/content/$locale/relationship_dynamics.json');
-      final parsed = json.decode(raw) as Map<String, dynamic>;
-
-      _dynamicsCache = RelationshipDynamicsContent(
-        frictions: Map<String, dynamic>.from(parsed['frictions'] as Map? ?? {}),
-        growths: Map<String, dynamic>.from(parsed['growths'] as Map? ?? {}),
-        communications: Map<String, dynamic>.from(parsed['communications'] as Map? ?? {}),
-      );
-    } catch (_) {
-      _dynamicsCache = const RelationshipDynamicsContent(
-        frictions: {}, growths: {}, communications: {}
-      );
-    }
-    
-    _loadedLocale = languageCode;
-    return _dynamicsCache!;
+    return _dynamicsCache[locale] = RelationshipDynamicsContent(
+      frictions: Map<String, dynamic>.from(parsed['frictions'] as Map? ?? {}),
+      growths: Map<String, dynamic>.from(parsed['growths'] as Map? ?? {}),
+      communications:
+          Map<String, dynamic>.from(parsed['communications'] as Map? ?? {}),
+    );
   }
 
   Future<CareerRolesContent> loadCareerRolesContent(String languageCode) async {
-    if (_careerCache != null && _loadedLocale == languageCode) return _careerCache!;
+    final locale = _resolveLocale(languageCode);
+    final cached = _careerCache[locale];
+    if (cached != null) return cached;
 
-    final supportedLocales = ['it', 'en'];
-    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
+    final parsed = await _loadJson('assets/content/$locale/career_roles.json');
 
-    try {
-      final raw =
-          await rootBundle.loadString('assets/content/$locale/career_roles.json');
-      final parsed = json.decode(raw) as Map<String, dynamic>;
-
-      _careerCache = CareerRolesContent(
-        roles: Map<String, dynamic>.from(parsed['roles'] as Map? ?? {}),
-      );
-    } catch (_) {
-      _careerCache = const CareerRolesContent(roles: {});
-    }
-    
-    _loadedLocale = languageCode;
-    return _careerCache!;
+    return _careerCache[locale] = CareerRolesContent(
+      roles: Map<String, dynamic>.from(parsed['roles'] as Map? ?? {}),
+    );
   }
 
-  Future<TeamObjectivesContent> loadTeamObjectivesContent(String languageCode) async {
-    if (_teamCache != null && _loadedLocale == languageCode) return _teamCache!;
+  Future<TeamObjectivesContent> loadTeamObjectivesContent(
+      String languageCode) async {
+    final locale = _resolveLocale(languageCode);
+    final cached = _teamCache[locale];
+    if (cached != null) return cached;
 
-    final supportedLocales = ['it', 'en'];
-    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
+    final parsed =
+        await _loadJson('assets/content/$locale/team_objectives.json');
 
-    try {
-      final raw =
-          await rootBundle.loadString('assets/content/$locale/team_objectives.json');
-      final parsed = json.decode(raw) as Map<String, dynamic>;
-
-      _teamCache = TeamObjectivesContent(
-        objectives: Map<String, dynamic>.from(parsed['objectives'] as Map? ?? {}),
-      );
-    } catch (_) {
-      _teamCache = const TeamObjectivesContent(objectives: {});
-    }
-    
-    _loadedLocale = languageCode;
-    return _teamCache!;
+    return _teamCache[locale] = TeamObjectivesContent(
+      objectives: Map<String, dynamic>.from(parsed['objectives'] as Map? ?? {}),
+    );
   }
 
-  Future<List<QuizQuestion>> loadQuizQuestions(String languageCode, QuizLength length) async {
-    final supportedLocales = ['it', 'en'];
-    final locale = supportedLocales.contains(languageCode) ? languageCode : 'en';
-    final fileName = length.fileName;
+  Future<List<QuizQuestion>> loadQuizQuestions(
+      String languageCode, QuizLength length) async {
+    final locale = _resolveLocale(languageCode);
 
-    try {
-      final raw = await rootBundle.loadString('assets/quiz/$locale/$fileName');
-      final parsed = json.decode(raw) as Map<String, dynamic>;
-      final questionsRaw = parsed['questions'] as List? ?? [];
-      return questionsRaw.map((q) => QuizQuestion.fromJson(q as Map<String, dynamic>)).toList();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  void invalidateCache() {
-    _cache = null;
-    _dynamicsCache = null;
-    _careerCache = null;
-    _teamCache = null;
-    _loadedLocale = null;
+    final parsed = await _loadJson('assets/quiz/$locale/${length.fileName}');
+    final questionsRaw = parsed['questions'] as List? ?? [];
+    return questionsRaw
+        .map((q) => QuizQuestion.fromJson(q as Map<String, dynamic>))
+        .toList();
   }
 
   Map<String, dynamic>? getTypeContent(MbtiContent content, String typeKey) =>

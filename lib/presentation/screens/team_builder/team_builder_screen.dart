@@ -4,7 +4,6 @@ import 'package:archetypes/presentation/l10n/app_localizations.dart';
 import '../../../domain/team/team_models.dart';
 import '../../providers/team_provider.dart';
 import '../../providers/person_provider.dart';
-import '../../providers/database_provider.dart';
 import '../../theme/app_theme.dart';
 
 class TeamBuilderScreen extends ConsumerWidget {
@@ -192,13 +191,13 @@ class _CandidateList extends StatelessWidget {
   }
 }
 
-class _ResultsList extends ConsumerWidget {
+class _ResultsList extends StatelessWidget {
   final List<TeamComposition> results;
 
   const _ResultsList({required this.results});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
 
@@ -206,98 +205,96 @@ class _ResultsList extends ConsumerWidget {
       return Center(child: Text(l10n.teamNoResults));
     }
 
-    return FutureBuilder(
-      future: ref.read(contentRepositoryProvider).loadTeamObjectivesContent(Localizations.localeOf(context).languageCode),
-      builder: (ctx, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+    // This list used to be wrapped in a FutureBuilder on
+    // `loadTeamObjectivesContent`, whose result was never read: every label
+    // below comes from `l10n`. It only added a way for the whole results screen
+    // to be blocked (or, once loaders started throwing, blanked) by an asset it
+    // does not use.
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: results.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (ctx, i) {
+        final comp = results[i];
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: results.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 16),
-          itemBuilder: (ctx, i) {
-            final comp = results[i];
-            
-            return Card(
-              elevation: i == 0 ? 4 : 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: i == 0 ? BorderSide(color: cs.primary, width: 2) : BorderSide.none,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (i == 0) ...[
-                      Row(
-                        children: [
-                          Icon(Icons.emoji_events, color: cs.primary),
-                          const SizedBox(width: 8),
-                          Text(l10n.teamBestMatch, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
-                          const Spacer(),
-                          Text('${comp.overallScore.round()}/100', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const Divider(height: 24),
-                    ] else ...[
-                      Row(
-                        children: [
-                          Text('${l10n.teamAlternative} $i', style: Theme.of(context).textTheme.titleMedium),
-                          const Spacer(),
-                          Text('${comp.overallScore.round()}/100', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+        return Card(
+          elevation: i == 0 ? 4 : 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: i == 0 ? BorderSide(color: cs.primary, width: 2) : BorderSide.none,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (i == 0) ...[
+                  Row(
+                    children: [
+                      Icon(Icons.emoji_events, color: cs.primary),
+                      const SizedBox(width: 8),
+                      Text(l10n.teamBestMatch, style: Theme.of(context).textTheme.titleMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.bold)),
+                      const Spacer(),
+                      Text('${comp.overallScore.round()}/100', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                     ],
-                    
-                    Text(l10n.teamMembers, style: Theme.of(context).textTheme.labelMedium),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: List.generate(comp.members.length, (idx) {
-                        final m = comp.members[idx];
-                        final p = comp.profiles[idx];
-                        final color = AppTheme.mbtiTypeColor(p.type.label, Theme.of(context).brightness);
-                        
-                        return Chip(
-                          avatar: CircleAvatar(backgroundColor: color.withAlpha(50), child: Text(p.type.label, style: TextStyle(fontSize: 10, color: color))),
-                          label: Text(m.displayName),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    if (comp.strengths.isNotEmpty) ...[
-                      Row(
-                        children: [
-                          const Icon(Icons.arrow_upward, color: Colors.green, size: 16),
-                          const SizedBox(width: 8),
-                          Text(l10n.contentSectionStrengths, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.green)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(comp.strengths.map((s) => l10n.getStrengthTitle(s)).join(', '), style: Theme.of(context).textTheme.bodySmall),
-                      const SizedBox(height: 12),
+                  ),
+                  const Divider(height: 24),
+                ] else ...[
+                  Row(
+                    children: [
+                      Text('${l10n.teamAlternative} $i', style: Theme.of(context).textTheme.titleMedium),
+                      const Spacer(),
+                      Text('${comp.overallScore.round()}/100', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
-                    if (comp.blindSpots.isNotEmpty) ...[
-                      Row(
-                        children: [
-                          Icon(Icons.warning_amber_rounded, color: cs.error, size: 16),
-                          const SizedBox(width: 8),
-                          Text(l10n.contentSectionWeaknesses, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: cs.error)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(comp.blindSpots.map((s) => l10n.getBlindSpotTitle(s)).join(', '), style: Theme.of(context).textTheme.bodySmall),
-                    ],
-                  ],
+                Text(l10n.teamMembers, style: Theme.of(context).textTheme.labelMedium),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: List.generate(comp.members.length, (idx) {
+                    final m = comp.members[idx];
+                    final p = comp.profiles[idx];
+                    final color = AppTheme.mbtiTypeColor(p.type.label, Theme.of(context).brightness);
+
+                    return Chip(
+                      avatar: CircleAvatar(backgroundColor: color.withAlpha(50), child: Text(p.type.label, style: TextStyle(fontSize: 10, color: color))),
+                      label: Text(m.displayName),
+                    );
+                  }),
                 ),
-              ),
-            );
-          },
+                const SizedBox(height: 16),
+
+                if (comp.strengths.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(Icons.arrow_upward, color: Colors.green, size: 16),
+                      const SizedBox(width: 8),
+                      Text(l10n.contentSectionStrengths, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.green)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(comp.strengths.map((s) => l10n.getStrengthTitle(s)).join(', '), style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(height: 12),
+                ],
+
+                if (comp.blindSpots.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, color: cs.error, size: 16),
+                      const SizedBox(width: 8),
+                      Text(l10n.contentSectionWeaknesses, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: cs.error)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(comp.blindSpots.map((s) => l10n.getBlindSpotTitle(s)).join(', '), style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ],
+            ),
+          ),
         );
       },
     );

@@ -51,8 +51,16 @@ class _CareerFitScreenState extends ConsumerState<CareerFitScreen> {
             child: FutureBuilder(
               future: ref.read(contentRepositoryProvider).loadCareerRolesContent(Localizations.localeOf(context).languageCode),
               builder: (ctx, snap) {
-                if (!snap.hasData) return const Center(child: CircularProgressIndicator());
-                
+                if (snap.connectionState != ConnectionState.done) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                // A broken asset used to arrive here as empty content, so the
+                // list rendered with raw role keys and no descriptions; with
+                // `!snap.hasData` it would now spin forever instead.
+                if (snap.hasError || snap.data == null) {
+                  return Center(child: Text(l10n.errorNotFound));
+                }
+
                 final textContent = snap.data!;
 
                 return ListView.separated(

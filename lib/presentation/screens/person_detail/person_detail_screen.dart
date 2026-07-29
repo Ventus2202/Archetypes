@@ -249,6 +249,8 @@ class _PersonalityTab extends ConsumerWidget {
       future: _computeAffinityWithSelf(ref, mbtiProfile!, context),
       builder: (ctx, affinitySnap) {
         final data = affinitySnap.data;
+        final loadFailed = affinitySnap.hasError;
+        final cs = Theme.of(context).colorScheme;
 
         return ListView(
           padding: const EdgeInsets.all(16),
@@ -285,6 +287,13 @@ class _PersonalityTab extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
+            if (loadFailed && !person.isSelf)
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.error_outline, color: cs.error),
+                  title: Text(l10n.errorNotFound),
+                ),
+              ),
             if (data != null && !person.isSelf) ...[
               _AffinityCard(affinity: data.affinity, personName: person.displayName),
               const SizedBox(height: 12),
@@ -306,18 +315,23 @@ class _PersonalityTab extends ConsumerWidget {
     final selfMbti =
         selfProfiles.where((p) => p.system.name == 'mbti').firstOrNull;
     if (selfMbti == null) return null;
-    try {
-      final selfProfile =
-          MbtiProfile.fromJson(Map<String, dynamic>.from(selfMbti.data));
-      final affinity = CognitiveFunctionAffinity.calculate(selfProfile, profile);
-      final report = RelationshipDynamics.analyze(selfProfile, profile);
-      
-      final textContent = await ref.read(contentRepositoryProvider).loadDynamicsContent(locale);
 
-      return (affinity: affinity, report: report, textContent: textContent);
+    final MbtiProfile selfProfile;
+    try {
+      selfProfile = MbtiProfile.fromJson(Map<String, dynamic>.from(selfMbti.data));
     } catch (_) {
+      // An unreadable self profile is the same "no term of comparison" case as
+      // no profile at all: hide the section rather than report a failure.
       return null;
     }
+
+    final affinity = CognitiveFunctionAffinity.calculate(selfProfile, profile);
+    final report = RelationshipDynamics.analyze(selfProfile, profile);
+    // Deliberately outside the catch: a content asset that fails to load is an
+    // error to show, not a section to make disappear silently.
+    final textContent = await ref.read(contentRepositoryProvider).loadDynamicsContent(locale);
+
+    return (affinity: affinity, report: report, textContent: textContent);
   }
 }
 
