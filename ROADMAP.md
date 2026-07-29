@@ -124,7 +124,8 @@ Verificato dal codice al 2026-07-22.
   `app_database.dart`) modificato e committato **senza** i file rigenerati passa la CI
   verde, e il repo può portarsi dietro codice generato che non corrisponde alla sua
   sorgente. Effetto collaterale minore: ogni sessione che tocca l10n o schema sporca il
-  commit con i diff dei generati (questa sessione: 3 file). Scegliere una politica:
+  commit con i diff dei generati (3 file il 2026-07-27, di nuovo gli stessi 3 il 2026-07-29:
+  è un costo ricorrente, non un caso isolato). Scegliere una politica:
   (a) tenerli committati e aggiungere `git diff --exit-code` dopo i due generatori in CI,
   così una rigenerazione dimenticata rompe la build; (b) metterli in `.gitignore` e
   affidarsi ai generatori in setup/CI. Vedi la voce collegata in Epica 8.
@@ -139,6 +140,33 @@ Verificato dal codice al 2026-07-22.
   (stringa già esistente, niente nuova l10n). `person_edit` rimette `_loading = false` nel
   `finally`; l'onboarding lo fa solo nel `catch`, perché in caso di successo è il gate a
   smontare la schermata e riabilitare il pulsante nel frattempo sarebbe sbagliato.
+- [x] **La cache di `ContentRepository` serviva il contenuto nella lingua sbagliata dopo un
+  cambio di lingua** — chiuso il 2026-07-29. I quattro contenuti (`_cache` mbti,
+  `_dynamicsCache`, `_careerCache`, `_teamCache`) avevano cache separate ma **un solo**
+  `_loadedLocale` condiviso, sovrascritto da ogni loader con la propria lingua: bastava che un
+  loader girasse in EN perché la guardia `_cache != null && _loadedLocale == languageCode`
+  diventasse vera anche per una cache riempita in IT (app in IT → schede MBTI → passa a EN →
+  Career fit → riapri le schede MBTI e ricevi il testo italiano). Fix: `_loadedLocale` sparisce
+  e ogni contenuto ha una `Map<String, T>` **indicizzata per locale risolto**, quindi la lingua
+  è parte della chiave e non uno stato globale; come effetto collaterale alternare due lingue
+  non ricarica più nulla, e le lingue non supportate condividono la voce `en`. Rimosso
+  `invalidateCache()`, che era codice morto (mai chiamato in `lib/`) e ora è anche inutile.
+- [x] **I loader di contenuto inghiottivano ogni errore, e non in modo coerente** — chiuso il
+  2026-07-29 insieme al punto sopra. `loadDynamicsContent`, `loadCareerRolesContent`,
+  `loadTeamObjectivesContent` e `loadQuizQuestions` avevano un `catch (_)` che restituiva
+  contenuto vuoto, mentre `loadMbtiContent` lasciava propagare. Politica scelta: **il
+  repository propaga**, i chiamanti mostrano un errore esplicito — la stessa linea di
+  `_AppGate`, della schermata quiz e di `content_viewer` (l'unico consumatore già corretto).
+  Chiamanti adeguati: Career fit passa da `!snap.hasData` (che con la propagazione avrebbe
+  girato all'infinito) a `connectionState`/`hasError` → `errorNotFound`; `person_detail` non
+  avvolge più il caricamento nel `catch` che faceva sparire in silenzio l'intera sezione
+  affinità, e mostra una riga d'errore (il `catch` resta solo sul profilo self illeggibile);
+  `QuizScreen._startQuiz` converte l'eccezione nella lista vuota che la schermata già sa
+  renderizzare come errore. In Team builder il `FutureBuilder` su `loadTeamObjectivesContent`
+  è stato **rimosso**: il contenuto caricato non veniva mai letto (tutte le etichette vengono
+  da `l10n`), quindi bloccava i risultati su un asset che non usa. Nuovo
+  `test/data/repositories/content_repository_test.dart` (11 test, con un `AssetBundle` finto:
+  4 sulla cache per locale — incluso il sequenza esatta del bug — e 7 sulla propagazione).
 - [ ] Verificare il **primo run** di CI e del deploy Pages su GitHub; se il pin
   `flutter-version: 3.41.9` non si risolve nell'action, allentare a solo `channel: stable`.
 - [ ] **Aggiornamento dipendenze controllato**: `flutter pub outdated` (2026-07-23) segnala
@@ -147,18 +175,82 @@ Verificato dal codice al 2026-07-22.
   (`build_resolvers`, `build_runner_core`, catena `build_runner`). Pianificare un giro di
   update a scaglioni con CI verde ad ogni passo (riverpod 3 è breaking → valutarlo a parte).
 
-### 2. Nuovi sistemi di personalità (l'architettura è già pronta)
+### 2. Profilo ibrido multi-sistema
 
-L'enum `PersonalitySystem` prevede già: `mbti, enneagram, bigFive, disc, cliftonStrengths`.
-Solo MBTI è implementato. Per ognuno: modello di profilo, contenuti JSON IT+EN, calcolatore
-di affinità registrato accanto a `CognitiveFunctionAffinity`.
+**Obiettivo.** Il profilo finale di una persona non è "il suo MBTI": è una **sintesi di tutta
+l'evidenza disponibile** — MBTI, Big Five, Enneagramma, DISC, CliftonStrengths — pesata per
+quanto ciascuna misura è affidabile. Più strumenti una persona ha svolto, più il profilo è
+accurato e completo. L'enum `PersonalitySystem` prevede già i cinque valori; solo MBTI è
+implementato.
 
-- [ ] **Enneagramma**: 9 tipi + ali + tritype, modello + contenuti + affinità.
-- [ ] **Big Five (OCEAN)**: profilo a 5 tratti continui + quiz + contenuti.
-- [ ] **DISC**: 4 dimensioni + contenuti.
-- [ ] **CliftonStrengths**: 34 talenti (fase 1: solo storage + schede).
-- [ ] Registro affinità multi-sistema (selezione del calcolatore in base a `system`).
-- [ ] UI: selezione sistema attivo per persona e nel grafo.
+**Decisione di architettura (2026-07-29): l'ibrido è derivato al volo, non materializzato.**
+I profili per-sistema restano la sorgente di verità in `PersonalityProfiles` (una riga per
+`(persona, system)`, ciascuna con `confidence`, `source`, `updatedAt`); il profilo ibrido si
+calcola **su lettura** da quelle righe e non viene mai scritto in DB. Conseguenze: nessun
+cambio di schema, nessuna migration, nessuna cache da invalidare quando arriva un test nuovo —
+il profilo si aggiorna da sé. In cambio il calcolo va tenuto economico ed esposto da un
+provider derivato (`hybridProfileProvider(personId)`), con la logica in `domain/` in Dart puro
+come gli altri motori.
+
+**Prerequisito bloccante.** Oggi `MbtiProfile.fromType` appiattisce le dicotomie a `±70` e i
+pesi funzione a `[90,70,45,25]` per **ogni** sorgente, e tutti i percorsi di scrittura passano
+di lì: in DB le dicotomie sono identiche per tutte le persone, e l'unica variazione è quale
+dei 16 tipi più `confidence`/`source`. Non si fonde una misura continua con un flag: senza
+evidenza graduata non c'è niente da fondere, si può solo sovrascrivere. Vedi la voce
+**"La fedeltà dell'evidenza si ferma alla confidence"** in Epica 5 — è il primo passo di
+questa epica, non un miglioramento cosmetico. Nota: il dato serve già esiste ed è buttato via,
+`QuizResult.breakdown` è la posizione normalizzata 0..1 per asse e sopravvive solo come
+`confidence`; col test lungo (20 item per asse, dal 2026-07-29) è una misura fine.
+
+- [ ] **Salvare l'evidenza graduata** (prerequisito, vedi Epica 5): dicotomie reali quando il
+  metodo le conosce, così MBTI contribuisce posizioni e non flag.
+- [ ] **Spazio latente comune**: definire le dimensioni su cui i sistemi confluiscono. Proposta:
+  backbone in stile Big Five (continuo, il più fondato empiricamente e con la sovrapposizione
+  più ampia) più i tratti che non si riducono a fattori — tipo core/ali dell'Enneagramma,
+  talenti CliftonStrengths — trasportati a parte invece che schiacciati dentro. Le mappature
+  note collegano E↔Estroversione, N↔Apertura, F↔Gradevolezza, J↔Coscienziosità: il
+  **Nevroticismo non ha corrispettivo MBTI**, quindi resta non misurato finché non c'è il
+  Big Five. La fusione non è "media ciò che si sovrappone": è dimensioni condivise da
+  riconciliare più dimensioni che un solo strumento copre, da propagare intatte.
+- [ ] **Calibrazione delle scale**: prima di combinare, i contributi vanno portati su una scala
+  comune. Oggi ogni motore normalizza a 0–100 a modo suo (`CognitiveFunctionAffinity` divide
+  per `_maxRaw = 6.0`, tetto teorico MBTI-specifico; `CareerFit` tronca con `.clamp`). Mediare
+  0–100 provenienti da strumenti diversi senza calibrare dà un numero che sembra preciso e non
+  significa niente.
+- [ ] **Motore di fusione** (`domain/`, Dart puro, statico come gli altri): dai profili
+  per-sistema di una persona produce il profilo ibrido, pesando ogni contributo per
+  `confidence`, `source` e `updatedAt` (un `quizLong` recente pesa più di un `manual` di due
+  anni fa). È qui che il lavoro su confidence/source delle sessioni 27–29/07 diventa
+  infrastruttura e non un dettaglio di visualizzazione.
+- [ ] **Copertura del profilo**: l'ibrido deve dichiarare **quanto è completo** — quali sistemi
+  hanno contribuito, quali dimensioni restano non misurate. È il contraltare onesto della
+  promessa "più accurato e completo": senza, un profilo da un solo test breve si presenta come
+  uno costruito su quattro strumenti.
+- [ ] **Big Five (OCEAN)**: 5 tratti continui + quiz + contenuti. **Da fare per primo** fra i
+  nuovi sistemi: è continuo per natura (quindi è il candidato naturale a fare da backbone) ed
+  è l'unico che copre il Nevroticismo.
+- [ ] **Enneagramma**: 9 tipi + ali + tritype, modello + contenuti + mappatura nello spazio comune.
+- [ ] **DISC**: 4 dimensioni + contenuti + mappatura.
+- [ ] **CliftonStrengths**: 34 talenti (fase 1: solo storage + schede), trasportati come tratti
+  a sé.
+- [ ] **Consumatori a valle**: `CognitiveFunctionAffinity`, `CareerFit`, `TeamOptimizer`
+  (`kTeamObjectiveWeights` è indicizzato per funzione cognitiva) e i 7 tool "thick" del chatbot
+  oggi consumano tutti `MbtiProfile`. Decidere se passano all'ibrido o restano MBTI-only: è il
+  bivio architetturale vero di questa epica, molto più grosso di "aggiungere un calcolatore".
+- [ ] **UI**: mostrare l'ibrido come *il* profilo della persona, con l'evidenza per-sistema
+  navigabile sotto (quale test ha detto cosa, con che confidence). Sostituisce l'idea
+  precedente di un selettore di "sistema attivo".
+- [ ] **Condivisione**: `ShareCode` è un layout fisso da 15 byte con *un* tipo MBTI, *una*
+  confidence, *una* source. Un profilo ibrido non ci sta: non è un bump di `version`, serve un
+  payload a lunghezza variabile (o si condivide solo una sintesi).
+- [ ] **Allineare `CLAUDE.md`**: la sezione "Adding a new personality system" descrive ancora
+  il modello a coesistenza ("implement an affinity calculator and register it **alongside**
+  `CognitiveFunctionAffinity`"), che questa epica supera.
+
+> Voci superate da questa riscrittura, tenute per memoria: ~~"Registro affinità multi-sistema
+> (selezione del calcolatore in base a `system`)"~~ e ~~"UI: selezione sistema attivo per
+> persona e nel grafo"~~. Descrivevano un centralino — un sistema alla volta, profili in
+> parallelo — non una sintesi.
 
 ### 3. Grafo e relazioni
 
@@ -224,43 +316,57 @@ profilo salvato dal quiz ora registra confidence e sorgente reali.
   certezza di un quiz nemmeno a schermo. Il default del campo passa da `80` a
   `kSelfDeclaredConfidence`. Due widget test di regressione in
   `test/widgets/profile_provenance_widget_test.dart`.
-- [!] **I tre "test" del quiz sono lo stesso identico file da 16 domande.** Scoperto il
-  2026-07-28 mentre si scriveva il test end-to-end sul quiz: `assets/quiz/it/mbti_short.json`,
-  `mbti_medium.json` e `mbti_long.json` hanno lo **stesso hash SHA256** (idem per `en/`), 16
-  domande ciascuno — 4 per asse. Ma la UI promette "~20 domande · 5 min", "~50 domande ·
-  12 min", "~80 domande · 20 min", e dal 27/07 la card del test completo porta il badge
-  **"Più accurato"**. Sono affermazioni false, oggi live sulla PWA pubblicata: scegliere il
-  test completo dà esattamente le stesse 16 domande del breve, quindi la stessa confidence,
-  e `ProfileSource.quizShort/Medium/Long` distingue in DB tre percorsi identici. È il
-  presupposto mancante di tutto il lavoro su confidence e sorgente delle ultime due sessioni.
-  Va scritto il contenuto vero (medium ~50, long ~80, IT+EN) — finché non c'è, il badge e le
-  descrizioni mentono. Fino ad allora l'unica alternativa onesta è allineare la copy alle 16
-  domande reali e togliere il badge, ma è un ripiego: la funzionalità promessa è il contenuto.
+- [x] **I tre "test" del quiz erano lo stesso identico file da 16 domande** — chiuso il
+  2026-07-29 scrivendo il contenuto vero. Scoperto il 2026-07-28: i tre asset avevano lo
+  **stesso hash SHA256** (idem per `en/`) mentre la UI prometteva "~20 / ~50 / ~80 domande" e
+  bollava il completo come "Più accurato" — affermazioni false, allora live sulla PWA. Ora la
+  banca è di **80 item per lingua** (20 per asse, 10 diretti + 10 reverse-scored) e i tre file
+  sono **annidati**: short 16 (4/asse), medium 48 (12/asse), long 80 (20/asse), con gli assi
+  interlacciati e la direzione alternata, così nessuna sequenza di domande consecutive spinge
+  lo stesso polo. Le 16 domande del breve sono esattamente quelle già pubblicate, quindi
+  nessuna regressione di contenuto. Copy allineata ai numeri reali (niente più "~"):
+  16·4 min, 48·10 min, 80·16 min. Nuovo `test/assets/quiz_assets_test.dart` (15 test) che
+  asserisce conteggi, unicità di id e testo, assi/direzioni valide, bilanciamento per asse,
+  annidamento e parità di struttura IT/EN: è la rete che impedisce il ritorno del bug.
+  Nota emersa chiudendola: il badge **"Più accurato"** ora è vero nel senso ordinario
+  (20 item per asse contro 4 → una risposta anomala sposta molto meno il risultato), ma **non**
+  perché produca una `confidence` più alta — quella metrica è normalizzata per asse, quindi chi
+  risponde in modo coerente la satura su qualsiasi lunghezza. Il commento nel codice che
+  affermava il contrario è stato corretto.
+- [ ] **Uscire dal quiz a metà butta via tutte le risposte senza chiedere niente.**
+  `QuizScreen` è sempre spinta con `MaterialPageRoute` (da `onboarding._openQuiz` e da due
+  punti di `person_detail`), quindi l'AppBar della pagina domanda ha la freccia indietro
+  automatica: un tap fa `pop()` della route e `_answers` sparisce, senza conferma e senza
+  salvataggio parziale. Con 16 domande era una seccatura; dal 2026-07-29 il test completo ne
+  ha **80**, quindi si possono perdere venti minuti di lavoro con un tap involontario (su
+  mobile anche solo una gesture di swipe-back). Serve almeno un dialog di conferma sull'uscita
+  a quiz iniziato; la persistenza delle risposte parziali è il passo successivo.
 - [ ] **La fedeltà dell'evidenza si ferma alla confidence**: `MbtiProfile.fromType` fissa
   `dichotomies` a ±70 e i pesi funzione a `[90,70,45,25]` per **ogni** sorgente, quindi il
   breakdown del quiz e la posizione reale degli slider granulari vengono buttati via nel
   campo `data`. Un J/P al 51/49 e uno al 95/5 sono indistinguibili in DB, e la confidence
   (2026-07-27) è oggi l'unica traccia di quell'evidenza. Salvare le dicotomie reali quando
   il metodo le conosce. È il prerequisito della schermata di confronto e del livello
-  per-funzione qui sotto.
-- [!] **Un asset del quiz illeggibile fa crashare la schermata invece di dare un errore.**
-  `ContentRepository.loadQuizQuestions` (`content_repository.dart:152`) inghiotte qualsiasi
-  errore e restituisce `[]`; `_startQuiz` salva quella lista vuota e imposta `_selectedLength`,
-  quindi `build` scivola fino a `_buildQuestion`, che fa `_questions![_currentIndex]` su una
-  lista vuota. **Verificato il 2026-07-28** con una sonda usa-e-getta (override di
-  `contentRepositoryProvider` con un repo che ritorna `[]`): `RangeError (length): Invalid
-  value: Valid value range is empty: 0`, cioè schermo rosso, e senza via d'uscita perché
-  `_selectedLength` è ormai valorizzato. Basta un asset mancante nel bundle, un JSON malformato
-  o una chiave `questions` assente — sulla PWA anche solo un file non scaricato. Serve un ramo
-  esplicito su lista vuota (messaggio + ritorno alla scelta della lunghezza); la stessa classe
-  di bug di `_AppGate`, già chiusa altrove.
-- [ ] **Copy sbagliata sulla scelta della lunghezza del quiz** (`quiz_screen.dart:73-81`):
-  l'AppBar usa `mbtiSourceQuizShort` ("Test breve") — con il commento-appunto
-  `// Or a generic title` — su una pagina che offre tutte e tre le lunghezze, e il titolo
-  interno riusa `onboardingChooseMethod` ("Come vuoi inserire la tua personalità?"), che
-  parla del metodo, non della durata. Servono due stringhe l10n nuove (IT+EN).
-  Confermato dal vivo il 2026-07-28: il widget test ha dovuto disambiguare "Test breve" tra
-  l'AppBar e la card, perché la stessa stringa compare due volte sulla stessa pagina.
+  per-funzione qui sotto — e, dal 2026-07-29, **il primo passo di Epica 2**: senza evidenza
+  graduata il profilo ibrido multi-sistema non ha niente da fondere, perché una misura continua
+  (Big Five) non si combina con un flag `±70`. Da qui in poi vale come blocco, non come
+  rifinitura.
+- [x] **Un asset del quiz illeggibile faceva crashare la schermata invece di dare un errore**
+  — chiuso il 2026-07-29. `ContentRepository.loadQuizQuestions` inghiotte qualsiasi errore e
+  restituisce `[]`; `_startQuiz` salvava quella lista vuota e impostava `_selectedLength`,
+  quindi `build` scivolava fino a `_buildQuestion` → `RangeError` su lista vuota, schermo rosso
+  senza via d'uscita (verificato con una sonda il 2026-07-28). Ora `build` ha un ramo esplicito
+  su `_questions!.isEmpty` → `_buildLoadError`: icona, messaggio (`quizLoadError` IT/EN) e
+  pulsante **Indietro** che azzera `_selectedLength`/`_questions` e riporta alla scelta della
+  lunghezza, perché gli altri due file possono benissimo caricarsi. Widget test di regressione
+  `test/widgets/quiz_load_error_widget_test.dart` (override del repo con uno che ritorna `[]`):
+  nessuna eccezione, messaggio a schermo, ritorno alla scelta funzionante.
+- [x] **Copy sbagliata sulla scelta della lunghezza del quiz** — chiusa il 2026-07-29.
+  L'AppBar usava `mbtiSourceQuizShort` ("Test breve") su una pagina che offre tutte e tre le
+  lunghezze (di qui la disambiguazione che il widget test del 28/07 aveva dovuto fare) e il
+  titolo interno riusava `onboardingChooseMethod`, che parla del metodo e non della durata.
+  Due stringhe nuove IT+EN: `quizChooseLengthAppBar` ("Test della personalità") e
+  `quizChooseLengthTitle` ("Quanto vuoi che sia lungo il test?").
 - [ ] **Stringa italiana hardcoded in `person_edit`**: `person_edit_screen.dart` mostra
   `'Inserisci un nome'` come snackbar di validazione invece di una chiave l10n, quindi in EN
   esce in italiano. Notato il 2026-07-28 lavorando sullo stesso `_save`; lasciato fuori
@@ -274,6 +380,24 @@ profilo salvato dal quiz ora registra confidence e sorgente reali.
 
 ### 6. Contenuti
 
+- [!] **Il Team builder non ha mai mostrato il suo contenuto tradotto: l'utente legge chiavi
+  grezze.** Trovato il 2026-07-29 rimuovendo il `FutureBuilder` che caricava
+  `team_objectives.json` senza leggerlo. I due asset (IT + EN, ~2 KB l'uno) hanno `title`,
+  `description` e `ideal_profile` per ogni obiettivo, ma la schermata non li tocca: il menu a
+  tendina usa `l10n.getTeamObjectiveTitle(obj.name)` e strengths/blind spot usano
+  `getStrengthTitle`/`getBlindSpotTitle`, che sono tre **stub** in fondo a
+  `team_builder_screen.dart` (`=> key`, `key.replaceAll('strength_','').toUpperCase()`) con i
+  commenti-appunto "Will implement properly via JSON/arb". Risultato a schermo: gli obiettivi
+  appaiono come i nomi dell'enum Dart (`creative`, `execution`, …) **identici in IT e EN**,
+  perché `obj.name` non passa da nessuna traduzione, e i punti di forza come `NI, TE` (le
+  sigle delle funzioni cognitive, da `strength_${label.toLowerCase()}` in
+  `team_optimizer.dart:224`). Dopo la rimozione di oggi `loadTeamObjectivesContent` non ha
+  **nessun** chiamante in `lib/`: il contenuto è formalmente morto finché qualcuno non lo
+  collega. È la schermata più indietro del progetto ed è raggiungibile dalla home. Fix:
+  cablare `TeamObjectivesContent` nella schermata (titolo + descrizione dell'obiettivo
+  scelto) e risolvere le chiavi strength/blindspot via ARB o via JSON, togliendo l'estensione
+  stub. (Nota minore stessa schermata: `_ConfigurationPanel` è un `ConsumerWidget` che non usa
+  mai `ref`.)
 - [ ] Espandere le schede di relazione per **coppia di tipi** (16×16), non solo per coppia
   di funzioni.
 - [ ] Rivedere/ampliare i testi didattici esistenti (tipi, funzioni, ruoli, obiettivi team).
@@ -457,6 +581,53 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   non viene distrutto (con `_mbtiType` nullo il blocco di scrittura non parte, e dopo il fix di
   oggi nemmeno il `source` verrebbe toccato), quindi non è urgente — ma è un fallimento muto
   della stessa famiglia di quelli già chiusi in `_AppGate` e nel backup.
+- **`person_detail` ha la stessa copy sbagliata appena tolta dal quiz**:
+  `person_detail_screen.dart:280` usa `l10n.mbtiSourceQuizShort` ("Test breve") come titolo
+  della voce che **apre il quiz**, con il commento-appunto `// Or a "Retry quiz" label`. Da
+  quando il quiz offre davvero tre lunghezze diverse (2026-07-29) è sbagliata in due modi:
+  nomina una sola lunghezza per un ingresso che le offre tutte, e riusa una stringa che
+  descrive la *sorgente* di un profilo. Riusare `quizChooseLengthAppBar` o una stringa
+  dedicata tipo "Rifai il test".
+- **`QuizQuestion.weight` è flessibilità mai usata**: tutti e 144 gli item degli asset (e i 16
+  di prima) hanno `"weight": 1.0`, mentre engine e modello supportano pesi per domanda. O si
+  usa — pesando di più gli item che discriminano meglio, cosa che avrebbe senso ora che la
+  banca è di 80 — o è un campo che complica il formato senza dare niente. Da decidere quando
+  si rimetterà mano al contenuto.
+- **La banca del quiz va tenuta bilanciata a mano**: gli asset in `assets/quiz/` restano la
+  sorgente di verità (nessun generatore committato), quindi aggiungere item significa
+  rispettare gli invarianti che `test/assets/quiz_assets_test.dart` verifica — pari numero di
+  domande per asse, metà reverse-scored, annidamento short ⊂ medium ⊂ long, stessa struttura
+  IT/EN. Se la banca crescerà ancora, valutare di committare il generatore in `tool/`.
+- **I `FutureBuilder` creano il future dentro `build`**: `career_fit_screen.dart:52`,
+  `person_detail_screen.dart:79` e `:249`, `content_viewer_screen.dart:28`. Ogni rebuild
+  (cambio tab, `setState`, rotazione, comparsa della tastiera) costruisce un Future nuovo,
+  quindi rifà il lavoro e rimostra lo spinner. Per i contenuti il costo è basso — la cache per
+  locale del 2026-07-29 fa sì che il secondo giro non rilegga l'asset — ma
+  `_computeAffinityWithSelf` fa **due query DB più il calcolo di affinità e dinamiche** a ogni
+  rebuild. Memoizzare il future (campo in uno `State`, o un `FutureProvider`, stile già usato
+  altrove nel progetto).
+- **Il repo non è `dart format` clean**: verificato il 2026-07-29 con
+  `dart format --output=none --set-exit-if-changed` su file **non** toccati dalla sessione
+  (`graph_screen.dart`, `person_detail_screen.dart`): entrambi "Changed". Conseguenza pratica,
+  incontrata lo stesso giorno: non si può formattare il file su cui si sta lavorando senza
+  produrre un diff enorme e scollegato dal lavoro, quindi l'indentazione va sistemata a mano.
+  E la CI non controlla il formato, quindi la deriva continua. Decidere: un `dart format .` in
+  un commit dedicato e solo-formato + `--set-exit-if-changed` in CI, oppure dichiarare
+  esplicitamente che il formato è libero e smettere di chiederselo. Collegato alla voce
+  `.gitattributes` (stessa famiglia: igiene del diff).
+- **Pattern: per testare chi legge asset, iniettare l'`AssetBundle`.** Aggiunto il 2026-07-29
+  a `ContentRepository({AssetBundle? bundle})` (default `rootBundle`): un bundle finto rende
+  i test ermetici, indipendenti dal contenuto reale e capaci di simulare asset mancanti o
+  JSON malformato — cose che con `rootBundle` non si riescono a provocare. Vale accanto agli
+  altri due pattern annotati (geometria renderizzata, route host per le schermate che fanno
+  `pop()`). Trappola da ricordare: `rootBundle` è un `CachingAssetBundle` e cachea già le
+  stringhe per chiave, quindi un fake che voglia **contare** le letture deve sovrascrivere
+  anche `loadString`, altrimenti misura la cache del bundle e non quella del repository.
+- **Il quiz è l'unico contenuto non cachato**: dopo il fix del 2026-07-29 i quattro contenuti
+  didattici stanno in cache per locale, mentre `loadQuizQuestions` rilegge e riparsa l'asset a
+  ogni avvio del test (80 item nel completo). Non è un problema di prestazioni oggi — succede
+  una volta per test — ma è l'unica eccezione rimasta alla regola del repository, quindi o si
+  cacha anche quello o si scrive perché no.
 - **Il badge a pillola è duplicato**: stesso `Container` (alpha 38, radius 999, `labelSmall`
   w600) in `_MethodCard` (`onboarding_screen.dart`) e in `_LengthCard`
   (`quiz_screen.dart`). Due copie si tollerano; alla terza estrarre un piccolo widget
@@ -627,6 +798,73 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   widget test: pesa **sottoscriversi** allo stream, non toccarlo — `PersonEditScreen`
   invalida `allPersonsProvider` e pompa lo stesso. Annotata la stringa italiana hardcoded in
   `person_edit` (Epica 5). Nessun commit: in working tree restano anche i 13 file del 27/07.
+- 2026-07-29 — Epica 5: **chiusi entrambi i `[!]`, il quiz ora è quello che promette di
+  essere**. Scritta la banca vera di item MBTI — 80 per lingua (20 per asse, 10 diretti e 10
+  reverse-scored) — e generati i tre asset annidati: short 16, medium 48, long 80, assi
+  interlacciati e direzione alternata, con le 16 domande del breve invariate rispetto a quelle
+  già pubblicate. Prima i tre file erano **byte-identici** mentre la UI vendeva ~20/~50/~80
+  domande e un badge "Più accurato": copy riallineata ai conteggi reali (16·4 min, 48·10 min,
+  80·16 min). Chiuso nello stesso giro il secondo `[!]`: un asset che non si carica ora dà una
+  schermata d'errore con ritorno alla scelta della lunghezza invece del `RangeError` su lista
+  vuota. Sistemata anche la copy della pagina di scelta (`quizChooseLengthAppBar` /
+  `quizChooseLengthTitle`, IT+EN), che usava "Test breve" come titolo di una pagina con tre
+  lunghezze. Corretto il commento che giustificava il badge con una confidence più alta: la
+  metrica è normalizzata per asse e non cresce col numero di domande — il test lungo è più
+  *stabile*, non più "sicuro". Nuovi test: `test/assets/quiz_assets_test.dart` (15, sulla
+  struttura dei sei asset: conteggi, unicità, bilanciamento per asse, annidamento, parità
+  IT/EN) e `test/widgets/quiz_load_error_widget_test.dart` (1). Verifiche: `flutter analyze`
+  pulito, 103 test verdi (87→103).
+- 2026-07-29 — Chiusura sessione: registrate le voci emerse dal lavoro sul quiz. Un `[!]`
+  nuovo in Epica 1, trovato verificando come i loader gestiscono gli errori: le quattro cache
+  di `ContentRepository` condividono **un solo** `_loadedLocale`, quindi dopo un cambio di
+  lingua una cache riempita in IT viene servita come se fosse EN — e `invalidateCache()`, la
+  funzione scritta per evitarlo, non è chiamata da nessuna parte. Accanto, l'incoerenza dei
+  loader (quattro inghiottono tutto, `loadMbtiContent` propaga) che lascia scoperti Career fit
+  e Team builder ora che la schermata quiz è a posto. In Epica 5: uscire dal quiz a metà perde
+  tutte le risposte senza conferma — con 80 domande non è più una seccatura. Nel backlog:
+  `person_detail` ha la stessa copy sbagliata appena tolta dal quiz, `QuizQuestion.weight` è
+  sempre 1.0 su tutti e 144 gli item, e la banca resta da tenere bilanciata a mano. Confermato
+  che il churn dei file generati è ricorrente (stessi 3 file del 27/07).
+- 2026-07-29 — **Epica 2 riscritta attorno al profilo ibrido.** Emerso a fine sessione che
+  l'obiettivo non è affiancare più sistemi ma **fonderli**: il profilo finale è una sintesi di
+  tutta l'evidenza disponibile, pesata per affidabilità. La vecchia Epica 2 descriveva il
+  contrario — "selezione del calcolatore in base a `system`", "selezione sistema attivo" — cioè
+  un centralino con un sistema alla volta; quelle due voci sono superate e restano annotate a
+  fondo epica. Decisione presa: l'ibrido è **derivato al volo** dai profili per-sistema, mai
+  materializzato (niente schema nuovo, niente migration, niente invalidazione: si aggiorna da
+  sé). Ne discendono i punti nuovi dell'epica: spazio latente comune, calibrazione delle scale,
+  motore di fusione pesato per `confidence`/`source`/`updatedAt`, dichiarazione di copertura del
+  profilo, Big Five per primo (è continuo ed è l'unico che copre il Nevroticismo, che MBTI non
+  misura), consumatori a valle e `ShareCode` da ripensare. La voce di Epica 5 sulla fedeltà
+  dell'evidenza (`MbtiProfile.fromType` appiattisce tutto a `±70`) è promossa da rifinitura a
+  **blocco**: verificata oggi nel codice, è il primo passo di tutta l'epica.
+- 2026-07-29 — Epica 1: **chiuso il `[!]` sulla cache di `ContentRepository` e, con lo stesso
+  giro, la politica sugli errori dei loader**. Il `_loadedLocale` unico è sostituito da una
+  cache per contenuto **indicizzata per locale**, quindi la lingua è parte della chiave e non
+  uno stato globale che l'ultimo loader vince; `invalidateCache()`, mai chiamato in `lib/`, è
+  stato rimosso perché ora non serve. Politica sugli errori: il repository **propaga** e i
+  chiamanti mostrano un errore esplicito (prima quattro loader su cinque restituivano contenuto
+  vuoto, cioè schermate bianche senza spiegazione). Adeguati i chiamanti: Career fit aveva
+  `!snap.hasData` e con la propagazione avrebbe girato all'infinito; `person_detail` non fa più
+  sparire in silenzio la sezione affinità quando è l'asset a mancare; `QuizScreen` incanala
+  l'eccezione nella lista vuota che già rendeva come errore. Rimosso da Team builder un
+  `FutureBuilder` che caricava `team_objectives.json` senza **mai** leggerlo: era solo un modo
+  per far bloccare i risultati da un asset non usato. Per rendere testabile tutto questo,
+  `ContentRepository` accetta ora un `AssetBundle` opzionale (default `rootBundle`). Verifiche:
+  `flutter analyze` pulito, 114 test verdi (103→114, +11 in
+  `test/data/repositories/content_repository_test.dart`).
+- 2026-07-29 — Chiusura sessione: registrate le voci emerse dal lavoro sui loader di
+  contenuto. Un `[!]` nuovo in Epica 6, trovato rimuovendo il `FutureBuilder` inutile del Team
+  builder: quella schermata non ha **mai** mostrato il suo contenuto tradotto: obiettivi,
+  punti di forza e blind spot passano da tre stub che restituiscono la chiave, quindi
+  l'utente legge `creative` / `NI, TE` uguali in IT e in EN mentre `team_objectives.json`
+  (title + description + ideal_profile, in entrambe le lingue) non viene letto da nessuno.
+  Nel backlog: i `FutureBuilder` costruiscono il future dentro `build` (e
+  `_computeAffinityWithSelf` rifà due query DB più il calcolo a ogni rebuild); il repo non è
+  `dart format` clean — verificato su file non toccati — quindi formattare un file solo
+  produce un diff enorme e la CI non se ne accorge; il pattern dell'`AssetBundle` iniettabile
+  per i test, con la trappola della cache interna di `rootBundle`; e il quiz come unico
+  contenuto rimasto senza cache.
 - 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
   passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
   `archive_io` → `archive`. Nuovo helper download browser a import condizionale
