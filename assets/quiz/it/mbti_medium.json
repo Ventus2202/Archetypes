@@ -9,65 +9,65 @@
     },
     {
       "id": "q2",
-      "text": "Preferisci attività tranquille e solitarie invece di grandi eventi sociali.",
-      "axis": "IE",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q3",
-      "text": "Parli spesso prima di pensare bene a cosa dire.",
-      "axis": "IE",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q4",
-      "text": "Hai bisogno di molto tempo da solo per ricaricare le energie.",
-      "axis": "IE",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q5",
-      "text": "Sei più interessato ai fatti concreti che alle teorie astratte.",
-      "axis": "NS",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q6",
       "text": "Immagini spesso come le cose potrebbero essere in futuro.",
       "axis": "NS",
       "direction": 1,
       "weight": 1.0
     },
     {
-      "id": "q7",
-      "text": "Ti fidi di più della tua esperienza passata che dell'intuizione.",
-      "axis": "NS",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q8",
-      "text": "Ami esplorare concetti complessi e significati simbolici.",
-      "axis": "NS",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q9",
+      "id": "q3",
       "text": "Segui il tuo cuore piuttosto che la testa quando prendi decisioni.",
       "axis": "TF",
       "direction": 1,
       "weight": 1.0
     },
     {
-      "id": "q10",
+      "id": "q4",
+      "text": "Preferisci mantenere le tue opzioni aperte invece di decidere subito.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q5",
+      "text": "Preferisci attività tranquille e solitarie invece di grandi eventi sociali.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q6",
+      "text": "Sei più interessato ai fatti concreti che alle teorie astratte.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q7",
       "text": "Dai molta importanza alla logica e all'obiettività.",
       "axis": "TF",
       "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q8",
+      "text": "Ti piace avere un programma dettagliato per la tua giornata.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q9",
+      "text": "Parli spesso prima di pensare bene a cosa dire.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q10",
+      "text": "Ami esplorare concetti complessi e significati simbolici.",
+      "axis": "NS",
+      "direction": 1,
       "weight": 1.0
     },
     {
@@ -79,37 +79,261 @@
     },
     {
       "id": "q12",
+      "text": "Sei molto spontaneo e ti adatti facilmente ai cambiamenti improvvisi.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q13",
+      "text": "Hai bisogno di molto tempo da solo per ricaricare le energie.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q14",
+      "text": "Ti fidi di più della tua esperienza passata che dell'intuizione.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q15",
       "text": "Sei capace di restare distaccato e critico durante una discussione.",
       "axis": "TF",
       "direction": -1,
       "weight": 1.0
     },
     {
-      "id": "q13",
-      "text": "Ti piace avere un programma dettagliato per la tua giornata.",
-      "axis": "JP",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q14",
-      "text": "Preferisci mantenere le tue opzioni aperte invece di decidere subito.",
-      "axis": "JP",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q15",
+      "id": "q16",
       "text": "Ti senti frustrato quando le cose non vanno come pianificato.",
       "axis": "JP",
       "direction": -1,
       "weight": 1.0
     },
     {
-      "id": "q16",
-      "text": "Sei molto spontaneo e ti adatti facilmente ai cambiamenti improvvisi.",
+      "id": "q17",
+      "text": "Attacchi discorso con degli sconosciuti senza sforzo.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q18",
+      "text": "Ti perdi facilmente nei tuoi pensieri e nelle ipotesi.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q19",
+      "text": "Ti accorgi subito quando qualcuno nel gruppo sta male.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q20",
+      "text": "Lavori meglio sotto la pressione della scadenza.",
       "axis": "JP",
       "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q21",
+      "text": "In un gruppo ascolti più di quanto parli.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q22",
+      "text": "Noti subito i dettagli pratici che agli altri sfuggono.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q23",
+      "text": "Preferisci sentirti dire una verità scomoda che una bugia gentile.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q24",
+      "text": "Finisci le cose molto prima della scadenza.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q25",
+      "text": "Dopo una serata in mezzo alla gente ti senti carico.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q26",
+      "text": "Ti interessa più il quadro d'insieme che i singoli dettagli.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q27",
+      "text": "Faresti un'eccezione a una regola pur di non ferire una persona.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q28",
+      "text": "Cambi programma volentieri se salta fuori qualcosa di più interessante.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q29",
+      "text": "Le telefonate impreviste ti mettono a disagio.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q30",
+      "text": "Preferisci istruzioni precise a indicazioni generiche.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q31",
+      "text": "In un litigio cerchi prima chi ha ragione, poi come stanno le persone.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q32",
+      "text": "Ti dà fastidio lasciare un lavoro a metà.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q33",
+      "text": "Preferisci lavorare in gruppo piuttosto che da solo.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q34",
+      "text": "Ti vengono in mente collegamenti fra cose che sembrano lontane.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q35",
+      "text": "Quando qualcuno ti racconta un problema prima lo conforti, poi cerchi soluzioni.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q36",
+      "text": "Rimandi le decisioni finché non sei costretto a prenderle.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q37",
+      "text": "Prima di esprimere un'opinione preferisci averci riflettuto in privato.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q38",
+      "text": "Descrivi le cose come sono, senza metafore.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q39",
+      "text": "Giudichi un'idea per quanto regge, non per chi l'ha proposta.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q40",
+      "text": "Fai liste e le spunti.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q41",
+      "text": "Pensi meglio parlando ad alta voce con qualcuno.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q42",
+      "text": "Le domande senza una risposta certa ti attraggono.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q43",
+      "text": "In una decisione difficile pesa molto l'impatto sulle persone coinvolte.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q44",
+      "text": "La tua scrivania è in disordine creativo.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q45",
+      "text": "Le feste lunghe ti prosciugano, anche quando ti diverti.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q46",
+      "text": "Ti fidi solo di ciò che puoi verificare direttamente.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q47",
+      "text": "Applichi la stessa regola a tutti, anche quando è dura.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q48",
+      "text": "Prima di partire per un viaggio prepari tutto nei dettagli.",
+      "axis": "JP",
+      "direction": -1,
       "weight": 1.0
     }
   ]

@@ -218,13 +218,16 @@
     }
   },
 
+  "quizChooseLengthTitle": "Quanto vuoi che sia lungo il test?",
+  "quizChooseLengthAppBar": "Test della personalità",
   "quizShort": "Test breve",
-  "quizShortDesc": "~20 domande · 5 min",
+  "quizShortDesc": "16 domande · 4 min",
   "quizMedium": "Test medio",
-  "quizMediumDesc": "~50 domande · 12 min",
+  "quizMediumDesc": "48 domande · 10 min",
   "quizLong": "Test completo",
-  "quizLongDesc": "~80 domande · 20 min",
+  "quizLongDesc": "80 domande · 16 min",
   "quizMostAccurate": "Più accurato",
+  "quizLoadError": "Non è stato possibile caricare le domande di questo test.",
   "quizStart": "Inizia il test",
   "quizQuestion": "Domanda {current} di {total}",
   "@quizQuestion": {

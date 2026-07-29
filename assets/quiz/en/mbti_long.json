@@ -9,65 +9,65 @@
     },
     {
       "id": "q2",
-      "text": "You prefer quiet, solitary activities over large social events.",
-      "axis": "IE",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q3",
-      "text": "You often speak before fully thinking through what to say.",
-      "axis": "IE",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q4",
-      "text": "You need a lot of time alone to recharge your energy.",
-      "axis": "IE",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q5",
-      "text": "You are more interested in concrete facts than in abstract theories.",
-      "axis": "NS",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q6",
       "text": "You often imagine how things could be in the future.",
       "axis": "NS",
       "direction": 1,
       "weight": 1.0
     },
     {
-      "id": "q7",
-      "text": "You trust your past experience more than your intuition.",
-      "axis": "NS",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q8",
-      "text": "You love exploring complex concepts and symbolic meanings.",
-      "axis": "NS",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q9",
+      "id": "q3",
       "text": "You follow your heart rather than your head when making decisions.",
       "axis": "TF",
       "direction": 1,
       "weight": 1.0
     },
     {
-      "id": "q10",
+      "id": "q4",
+      "text": "You prefer to keep your options open instead of deciding right away.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q5",
+      "text": "You prefer quiet, solitary activities over large social events.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q6",
+      "text": "You are more interested in concrete facts than in abstract theories.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q7",
       "text": "You place a high value on logic and objectivity.",
       "axis": "TF",
       "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q8",
+      "text": "You like having a detailed schedule for your day.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q9",
+      "text": "You often speak before fully thinking through what to say.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q10",
+      "text": "You love exploring complex concepts and symbolic meanings.",
+      "axis": "NS",
+      "direction": 1,
       "weight": 1.0
     },
     {
@@ -79,37 +79,485 @@
     },
     {
       "id": "q12",
+      "text": "You are very spontaneous and adapt easily to sudden changes.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q13",
+      "text": "You need a lot of time alone to recharge your energy.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q14",
+      "text": "You trust your past experience more than your intuition.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q15",
       "text": "You are able to remain detached and critical during a discussion.",
       "axis": "TF",
       "direction": -1,
       "weight": 1.0
     },
     {
-      "id": "q13",
-      "text": "You like having a detailed schedule for your day.",
-      "axis": "JP",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q14",
-      "text": "You prefer to keep your options open instead of deciding right away.",
-      "axis": "JP",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q15",
+      "id": "q16",
       "text": "You feel frustrated when things don't go as planned.",
       "axis": "JP",
       "direction": -1,
       "weight": 1.0
     },
     {
-      "id": "q16",
-      "text": "You are very spontaneous and adapt easily to sudden changes.",
+      "id": "q17",
+      "text": "You strike up conversations with strangers without effort.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q18",
+      "text": "You easily get lost in your own thoughts and hypotheses.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q19",
+      "text": "You notice right away when someone in the group is upset.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q20",
+      "text": "You work better under deadline pressure.",
       "axis": "JP",
       "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q21",
+      "text": "In a group you listen more than you talk.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q22",
+      "text": "You immediately notice practical details that others miss.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q23",
+      "text": "You would rather be told an uncomfortable truth than a kind lie.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q24",
+      "text": "You finish things well before the deadline.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q25",
+      "text": "After an evening among people you feel energized.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q26",
+      "text": "You care more about the big picture than about individual details.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q27",
+      "text": "You would make an exception to a rule to avoid hurting someone.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q28",
+      "text": "You happily change plans if something more interesting comes up.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q29",
+      "text": "Unexpected phone calls make you uncomfortable.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q30",
+      "text": "You prefer precise instructions to general guidance.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q31",
+      "text": "In an argument you look first at who is right, then at how people feel.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q32",
+      "text": "It bothers you to leave a job half done.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q33",
+      "text": "You prefer working in a group rather than on your own.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q34",
+      "text": "Connections between seemingly unrelated things occur to you.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q35",
+      "text": "When someone brings you a problem you comfort them first and look for solutions after.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q36",
+      "text": "You put off decisions until you are forced to make them.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q37",
+      "text": "Before voicing an opinion you prefer to have thought it over in private.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q38",
+      "text": "You describe things as they are, without metaphors.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q39",
+      "text": "You judge an idea by how well it holds up, not by who proposed it.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q40",
+      "text": "You make lists and tick them off.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q41",
+      "text": "You think better by talking things through out loud with someone.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q42",
+      "text": "Questions without a definite answer attract you.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q43",
+      "text": "In a hard decision the impact on the people involved weighs heavily.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q44",
+      "text": "Your desk is in creative disorder.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q45",
+      "text": "Long parties drain you, even when you are enjoying yourself.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q46",
+      "text": "You only trust what you can verify directly.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q47",
+      "text": "You apply the same rule to everyone, even when it is harsh.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q48",
+      "text": "Before leaving on a trip you plan everything in detail.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q49",
+      "text": "In meetings you speak up readily, even when you are unprepared.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q50",
+      "text": "You prefer a new problem to invent over a familiar one to carry out.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q51",
+      "text": "An environment full of conflict drains you even when it does not involve you.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q52",
+      "text": "A trip with no itinerary strikes you as the best way to travel.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q53",
+      "text": "You would rather send a message than make a phone call.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q54",
+      "text": "You prefer improving something that works over starting from scratch.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q55",
+      "text": "You easily spot the inconsistency in an argument.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q56",
+      "text": "You prefer a decision already made to a possibility still open.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q57",
+      "text": "You get restless if you go too many days without seeing anyone.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q58",
+      "text": "You often sense where a situation is heading before it becomes clear.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q59",
+      "text": "You find it hard to give negative feedback, even when it is deserved.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q60",
+      "text": "You start more things than you finish.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q61",
+      "text": "In a crowded room you are happy to stay on the edges.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q62",
+      "text": "You remember concrete facts well: dates, figures, places.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q63",
+      "text": "It bothers you when a decision is made on gut feeling.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q64",
+      "text": "You keep the spaces you work in tidy.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q65",
+      "text": "You are the first to introduce yourself in a room of new people.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q66",
+      "text": "Repeating a procedure you already know well bores you.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q67",
+      "text": "You trust the impression a person makes on you more than their track record.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q68",
+      "text": "Rigid rules strike you mostly as an obstacle.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q69",
+      "text": "You prefer a few deep relationships to many acquaintances.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q70",
+      "text": "In discussions you bring people back to the hard data.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q71",
+      "text": "You can say no to a request without feeling guilty.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q72",
+      "text": "You feel uneasy when a plan changes at the last moment.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q73",
+      "text": "You have a wide circle of acquaintances rather than a few close friends.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q74",
+      "text": "When you read something you immediately look for the meaning behind the words.",
+      "axis": "NS",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q75",
+      "text": "You feel guilty when a decision of yours was right but hurt someone.",
+      "axis": "TF",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q76",
+      "text": "You enjoy improvising instead of following a plan.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q77",
+      "text": "After a day full of meetings you need a break on your own.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q78",
+      "text": "You are more at ease with practical tasks than with speculation.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q79",
+      "text": "In the criticism you receive you look at the content, not the tone.",
+      "axis": "TF",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q80",
+      "text": "You prefer to know in advance what your day will hold.",
+      "axis": "JP",
+      "direction": -1,
       "weight": 1.0
     }
   ]

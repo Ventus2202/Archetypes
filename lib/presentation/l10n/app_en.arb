@@ -216,13 +216,16 @@
     }
   },
 
+  "quizChooseLengthTitle": "How long do you want the test to be?",
+  "quizChooseLengthAppBar": "Personality test",
   "quizShort": "Short test",
-  "quizShortDesc": "~20 questions · 5 min",
+  "quizShortDesc": "16 questions · 4 min",
   "quizMedium": "Medium test",
-  "quizMediumDesc": "~50 questions · 12 min",
+  "quizMediumDesc": "48 questions · 10 min",
   "quizLong": "Full test",
-  "quizLongDesc": "~80 questions · 20 min",
+  "quizLongDesc": "80 questions · 16 min",
   "quizMostAccurate": "Most accurate",
+  "quizLoadError": "The questions for this test could not be loaded.",
   "quizStart": "Start the test",
   "quizQuestion": "Question {current} of {total}",
   "@quizQuestion": {

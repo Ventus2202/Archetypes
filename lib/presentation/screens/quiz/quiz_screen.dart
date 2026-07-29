@@ -26,7 +26,16 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
 
   Future<void> _startQuiz(QuizLength length) async {
     final locale = Localizations.localeOf(context).languageCode;
-    final questions = await ref.read(contentRepositoryProvider).loadQuizQuestions(locale, length);
+    // `loadQuizQuestions` throws on a missing or malformed asset (the repository
+    // propagates failures); an empty list is the state `build` already knows how
+    // to render as an error, so funnel both into it.
+    List<QuizQuestion> questions;
+    try {
+      questions = await ref.read(contentRepositoryProvider).loadQuizQuestions(locale, length);
+    } catch (_) {
+      questions = const [];
+    }
+    if (!mounted) return;
     setState(() {
       _selectedLength = length;
       _questions = questions;
@@ -63,6 +72,15 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // An empty list means the questions could not be loaded (asset missing from
+    // the bundle, malformed JSON, a file that never downloaded on the PWA — see
+    // `_startQuiz`). Without this branch `_buildQuestion` indexes an empty list
+    // and the user gets a red screen with no way back, since `_selectedLength`
+    // is already set.
+    if (_questions!.isEmpty) {
+      return _buildLoadError(context, l10n);
+    }
+
     if (_isComplete) {
       return _buildResults(context, l10n);
     }
@@ -72,7 +90,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
 
   Widget _buildLengthSelection(BuildContext context, AppLocalizations l10n) {
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.mbtiSourceQuizShort)), // Or a generic title
+      appBar: AppBar(title: Text(l10n.quizChooseLengthAppBar)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -80,7 +98,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                l10n.onboardingChooseMethod,
+                l10n.quizChooseLengthTitle,
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
@@ -103,11 +121,47 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                 title: l10n.quizLong,
                 desc: l10n.quizLongDesc,
                 icon: Icons.hourglass_full,
-                // More questions per axis, so the resulting confidence is the
-                // highest the quiz can produce: say so instead of leaving the
-                // user to infer it from the question count.
+                // 20 items per axis against the short test's 4: a single odd
+                // answer moves the result far less, so the type it reports is
+                // the most reliable one the quiz can give. Note this is *not*
+                // a higher `confidence` — that metric is normalized per axis,
+                // so a consistent responder tops it out on any length.
                 badge: l10n.quizMostAccurate,
                 onTap: () => _startQuiz(QuizLength.long),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadError(BuildContext context, AppLocalizations l10n) {
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.quizChooseLengthAppBar)),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline,
+                  size: 48, color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: 16),
+              Text(
+                l10n.quizLoadError,
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                // Back to the length choice: the other two files may well load.
+                onPressed: () => setState(() {
+                  _selectedLength = null;
+                  _questions = null;
+                }),
+                icon: const Icon(Icons.arrow_back),
+                label: Text(l10n.actionBack),
               ),
             ],
           ),

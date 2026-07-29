@@ -506,25 +506,35 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get quizChooseLengthTitle => 'Quanto vuoi che sia lungo il test?';
+
+  @override
+  String get quizChooseLengthAppBar => 'Test della personalità';
+
+  @override
   String get quizShort => 'Test breve';
 
   @override
-  String get quizShortDesc => '~20 domande · 5 min';
+  String get quizShortDesc => '16 domande · 4 min';
 
   @override
   String get quizMedium => 'Test medio';
 
   @override
-  String get quizMediumDesc => '~50 domande · 12 min';
+  String get quizMediumDesc => '48 domande · 10 min';
 
   @override
   String get quizLong => 'Test completo';
 
   @override
-  String get quizLongDesc => '~80 domande · 20 min';
+  String get quizLongDesc => '80 domande · 16 min';
 
   @override
   String get quizMostAccurate => 'Più accurato';
+
+  @override
+  String get quizLoadError =>
+      'Non è stato possibile caricare le domande di questo test.';
 
   @override
   String get quizStart => 'Inizia il test';

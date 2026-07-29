@@ -9,65 +9,65 @@
     },
     {
       "id": "q2",
-      "text": "Preferisci attività tranquille e solitarie invece di grandi eventi sociali.",
-      "axis": "IE",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q3",
-      "text": "Parli spesso prima di pensare bene a cosa dire.",
-      "axis": "IE",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q4",
-      "text": "Hai bisogno di molto tempo da solo per ricaricare le energie.",
-      "axis": "IE",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q5",
-      "text": "Sei più interessato ai fatti concreti che alle teorie astratte.",
-      "axis": "NS",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q6",
       "text": "Immagini spesso come le cose potrebbero essere in futuro.",
       "axis": "NS",
       "direction": 1,
       "weight": 1.0
     },
     {
-      "id": "q7",
-      "text": "Ti fidi di più della tua esperienza passata che dell'intuizione.",
-      "axis": "NS",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q8",
-      "text": "Ami esplorare concetti complessi e significati simbolici.",
-      "axis": "NS",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q9",
+      "id": "q3",
       "text": "Segui il tuo cuore piuttosto che la testa quando prendi decisioni.",
       "axis": "TF",
       "direction": 1,
       "weight": 1.0
     },
     {
-      "id": "q10",
+      "id": "q4",
+      "text": "Preferisci mantenere le tue opzioni aperte invece di decidere subito.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q5",
+      "text": "Preferisci attività tranquille e solitarie invece di grandi eventi sociali.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q6",
+      "text": "Sei più interessato ai fatti concreti che alle teorie astratte.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q7",
       "text": "Dai molta importanza alla logica e all'obiettività.",
       "axis": "TF",
       "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q8",
+      "text": "Ti piace avere un programma dettagliato per la tua giornata.",
+      "axis": "JP",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q9",
+      "text": "Parli spesso prima di pensare bene a cosa dire.",
+      "axis": "IE",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q10",
+      "text": "Ami esplorare concetti complessi e significati simbolici.",
+      "axis": "NS",
+      "direction": 1,
       "weight": 1.0
     },
     {
@@ -79,37 +79,37 @@
     },
     {
       "id": "q12",
+      "text": "Sei molto spontaneo e ti adatti facilmente ai cambiamenti improvvisi.",
+      "axis": "JP",
+      "direction": 1,
+      "weight": 1.0
+    },
+    {
+      "id": "q13",
+      "text": "Hai bisogno di molto tempo da solo per ricaricare le energie.",
+      "axis": "IE",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q14",
+      "text": "Ti fidi di più della tua esperienza passata che dell'intuizione.",
+      "axis": "NS",
+      "direction": -1,
+      "weight": 1.0
+    },
+    {
+      "id": "q15",
       "text": "Sei capace di restare distaccato e critico durante una discussione.",
       "axis": "TF",
       "direction": -1,
       "weight": 1.0
     },
     {
-      "id": "q13",
-      "text": "Ti piace avere un programma dettagliato per la tua giornata.",
-      "axis": "JP",
-      "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q14",
-      "text": "Preferisci mantenere le tue opzioni aperte invece di decidere subito.",
-      "axis": "JP",
-      "direction": 1,
-      "weight": 1.0
-    },
-    {
-      "id": "q15",
+      "id": "q16",
       "text": "Ti senti frustrato quando le cose non vanno come pianificato.",
       "axis": "JP",
       "direction": -1,
-      "weight": 1.0
-    },
-    {
-      "id": "q16",
-      "text": "Sei molto spontaneo e ti adatti facilmente ai cambiamenti improvvisi.",
-      "axis": "JP",
-      "direction": 1,
       "weight": 1.0
     }
   ]

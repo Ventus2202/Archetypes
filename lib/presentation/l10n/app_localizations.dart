@@ -1034,6 +1034,18 @@ abstract class AppLocalizations {
   /// **'Versione {version}'**
   String settingsVersion(String version);
 
+  /// No description provided for @quizChooseLengthTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Quanto vuoi che sia lungo il test?'**
+  String get quizChooseLengthTitle;
+
+  /// No description provided for @quizChooseLengthAppBar.
+  ///
+  /// In it, this message translates to:
+  /// **'Test della personalità'**
+  String get quizChooseLengthAppBar;
+
   /// No description provided for @quizShort.
   ///
   /// In it, this message translates to:
@@ -1043,7 +1055,7 @@ abstract class AppLocalizations {
   /// No description provided for @quizShortDesc.
   ///
   /// In it, this message translates to:
-  /// **'~20 domande · 5 min'**
+  /// **'16 domande · 4 min'**
   String get quizShortDesc;
 
   /// No description provided for @quizMedium.
@@ -1055,7 +1067,7 @@ abstract class AppLocalizations {
   /// No description provided for @quizMediumDesc.
   ///
   /// In it, this message translates to:
-  /// **'~50 domande · 12 min'**
+  /// **'48 domande · 10 min'**
   String get quizMediumDesc;
 
   /// No description provided for @quizLong.
@@ -1067,7 +1079,7 @@ abstract class AppLocalizations {
   /// No description provided for @quizLongDesc.
   ///
   /// In it, this message translates to:
-  /// **'~80 domande · 20 min'**
+  /// **'80 domande · 16 min'**
   String get quizLongDesc;
 
   /// No description provided for @quizMostAccurate.
@@ -1075,6 +1087,12 @@ abstract class AppLocalizations {
   /// In it, this message translates to:
   /// **'Più accurato'**
   String get quizMostAccurate;
+
+  /// No description provided for @quizLoadError.
+  ///
+  /// In it, this message translates to:
+  /// **'Non è stato possibile caricare le domande di questo test.'**
+  String get quizLoadError;
 
   /// No description provided for @quizStart.
   ///
