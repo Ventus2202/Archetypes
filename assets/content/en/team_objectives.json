@@ -30,5 +30,25 @@
       "description": "Objective focused on defining long-term visions, market analysis, and decision-making architectures.",
       "ideal_profile": "The ideal team has strong Introverted Intuition (Ni) to foresee future scenarios and Thinking (Te/Ti) to structure the strategy."
     }
+  },
+  "strengths": {
+    "strength_ne": "Exploring alternatives (Ne)",
+    "strength_ni": "Long-term vision (Ni)",
+    "strength_se": "Reacting in the moment (Se)",
+    "strength_si": "Attention to detail and precedent (Si)",
+    "strength_te": "Structuring the work (Te)",
+    "strength_ti": "Logical analysis and internal consistency (Ti)",
+    "strength_fe": "Attention to the group's climate (Fe)",
+    "strength_fi": "Alignment with shared values (Fi)"
+  },
+  "blind_spots": {
+    "blindspot_ne": "Few alternatives on the table (Ne)",
+    "blindspot_ni": "No long-term vision (Ni)",
+    "blindspot_se": "Slow to react to the unexpected (Se)",
+    "blindspot_si": "Details and precedent overlooked (Si)",
+    "blindspot_te": "Nobody structures the work (Te)",
+    "blindspot_ti": "Little logical checking of decisions (Ti)",
+    "blindspot_fe": "Group climate left to chance (Fe)",
+    "blindspot_fi": "Personal values barely considered (Fi)"
   }
 }

@@ -37,8 +37,17 @@ class CareerRolesContent {
 class TeamObjectivesContent {
   final Map<String, dynamic> objectives;
 
+  /// Keyed by the strings `TeamOptimizer` emits (`strength_ni`,
+  /// `blindspot_te`, one per cognitive function); each value is the localized
+  /// label. Before 2026-07-30 the team builder resolved those keys through
+  /// stubs that returned the key itself, so the user read `NI, TE`.
+  final Map<String, dynamic> strengths;
+  final Map<String, dynamic> blindSpots;
+
   const TeamObjectivesContent({
     required this.objectives,
+    required this.strengths,
+    required this.blindSpots,
   });
 }
 
@@ -131,6 +140,8 @@ class ContentRepository {
 
     return _teamCache[locale] = TeamObjectivesContent(
       objectives: Map<String, dynamic>.from(parsed['objectives'] as Map? ?? {}),
+      strengths: Map<String, dynamic>.from(parsed['strengths'] as Map? ?? {}),
+      blindSpots: Map<String, dynamic>.from(parsed['blind_spots'] as Map? ?? {}),
     );
   }
 

@@ -30,5 +30,25 @@
       "description": "Obiettivo focalizzato sulla definizione di visioni a lungo termine, analisi di mercato e architetture decisionali.",
       "ideal_profile": "Il team ideale ha una spiccata Intuizione Introversa (Ni) per prevedere scenari futuri e Pensiero (Te/Ti) per strutturare la strategia."
     }
+  },
+  "strengths": {
+    "strength_ne": "Esplorazione di alternative (Ne)",
+    "strength_ni": "Visione a lungo termine (Ni)",
+    "strength_se": "Reattività nel presente (Se)",
+    "strength_si": "Attenzione ai dettagli e ai precedenti (Si)",
+    "strength_te": "Organizzazione del lavoro (Te)",
+    "strength_ti": "Analisi logica e coerenza interna (Ti)",
+    "strength_fe": "Attenzione al clima del gruppo (Fe)",
+    "strength_fi": "Coerenza con i valori (Fi)"
+  },
+  "blind_spots": {
+    "blindspot_ne": "Poche alternative sul tavolo (Ne)",
+    "blindspot_ni": "Manca una visione a lungo termine (Ni)",
+    "blindspot_se": "Reazione lenta agli imprevisti (Se)",
+    "blindspot_si": "Dettagli e precedenti trascurati (Si)",
+    "blindspot_te": "Nessuno struttura il lavoro (Te)",
+    "blindspot_ti": "Poca verifica logica delle decisioni (Ti)",
+    "blindspot_fe": "Clima del gruppo lasciato al caso (Fe)",
+    "blindspot_fi": "Valori personali poco considerati (Fi)"
   }
 }

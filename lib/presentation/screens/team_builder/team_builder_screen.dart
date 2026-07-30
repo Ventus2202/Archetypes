@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
+import '../../../data/repositories/content_repository.dart';
+import '../../../domain/entities/person.dart';
 import '../../../domain/team/team_models.dart';
 import '../../providers/team_provider.dart';
 import '../../providers/person_provider.dart';
@@ -15,6 +17,9 @@ class TeamBuilderScreen extends ConsumerWidget {
     final state = ref.watch(teamOptimizerProvider);
     final notifier = ref.read(teamOptimizerProvider.notifier);
     final personsAsync = ref.watch(allPersonsProvider);
+    final contentAsync = ref.watch(teamObjectivesContentProvider(
+      Localizations.localeOf(context).languageCode,
+    ));
 
     return Scaffold(
       appBar: AppBar(
@@ -22,11 +27,19 @@ class TeamBuilderScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          _ConfigurationPanel(state: state, notifier: notifier),
+          _ConfigurationPanel(
+            state: state,
+            notifier: notifier,
+            content: contentAsync,
+          ),
           const Divider(height: 1),
           Expanded(
             child: state.results != null
-                ? _ResultsList(results: state.results!)
+                ? _ResultsList(
+                    results: state.results!,
+                    objective: state.objective,
+                    content: contentAsync.valueOrNull,
+                  )
                 : personsAsync.when(
                     data: (persons) => _CandidateList(persons: persons, state: state, notifier: notifier),
                     loading: () => const Center(child: CircularProgressIndicator()),
@@ -48,14 +61,19 @@ class TeamBuilderScreen extends ConsumerWidget {
   }
 }
 
-class _ConfigurationPanel extends ConsumerWidget {
+class _ConfigurationPanel extends StatelessWidget {
   final TeamOptimizerState state;
   final TeamOptimizerNotifier notifier;
+  final AsyncValue<TeamObjectivesContent> content;
 
-  const _ConfigurationPanel({required this.state, required this.notifier});
+  const _ConfigurationPanel({
+    required this.state,
+    required this.notifier,
+    required this.content,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
 
@@ -97,7 +115,7 @@ class _ConfigurationPanel extends ConsumerWidget {
                       items: TeamObjective.values.map((obj) {
                         return DropdownMenuItem(
                           value: obj,
-                          child: Text(l10n.getTeamObjectiveTitle(obj.name)),
+                          child: Text(_objectiveTitle(l10n, obj)),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -129,6 +147,7 @@ class _ConfigurationPanel extends ConsumerWidget {
               ),
             ],
           ),
+          _ObjectiveDescription(objective: state.objective, content: content),
           if (state.results != null) ...[
             const SizedBox(height: 16),
             SizedBox(
@@ -146,8 +165,51 @@ class _ConfigurationPanel extends ConsumerWidget {
   }
 }
 
+/// What the selected objective is about, from `team_objectives.json`. The
+/// objective *names* come from the ARB instead, so a missing asset degrades this
+/// block alone and never leaves the dropdown unlabelled.
+class _ObjectiveDescription extends StatelessWidget {
+  final TeamObjective objective;
+  final AsyncValue<TeamObjectivesContent> content;
+
+  const _ObjectiveDescription({required this.objective, required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final style = Theme.of(context).textTheme.bodySmall;
+
+    return content.when(
+      loading: () => const SizedBox.shrink(),
+      error: (e, st) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Text(
+          AppLocalizations.of(context).errorNotFound,
+          style: style?.copyWith(color: cs.error),
+        ),
+      ),
+      data: (textContent) {
+        final description = _objectiveField(textContent, objective, 'description');
+        if (description == null) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Text(
+            description,
+            style: style?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _CandidateList extends StatelessWidget {
-  final List<dynamic> persons;
+  /// Typed, not `List<dynamic>`: with a dynamic receiver `displayName.characters`
+  /// below is a dynamic invocation of an extension method, which the analyzer
+  /// cannot see and which throws `NoSuchMethodError` at runtime — the candidate
+  /// list crashed for every non-empty list of people.
+  final List<Person> persons;
   final TeamOptimizerState state;
   final TeamOptimizerNotifier notifier;
 
@@ -193,8 +255,21 @@ class _CandidateList extends StatelessWidget {
 
 class _ResultsList extends StatelessWidget {
   final List<TeamComposition> results;
+  final TeamObjective objective;
 
-  const _ResultsList({required this.results});
+  /// Null while the asset is loading or if it failed: the labels then fall back
+  /// to the raw engine keys, the way the career and relationship screens do.
+  /// The configuration panel above is what reports the failure.
+  final TeamObjectivesContent? content;
+
+  const _ResultsList({
+    required this.results,
+    required this.objective,
+    required this.content,
+  });
+
+  String _label(Map<String, dynamic>? section, String key) =>
+      section?[key] as String? ?? key;
 
   @override
   Widget build(BuildContext context) {
@@ -205,16 +280,37 @@ class _ResultsList extends StatelessWidget {
       return Center(child: Text(l10n.teamNoResults));
     }
 
-    // This list used to be wrapped in a FutureBuilder on
-    // `loadTeamObjectivesContent`, whose result was never read: every label
-    // below comes from `l10n`. It only added a way for the whole results screen
-    // to be blocked (or, once loaders started throwing, blanked) by an asset it
-    // does not use.
+    final textContent = content;
+    final idealProfile = textContent == null
+        ? null
+        : _objectiveField(textContent, objective, 'ideal_profile');
+
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: results.length,
+      // The ideal profile of the objective heads the list: it is the yardstick
+      // the proposed teams are being measured against.
+      itemCount: results.length + (idealProfile == null ? 0 : 1),
       separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (ctx, i) {
+      itemBuilder: (ctx, index) {
+        if (idealProfile != null && index == 0) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.flag_outlined, size: 16, color: cs.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  idealProfile,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
+            ],
+          );
+        }
+        final i = idealProfile == null ? index : index - 1;
         final comp = results[i];
 
         return Card(
@@ -277,7 +373,12 @@ class _ResultsList extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(comp.strengths.map((s) => l10n.getStrengthTitle(s)).join(', '), style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    comp.strengths
+                        .map((s) => _label(textContent?.strengths, s))
+                        .join('\n'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   const SizedBox(height: 12),
                 ],
 
@@ -290,7 +391,12 @@ class _ResultsList extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(comp.blindSpots.map((s) => l10n.getBlindSpotTitle(s)).join(', '), style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    comp.blindSpots
+                        .map((s) => _label(textContent?.blindSpots, s))
+                        .join('\n'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ],
               ],
             ),
@@ -301,8 +407,24 @@ class _ResultsList extends StatelessWidget {
   }
 }
 
-extension on AppLocalizations {
-  String getTeamObjectiveTitle(String key) => key; // Will implement properly via JSON/arb
-  String getStrengthTitle(String key) => key.replaceAll('strength_', '').toUpperCase(); // Will implement
-  String getBlindSpotTitle(String key) => key.replaceAll('blindspot_', '').toUpperCase(); // Will implement
+/// The objective names live in the ARB, not in `team_objectives.json`: they label
+/// a control, and the dropdown has to be usable even if the content asset is
+/// broken. The switch is exhaustive, so a new objective cannot ship unnamed.
+String _objectiveTitle(AppLocalizations l10n, TeamObjective objective) =>
+    switch (objective) {
+      TeamObjective.creative => l10n.teamObjCreative,
+      TeamObjective.execution => l10n.teamObjExecution,
+      TeamObjective.crisis => l10n.teamObjCrisis,
+      TeamObjective.innovation => l10n.teamObjInnovation,
+      TeamObjective.support => l10n.teamObjSupport,
+      TeamObjective.strategy => l10n.teamObjStrategy,
+    };
+
+String? _objectiveField(
+  TeamObjectivesContent content,
+  TeamObjective objective,
+  String field,
+) {
+  final entry = content.objectives[objective.name] as Map<String, dynamic>?;
+  return entry?[field] as String?;
 }

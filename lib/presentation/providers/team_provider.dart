@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/repositories/content_repository.dart';
 import '../../domain/team/team_models.dart';
 import '../../domain/team/team_optimizer.dart';
 import '../../domain/entities/person.dart';
@@ -97,4 +98,15 @@ class TeamOptimizerNotifier extends Notifier<TeamOptimizerState> {
 
 final teamOptimizerProvider = NotifierProvider<TeamOptimizerNotifier, TeamOptimizerState>(
   TeamOptimizerNotifier.new,
+);
+
+/// Localized text for the team objectives, keyed by language code. A provider
+/// rather than a `FutureBuilder` because the team builder rebuilds on every
+/// selection change, and a future built inside `build` would re-read the asset
+/// (and flash a spinner) each time.
+final teamObjectivesContentProvider =
+    FutureProvider.family<TeamObjectivesContent, String>(
+  (ref, languageCode) => ref
+      .read(contentRepositoryProvider)
+      .loadTeamObjectivesContent(languageCode),
 );
