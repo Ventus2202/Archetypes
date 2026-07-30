@@ -197,24 +197,65 @@ Verificato dal codice al 2026-07-22.
   `.characters` (graph, people_list, person_detail) hanno il ricevitore tipizzato e sono sane.
 - [ ] Verificare il **primo run** di CI e del deploy Pages su GitHub; se il pin
   `flutter-version: 3.41.9` non si risolve nell'action, allentare a solo `channel: stable`.
-- [ ] **Attivare il lint `avoid_dynamic_calls`**: è l'unica difesa automatica contro la classe di
-  bug trovata il 2026-07-30 (`List<dynamic>` + metodo di estensione = crash a runtime con
-  `analyze` verde). Misurato lo stesso giorno con il lint attivo in via temporanea: **22
-  violazioni**, 9 in `lib/` (3 in `career_fit_screen.dart`, 6 in `person_detail_screen.dart`) e
-  13 in `test/data/chat/chat_tool_executor_test.dart`. Tutte e 22 sono indicizzazioni di
-  `Map<String, dynamic>` che finiscono in un cast (`as String?`) o in un `??`, quindi innocue —
-  al contrario di quella di ieri, che chiamava un *metodo di estensione* su `dynamic`, cosa che
-  non può funzionare per costruzione. Lavoro: tipizzare le nove letture di contenuto in `lib/`
-  (una `Map<String, dynamic>` locale al posto del `dynamic`), decidere se sistemare o
-  `ignore_for_file` il test, poi aggiungere la regola in `analysis_options.yaml`.
-- [ ] **Estendere `content_assets_test` alle chiavi di career e dynamics**: il test nuovo del
-  2026-07-30 verifica riga per riga le chiavi di `mbti.json` e `team_objectives.json`, ma per gli
-  altri due si limita a "non vuoto". Verificato a mano lo stesso giorno che oggi combaciano — 16
-  `id` del `career_catalog` ↔ 16 chiavi di `career_roles.json`, 4 `conflict_*`, 8 `growth_*` e le
-  10 combinazioni `comm_*` più `comm_default` in `relationship_dynamics.json` — ma niente lo
-  fissa, e siccome entrambe le schermate risolvono con `?? key`/`?? ''`, un id rinominato
-  ricompare a schermo come chiave grezza o come descrizione vuota, in silenzio. È lo stesso
-  fallimento muto appena chiuso sul Team builder.
+- [x] **Attivato il lint `avoid_dynamic_calls`** — chiuso il 2026-07-31. Era l'unica difesa
+  automatica contro la classe di bug trovata il 2026-07-30 (`List<dynamic>` + metodo di
+  estensione = crash a runtime con `analyze` verde). Le 22 violazioni misurate erano tutte
+  indicizzazioni con ricevitore `dynamic`, quindi innocue oggi ma indistinguibili da quella
+  fatale: azzerate **tipizzando**, non con un `ignore_for_file`. In `lib/`: `career_fit_screen`
+  legge la voce del ruolo come `Map<String, dynamic>?` invece che come `dynamic`;
+  `person_detail` passa da sei letture dinamiche a un helper `_entry(section, key)` che fa il
+  cast una volta sola (le sei `replaceAll('_title','')` sono sparite con il fix del contratto
+  qui sotto). In `test/data/chat/chat_tool_executor_test.dart` le tredici violazioni erano tutte
+  elementi di liste uscite da `jsonDecode`: un helper `rows(value)` che fa
+  `.cast<Map<String, dynamic>>()` una volta le chiude tutte. Regola accesa in
+  `analysis_options.yaml` con il commento che spiega da quale bug arriva; `flutter analyze`
+  pulito.
+- [x] **Il contratto delle chiavi di `relationship_dynamics` è uno solo** (voce arrivata dal
+  backlog, chiusa nello stesso giro il 2026-07-31). Il motore emetteva `conflict_ne_si_title` e
+  `conflict_ne_si_desc` mentre il JSON è indicizzato `conflict_ne_si` con dentro `title` e
+  `description`: `person_detail` ricuciva i due contratti con sei `replaceAll('_title', '')`.
+  Scelto il lato del motore: `FrictionPoint`, `GrowthArea` e `CommunicationTip` hanno ora un
+  solo campo `contentKey` con la chiave nuda (prima due campi, di cui `descriptionKey` mai
+  usato dalla UI). Sei `replaceAll` in meno e sei delle nove violazioni di `avoid_dynamic_calls`
+  in `lib/` sparite di conseguenza.
+- [x] **`content_assets_test` esteso alle chiavi di career e dynamics** — chiuso il 2026-07-31.
+  Il test del 2026-07-30 verificava riga per riga solo `mbti.json` e `team_objectives.json`; per
+  gli altri due si fermava a "non vuoto", mentre entrambe le schermate risolvono con
+  `?? key`/`?? ''`, quindi un id rinominato ricompare a schermo come chiave grezza o come
+  descrizione vuota, in silenzio. Ora il test parte dalle **sorgenti delle chiavi**, non da una
+  lista copiata: i 16 `id` di `kCareerRoles` (con `title`/`description`/`why_fit`), i valori di
+  `RelationshipDynamics.kFunctionConflicts`, gli 8 `growth_<funzione>` costruiti da
+  `CognitiveFunction.values` e i valori di `kCommunicationPatterns` più `comm_default`. Nuovo
+  helper `expectEntry` che pretende anche stringhe **non vuote** — una voce presente ma vuota si
+  legge a schermo esattamente come una mancante — usato anche dal test degli obiettivi, che
+  prima controllava solo il tipo. Verificato con una sonda usa-e-getta (rimosso `comm_default` e
+  svuotato una `description` nell'asset IT): il test fallisce con il nome della chiave rotta.
+- [ ] **`data_backup.dart` passa `dynamic` dritto dentro i costruttori tipizzati: 44 errori su
+  81 di tutto il repo.** Misurato il 2026-07-31 accendendo in via temporanea `strict-casts` +
+  `strict-raw-types` + `strict-inference` (la difesa che sta un gradino sopra
+  `avoid_dynamic_calls`: quella scatta al **punto di chiamata**, queste al punto di
+  assegnazione, quindi vedono anche il `List<dynamic>` dichiarato che il 30/07 ha prodotto il
+  crash). Totale 81 diagnostiche, ma la distribuzione è la notizia: **44 stanno tutte in
+  `data_backup.dart`**, tutte `argument_type_not_assignable`, cioè ogni campo letto dal JSON di
+  un backup entra in un parametro `int`/`String`/`bool` senza un cast che lo verifichi. In
+  pratica il percorso di **restore non valida niente**: un backup vecchio o manomesso con un
+  campo del tipo sbagliato non viene rifiutato con un messaggio, esplode in `TypeError` a metà
+  import — ed è lo stesso file che portava il primo bug della roadmap (`shareId` non
+  serializzato). Le altre 37 sono sparse e innocue (17 letterali di collezione senza tipo, 15
+  `new` senza argomenti di tipo, 3 tipi raw, 2 invocazioni). Lavoro: tipizzare la
+  deserializzazione del backup con errori espliciti — che è un fix di robustezza a sé, non solo
+  la pulizia di un lint — poi rivalutare se accendere le tre opzioni stabilmente.
+- [ ] **`mbti.json` è ora il contenuto meno verificato dei quattro**: dopo il giro del
+  2026-07-31, `career_roles`, `relationship_dynamics` e `team_objectives` hanno ogni chiave
+  verificata campo per campo e con stringhe non vuote, mentre per `mbti.json` il test si ferma a
+  "i 16 tipi e le 8 funzioni esistono" — e non guarda **nessuno** dei campi che
+  `content_viewer_screen` legge davvero: 12 per tipo (`title`, `tagline`, `description`,
+  `stack`, `strengths`, `weaknesses`, `behavioral_traits`, `in_relationships`, `at_work`, …),
+  17 per funzione (`full_name`, `as_dominant`…`as_inferior`, …), più le 4 **dicotomie**, che il
+  test non tocca affatto benché `getDichotomyContent` sia usato e la schermata legga `poles` /
+  `spectrum_note`. Ogni lettura è `?? contentKey`, `?? []` o `if (... != null)`, quindi un campo
+  che sparisce è una sezione vuota senza avviso: esattamente il fallimento muto appena chiuso
+  sugli altri tre asset, sul contenuto più grosso e più visibile dell'app.
 - [ ] **Aggiornamento dipendenze controllato**: `flutter pub outdated` (2026-07-23) segnala
   molti pacchetti major indietro (`share_plus` 12→13, `riverpod`/`riverpod_annotation` 2→3+
   con generator, `file_picker` 8→10, `drift` minori) e due transitive **dismesse**
@@ -470,6 +511,17 @@ profilo salvato dal quiz ora registra confidence e sorgente reali.
   padrone del nome, il JSON di descrizione e `ideal_profile`) oppure il contrario. La ragione
   per cui il nome sta in ARB è che etichetta un controllo: il menu a tendina deve funzionare
   anche con l'asset rotto.
+- [ ] **`CareerRole.titleKey` non risolve da nessuna parte**: è il gemello rovesciato della voce
+  qui sopra sui `title` degli obiettivi (là due sorgenti, qui zero). Verificato il 2026-07-31:
+  `career_catalog.dart` dà a ogni ruolo un `titleKey` tipo `career_researcher`, ma
+  `career_roles.json` è indicizzato per **`id`** (`researcher`) e nelle ARB non esiste
+  **nessuna** chiave `career_*` (solo `careerFitTitle` e `careerDisclaimer`). Quindi quel campo
+  nomina una traduzione che non esiste, e i suoi due unici usi lo mostrano: il fallback di
+  `career_fit_screen` (`?? res.role.titleKey`), che in caso di asset rotto stampa a schermo
+  `career_researcher`, e `chat_tools.dart:185`, che lo manda al modello come `'key'` — vedi la
+  voce di backlog sulle chiavi grezze spedite al chatbot. Decidere: togliere `titleKey` da
+  `CareerRole` (l'`id` è già la chiave del contenuto, e il fallback diventa l'`id`) oppure
+  farlo puntare a qualcosa che esiste.
 - [ ] Espandere le schede di relazione per **coppia di tipi** (16×16), non solo per coppia
   di funzioni.
 - [ ] Rivedere/ampliare i testi didattici esistenti (tipi, funzioni, ruoli, obiettivi team).
@@ -695,12 +747,9 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   `_computeAffinityWithSelf` fa **due query DB più il calcolo di affinità e dinamiche** a ogni
   rebuild. Memoizzare il future (campo in uno `State`, o un `FutureProvider`, stile già usato
   altrove nel progetto).
-- **Il motore aggiunge un suffisso `_title` che il contenuto non ha**: `relationship_dynamics.dart`
-  emette `conflict_ne_si_title` mentre `relationship_dynamics.json` è indicizzato
-  `conflict_ne_si`, quindi `person_detail` fa `f.titleKey.replaceAll('_title', '')` **due volte
-  per voce** (titolo e descrizione, sei occorrenze in `:622`–`:655`) per ricucire il contratto.
-  Sono anche sei delle nove violazioni di `avoid_dynamic_calls` in `lib/`. Scegliere un lato: il
-  motore emette la chiave nuda, o il JSON include il `_title`.
+- ~~**Il motore aggiunge un suffisso `_title` che il contenuto non ha**~~ — chiuso il
+  2026-07-31 insieme ad `avoid_dynamic_calls`, vedi Epica 1. Il motore emette la chiave nuda
+  (`contentKey`), le sei `replaceAll` in `person_detail` sono sparite.
 - **Il chatbot manda al modello le chiavi grezze di strength/blind spot**: `_optimizeTeam`
   (`chat_tools.dart:255`) serializza `chosen.strengths`/`blindSpots` così come sono, quindi il
   modello riceve `strength_ne` e `blindspot_ni` e deve indovinare cosa significano. È la stessa
@@ -722,6 +771,16 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   un commit dedicato e solo-formato + `--set-exit-if-changed` in CI, oppure dichiarare
   esplicitamente che il formato è libero e smettere di chiederselo. Collegato alla voce
   `.gitattributes` (stessa famiglia: igiene del diff).
+- **Pattern: un test sul contenuto deriva le chiavi attese dal motore, non da una lista
+  copiata.** Aggiunto il 2026-07-31 estendendo `content_assets_test`: le chiavi attese si
+  ottengono da `kCareerRoles`, `RelationshipDynamics.kFunctionConflicts`,
+  `kCommunicationPatterns` e `CognitiveFunction.values`, così se domani il motore ne emette una
+  nuova il test la pretende **da solo**. Una lista di stringhe scritta a mano nel test fissa
+  invece una fotografia, e diverge in silenzio esattamente come il contenuto che dovrebbe
+  proteggere. Corollario dello stesso giro: pretendere stringhe **non vuote** e non solo
+  `isA<String>()` — a schermo una voce presente ma vuota si legge come una mancante, quindi un
+  test che guarda solo il tipo lascia passare metà del fallimento. Vale accanto agli altri tre
+  pattern annotati (geometria renderizzata, route host, `AssetBundle` iniettabile).
 - **Pattern: per testare chi legge asset, iniettare l'`AssetBundle`.** Aggiunto il 2026-07-29
   a `ContentRepository({AssetBundle? bundle})` (default `rootBundle`): un bundle finto rende
   i test ermetici, indipendenti dal contenuto reale e capaci di simulare asset mancanti o
@@ -1011,6 +1070,39 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   il test nuovo la pretende, cioè fissa contenuto morto). Nel backlog: il suffisso `_title` che
   il motore delle dinamiche aggiunge e che il JSON non ha, ricucito da sei `replaceAll` in
   `person_detail`.
+- 2026-07-31 — Epica 1: **accese le due difese automatiche mancanti**, entrambe nate dai bug
+  muti del 30/07. (1) `avoid_dynamic_calls` è attivo: le 22 violazioni misurate ieri sono state
+  **tipizzate**, non silenziate — voce del ruolo come `Map<String, dynamic>?` in `career_fit`,
+  helper `_entry` in `person_detail`, helper `rows()` che fa un `.cast()` unico sulle liste
+  uscite da `jsonDecode` nel test dei chat tool. È il lint che avrebbe preso a compile time il
+  `NoSuchMethodError` del Team builder. (2) `content_assets_test` non si ferma più a "non
+  vuoto" su `career_roles.json` e `relationship_dynamics.json`: parte dalle sorgenti delle
+  chiavi (i 16 `id` di `kCareerRoles`, `kFunctionConflicts`, gli 8 `growth_<funzione>` da
+  `CognitiveFunction.values`, `kCommunicationPatterns` + `comm_default`) e pretende stringhe
+  non vuote, perché una voce vuota si legge come una mancante. Chiusa nello stesso giro la voce
+  di backlog sul suffisso `_title`: il motore delle dinamiche emette ora la chiave nuda in un
+  solo campo `contentKey` (prima `titleKey` + un `descriptionKey` che la UI non usava), e le sei
+  `replaceAll('_title','')` di `person_detail` sono sparite — erano anche sei delle nove
+  violazioni in `lib/`. `CLAUDE.md` allineato sul contratto delle chiavi. Verifiche: `flutter
+  analyze` pulito **con la regola accesa**, 124 test verdi (invariati: sono le asserzioni
+  esistenti a essere state rese esigenti), e una sonda usa-e-getta sull'asset IT a confermare
+  che il test nuovo ha i denti.
+- 2026-07-31 — Chiusura sessione: registrate le voci emerse dal lavoro sui lint e sugli asset,
+  tre delle quattro **misurate o verificate nel codice**, non intuite. In Epica 1: accese in via
+  temporanea le tre opzioni `strict-*` dell'analyzer — il gradino sopra `avoid_dynamic_calls`,
+  perché scattano al punto di assegnazione e non solo a quello di chiamata — e la distribuzione
+  delle 81 diagnostiche è la scoperta vera: **44 stanno tutte in `data_backup.dart`**, tutte
+  `argument_type_not_assignable`, cioè il restore infila i campi del JSON dritti dentro
+  parametri `int`/`String`/`bool` senza verificarli; un backup malformato non viene rifiutato,
+  esplode a metà import. Sempre in Epica 1: dopo il giro di oggi `mbti.json` è rimasto il
+  contenuto **meno** verificato dei quattro — il test controlla che i 16 tipi e le 8 funzioni
+  esistano ma nessuno dei ~12 e ~17 campi che `content_viewer` legge, e le 4 dicotomie non le
+  guarda affatto. In Epica 6: `CareerRole.titleKey` non risolve da nessuna parte (il JSON è
+  indicizzato per `id`, e nelle ARB non c'è nessuna chiave `career_*` — verificato), quindi il
+  fallback di `career_fit` può stampare `career_researcher` e il chatbot riceve quella stringa
+  come `key`; è il gemello rovesciato del `title` degli obiettivi, che di sorgenti ne ha due.
+  Nel backlog: il pattern per cui un test sul contenuto deve derivare le chiavi attese dalle
+  costanti del motore invece di copiarle, con il corollario di pretendere stringhe non vuote.
 - 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
   passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
   `archive_io` → `archive`. Nuovo helper download browser a import condizionale
