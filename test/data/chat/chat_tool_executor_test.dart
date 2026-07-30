@@ -42,6 +42,12 @@ void main() {
   ]) async =>
       jsonDecode(await executor.execute(tool, input)) as Map<String, dynamic>;
 
+  // The tools return JSON arrays of objects, so every element comes out of
+  // `jsonDecode` as `dynamic`. Casting once here keeps the field reads below
+  // static calls (`avoid_dynamic_calls`) instead of thirteen dynamic ones.
+  List<Map<String, dynamic>> rows(Object? value) =>
+      (value! as List).cast<Map<String, dynamic>>();
+
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     executor = ChatToolExecutor(
@@ -57,7 +63,7 @@ void main() {
     await addPerson('Bob', MbtiType.enfp);
     await addPerson('Senza profilo', null);
 
-    final people = (await run('list_people'))['people'] as List;
+    final people = rows((await run('list_people'))['people']);
 
     expect(people.length, 3);
     final ada = people.firstWhere((p) => p['name'] == 'Ada');
@@ -70,7 +76,7 @@ void main() {
   });
 
   test('list_roles espone gli id del catalogo', () async {
-    final roles = (await run('list_roles'))['roles'] as List;
+    final roles = rows((await run('list_roles'))['roles']);
 
     expect(roles.length, kCareerRoles.length);
     expect(roles.map((r) => r['id']), contains('researcher'));
@@ -124,13 +130,13 @@ void main() {
     await addPerson('Cleo', MbtiType.istj);
     await addPerson('Dan', MbtiType.esfj);
 
-    final all = (await run('best_pairs', {'top_n': 10}))['pairs'] as List;
+    final all = rows((await run('best_pairs', {'top_n': 10}))['pairs']);
     expect(all.length, 6); // 4 persone -> C(4,2)
     for (var i = 1; i < all.length; i++) {
       expect(all[i - 1]['score'], greaterThanOrEqualTo(all[i]['score'] as int));
     }
 
-    final limited = (await run('best_pairs', {'top_n': 2}))['pairs'] as List;
+    final limited = rows((await run('best_pairs', {'top_n': 2}))['pairs']);
     expect(limited.length, 2);
   });
 
@@ -189,7 +195,7 @@ void main() {
     await addPerson('Cleo', MbtiType.estj);
 
     final res = await run('rank_people_for_role', {'role_id': 'researcher'});
-    final ranking = res['ranking'] as List;
+    final ranking = rows(res['ranking']);
 
     expect(res['role'], 'researcher');
     expect(ranking.length, 3);
@@ -214,7 +220,7 @@ void main() {
     final id = await addPerson('Ada', MbtiType.intj);
 
     final res = await run('career_fit', {'person_id': id, 'top_n': 3});
-    final roles = res['roles'] as List;
+    final roles = rows(res['roles']);
 
     expect(res['person'], 'Ada');
     expect(roles.length, 3);

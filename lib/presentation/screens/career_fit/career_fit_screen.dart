@@ -68,8 +68,14 @@ class _CareerFitScreenState extends ConsumerState<CareerFitScreen> {
                   separatorBuilder: (context, index) => const Divider(height: 1),
                   itemBuilder: (context, i) {
                     final res = results[i];
-                    final roleData = textContent.roles[res.role.id] ?? {};
-                    
+                    // Typed, so the three reads below are static calls: on a
+                    // raw `dynamic` they would compile even when wrong (see
+                    // `avoid_dynamic_calls` in `analysis_options.yaml`).
+                    final roleData =
+                        textContent.roles[res.role.id] as Map<String, dynamic>? ??
+                            const {};
+
+
                     return _CareerRoleTile(
                       result: res,
                       title: roleData['title'] as String? ?? res.role.titleKey,

@@ -21,8 +21,12 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # On 2026-07-30 `_CandidateList.persons` was typed `List<dynamic>`, so
+    # `displayName.characters` compiled as a dynamic call to an extension
+    # method — extensions only resolve statically, so it was a guaranteed
+    # `NoSuchMethodError` at runtime, in release too, with `flutter analyze`
+    # green. This rule is the only automatic defence against that class of bug.
+    avoid_dynamic_calls: true
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
