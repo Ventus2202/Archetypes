@@ -70,7 +70,11 @@ flutter:
   generate: true
 
   assets:
-    - assets/content/it/mbti.json
-    - assets/content/en/mbti.json
+    # Whole directories, like the quiz below: listing `mbti.json` alone left
+    # `career_roles.json`, `relationship_dynamics.json` and
+    # `team_objectives.json` out of the bundle, so three of the four content
+    # loaders could never find their asset in a built app.
+    - assets/content/it/
+    - assets/content/en/
     - assets/quiz/it/
     - assets/quiz/en/
