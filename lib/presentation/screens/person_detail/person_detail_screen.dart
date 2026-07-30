@@ -619,8 +619,8 @@ class _DynamicsReportCard extends StatelessWidget {
               ...report.frictionPoints.map((f) => _buildItem(
                     icon: Icons.warning_amber_rounded,
                     iconColor: cs.error,
-                    title: textContent.frictions[f.titleKey.replaceAll('_title', '')]?['title'] ?? f.titleKey,
-                    desc: textContent.frictions[f.titleKey.replaceAll('_title', '')]?['description'] ?? f.descriptionKey,
+                    entry: _entry(textContent.frictions, f.contentKey),
+                    fallbackKey: f.contentKey,
                     context: context,
                   )),
               const Divider(height: 24),
@@ -635,8 +635,8 @@ class _DynamicsReportCard extends StatelessWidget {
               ...report.mutualGrowthAreas.map((g) => _buildItem(
                     icon: Icons.trending_up,
                     iconColor: Colors.green,
-                    title: textContent.growths[g.titleKey.replaceAll('_title', '')]?['title'] ?? g.titleKey,
-                    desc: textContent.growths[g.titleKey.replaceAll('_title', '')]?['description'] ?? g.descriptionKey,
+                    entry: _entry(textContent.growths, g.contentKey),
+                    fallbackKey: g.contentKey,
                     context: context,
                   )),
               const Divider(height: 24),
@@ -651,8 +651,8 @@ class _DynamicsReportCard extends StatelessWidget {
               ...report.communicationTips.map((c) => _buildItem(
                     icon: Icons.chat_bubble_outline,
                     iconColor: cs.primary,
-                    title: textContent.communications[c.titleKey.replaceAll('_title', '')]?['title'] ?? c.titleKey,
-                    desc: textContent.communications[c.titleKey.replaceAll('_title', '')]?['description'] ?? c.descriptionKey,
+                    entry: _entry(textContent.communications, c.contentKey),
+                    fallbackKey: c.contentKey,
                     context: context,
                   )),
               const Divider(height: 24),
@@ -682,13 +682,24 @@ class _DynamicsReportCard extends StatelessWidget {
     );
   }
 
+  /// Reads one entry out of a `Map<String, dynamic>` section of the content as
+  /// a typed map, so the two field lookups below are static calls and not
+  /// `dynamic` ones (see `avoid_dynamic_calls` in `analysis_options.yaml`).
+  static Map<String, dynamic> _entry(Map<String, dynamic> section, String key) =>
+      section[key] as Map<String, dynamic>? ?? const {};
+
   Widget _buildItem({
     required IconData icon,
     required Color iconColor,
-    required String title,
-    required String desc,
+    required Map<String, dynamic> entry,
+    required String fallbackKey,
     required BuildContext context,
   }) {
+    // A key the content does not cover shows up raw rather than blank: it is
+    // the visible half of what `content_assets_test` pins down.
+    final title = entry['title'] as String? ?? fallbackKey;
+    final desc = entry['description'] as String? ?? '';
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(

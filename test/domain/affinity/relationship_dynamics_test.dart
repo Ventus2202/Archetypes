@@ -12,10 +12,10 @@ void main() {
       final report = RelationshipDynamics.analyze(a, b);
 
       expect(report.mutualGrowthAreas, isNotEmpty);
-      expect(report.mutualGrowthAreas.any((g) => g.titleKey.contains('growth_te') || g.titleKey.contains('growth_fi')), isTrue);
+      expect(report.mutualGrowthAreas.any((g) => g.contentKey.contains('growth_te') || g.contentKey.contains('growth_fi')), isTrue);
       // Wait, let's check friction: INTJ (Ni, Te) vs ENFP (Ne, Fi).
       // Te-Fi conflict might exist if Dom/Aux are opposite. INTJ Aux=Te, ENFP Aux=Fi.
-      expect(report.frictionPoints.any((f) => f.titleKey.contains('conflict_te_fi')), isTrue);
+      expect(report.frictionPoints.any((f) => f.contentKey.contains('conflict_te_fi')), isTrue);
     });
 
     test('INTJ + ESTP (bassa affinità, attriti multipli)', () {
@@ -26,7 +26,7 @@ void main() {
 
       // INTJ (Ni, Te) vs ESTP (Se, Ti)
       // Ni-Se conflict because INTJ Dom=Ni, ESTP Dom=Se.
-      expect(report.frictionPoints.any((f) => f.titleKey.contains('conflict_ni_se')), isTrue);
+      expect(report.frictionPoints.any((f) => f.contentKey.contains('conflict_ni_se')), isTrue);
     });
 
     test('INFP + INFP (stessi tipi, crescita limitata)', () {
@@ -48,10 +48,10 @@ void main() {
 
       // ENTJ (Te, Ni) vs INFP (Fi, Ne)
       // Te Dom vs Fi Dom -> conflict
-      expect(report.frictionPoints.any((f) => f.titleKey.contains('conflict_te_fi')), isTrue);
+      expect(report.frictionPoints.any((f) => f.contentKey.contains('conflict_te_fi')), isTrue);
       
       // Mutual growth: INFP Inf=Te vs ENTJ Dom=Te.
-      expect(report.mutualGrowthAreas.any((g) => g.titleKey.contains('growth_te')), isTrue);
+      expect(report.mutualGrowthAreas.any((g) => g.contentKey.contains('growth_te')), isTrue);
     });
 
     test('ISFJ + ESTP (asse Si vs Se, crescita su tradizione/presente)', () {

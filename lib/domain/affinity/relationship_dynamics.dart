@@ -1,30 +1,32 @@
 import '../personality_systems/mbti/mbti_profile.dart';
 import '../personality_systems/mbti/mbti_types.dart';
 
+/// The key of the entry in `relationship_dynamics.json` that describes this
+/// item. The entry holds both `title` and `description`, so one key is enough.
+///
+/// Until 2026-07-31 the engine emitted `conflict_ne_si_title` / `_desc` while
+/// the content was indexed `conflict_ne_si`, and `person_detail` stitched the
+/// two contracts back together with six `replaceAll('_title', '')`.
 class FrictionPoint {
-  final String titleKey;
-  final String descriptionKey;
+  final String contentKey;
   final CognitiveFunction functionA;
   final CognitiveFunction functionB;
 
   const FrictionPoint({
-    required this.titleKey,
-    required this.descriptionKey,
+    required this.contentKey,
     required this.functionA,
     required this.functionB,
   });
 }
 
 class GrowthArea {
-  final String titleKey;
-  final String descriptionKey;
+  final String contentKey;
   final CognitiveFunction functionA;
   final CognitiveFunction functionB;
   final double weight;
 
   const GrowthArea({
-    required this.titleKey,
-    required this.descriptionKey,
+    required this.contentKey,
     required this.functionA,
     required this.functionB,
     required this.weight,
@@ -32,13 +34,9 @@ class GrowthArea {
 }
 
 class CommunicationTip {
-  final String titleKey;
-  final String descriptionKey;
+  final String contentKey;
 
-  const CommunicationTip({
-    required this.titleKey,
-    required this.descriptionKey,
-  });
+  const CommunicationTip({required this.contentKey});
 }
 
 enum AxisStatus { aligned, complementary, tension }
@@ -116,12 +114,12 @@ class RelationshipDynamics {
 
     void checkConflict(CognitiveFunction fA, CognitiveFunction fB) {
       final key = '${fA.label}-${fB.label}';
-      if (kFunctionConflicts.containsKey(key)) {
+      final contentKey = kFunctionConflicts[key];
+      if (contentKey != null) {
         // Prevent duplicates
-        if (!frictions.any((f) => f.titleKey == '${kFunctionConflicts[key]}_title')) {
+        if (!frictions.any((f) => f.contentKey == contentKey)) {
           frictions.add(FrictionPoint(
-            titleKey: '${kFunctionConflicts[key]}_title',
-            descriptionKey: '${kFunctionConflicts[key]}_desc',
+            contentKey: contentKey,
             functionA: fA,
             functionB: fB,
           ));
@@ -148,10 +146,9 @@ class RelationshipDynamics {
     void checkGrowth(CognitiveFunction weak, CognitiveFunction strong, int posWeak, int posStrong, bool isAWeak) {
       if (weak == strong) {
         final key = 'growth_${weak.label.toLowerCase()}';
-        if (!growths.any((g) => g.titleKey == '${key}_title')) {
+        if (!growths.any((g) => g.contentKey == key)) {
           growths.add(GrowthArea(
-            titleKey: '${key}_title',
-            descriptionKey: '${key}_desc',
+            contentKey: key,
             functionA: isAWeak ? weak : strong,
             functionB: isAWeak ? strong : weak,
             weight: 10.0 - (posWeak + posStrong),
@@ -182,12 +179,7 @@ class RelationshipDynamics {
     
     final patternKey = kCommunicationPatterns['$codeA-$codeB'] ?? 'comm_default';
 
-    return [
-      CommunicationTip(
-        titleKey: '${patternKey}_title',
-        descriptionKey: '${patternKey}_desc',
-      )
-    ];
+    return [CommunicationTip(contentKey: patternKey)];
   }
 
   static FunctionAxisAnalysis _calculateAxis(MbtiProfile a, MbtiProfile b) {
