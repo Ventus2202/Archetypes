@@ -167,8 +167,54 @@ Verificato dal codice al 2026-07-22.
   da `l10n`), quindi bloccava i risultati su un asset che non usa. Nuovo
   `test/data/repositories/content_repository_test.dart` (11 test, con un `AssetBundle` finto:
   4 sulla cache per locale — incluso il sequenza esatta del bug — e 7 sulla propagazione).
+- [x] **Tre dei quattro asset di contenuto non erano nel bundle: in app costruita non
+  esistevano** — trovato e chiuso il 2026-07-30 lavorando sul Team builder. `pubspec.yaml`
+  elencava `assets/content/it/mbti.json` e `assets/content/en/mbti.json` **file per file**,
+  quindi `career_roles.json`, `relationship_dynamics.json` e `team_objectives.json` — presenti
+  nel repo, letti dal repository, citati in `CLAUDE.md` — non venivano mai copiati nel bundle.
+  Verificato su `build/web` prima del fix: sotto `assets/assets/content/it/` c'era **solo**
+  `mbti.json`. Effetto in produzione: `loadCareerRolesContent` e `loadDynamicsContent`
+  falliscono sempre, quindi dal 2026-07-29 (loader che propagano) **Career fit mostra
+  "Contenuto non trovato" e la sezione affinità di `person_detail` una riga d'errore, sulla PWA
+  live**; prima di quel cambio degradavano in silenzio (chiavi grezze e descrizioni vuote), che
+  è il motivo per cui nessuno se n'era accorto. Fix: `pubspec.yaml` dichiara le **directory**
+  `assets/content/it/` e `assets/content/en/`, come già faceva per il quiz. Verificato con
+  `flutter build web --release`: gli otto file ora sono in `build/web`. Nuovo
+  `test/assets/content_assets_test.dart` (8 test): carica tutti e quattro i contenuti in IT e
+  EN **attraverso `rootBundle`** — è l'unico modo di accorgersi di un asset non dichiarato, un
+  test sui file JSON non lo vedrebbe — e verifica che le chiavi combacino con quelle che i
+  motori emettono (16 tipi, 8 funzioni, 6 obiettivi con `title`/`description`/`ideal_profile`,
+  8 `strength_*` + 8 `blindspot_*`). Nota: la verifica del 2026-07-26 sulla PWA ("asset di
+  contenuto e quiz tutti 200") aveva evidentemente toccato solo `mbti.json`.
+- [x] **La lista candidati del Team builder crashava a runtime** — trovato il 2026-07-30 dal
+  primo widget test sulla schermata, chiuso subito. `_CandidateList.persons` era dichiarata
+  `List<dynamic>`, quindi `p.displayName.characters.first` era una chiamata **dinamica** a un
+  metodo di estensione: le estensioni si risolvono solo staticamente, quindi a runtime è
+  `NoSuchMethodError: Class 'String' has no instance getter 'characters'`. Con una persona in
+  rubrica la lista era un riquadro d'errore, sempre, anche in release — e `flutter analyze`
+  non può vederlo perché su `dynamic` non c'è niente da controllare. Fix: tipizzare
+  `List<Person>` (il chiamante già passava un `List<Person>`). Le altre tre schermate che usano
+  `.characters` (graph, people_list, person_detail) hanno il ricevitore tipizzato e sono sane.
 - [ ] Verificare il **primo run** di CI e del deploy Pages su GitHub; se il pin
   `flutter-version: 3.41.9` non si risolve nell'action, allentare a solo `channel: stable`.
+- [ ] **Attivare il lint `avoid_dynamic_calls`**: è l'unica difesa automatica contro la classe di
+  bug trovata il 2026-07-30 (`List<dynamic>` + metodo di estensione = crash a runtime con
+  `analyze` verde). Misurato lo stesso giorno con il lint attivo in via temporanea: **22
+  violazioni**, 9 in `lib/` (3 in `career_fit_screen.dart`, 6 in `person_detail_screen.dart`) e
+  13 in `test/data/chat/chat_tool_executor_test.dart`. Tutte e 22 sono indicizzazioni di
+  `Map<String, dynamic>` che finiscono in un cast (`as String?`) o in un `??`, quindi innocue —
+  al contrario di quella di ieri, che chiamava un *metodo di estensione* su `dynamic`, cosa che
+  non può funzionare per costruzione. Lavoro: tipizzare le nove letture di contenuto in `lib/`
+  (una `Map<String, dynamic>` locale al posto del `dynamic`), decidere se sistemare o
+  `ignore_for_file` il test, poi aggiungere la regola in `analysis_options.yaml`.
+- [ ] **Estendere `content_assets_test` alle chiavi di career e dynamics**: il test nuovo del
+  2026-07-30 verifica riga per riga le chiavi di `mbti.json` e `team_objectives.json`, ma per gli
+  altri due si limita a "non vuoto". Verificato a mano lo stesso giorno che oggi combaciano — 16
+  `id` del `career_catalog` ↔ 16 chiavi di `career_roles.json`, 4 `conflict_*`, 8 `growth_*` e le
+  10 combinazioni `comm_*` più `comm_default` in `relationship_dynamics.json` — ma niente lo
+  fissa, e siccome entrambe le schermate risolvono con `?? key`/`?? ''`, un id rinominato
+  ricompare a schermo come chiave grezza o come descrizione vuota, in silenzio. È lo stesso
+  fallimento muto appena chiuso sul Team builder.
 - [ ] **Aggiornamento dipendenze controllato**: `flutter pub outdated` (2026-07-23) segnala
   molti pacchetti major indietro (`share_plus` 12→13, `riverpod`/`riverpod_annotation` 2→3+
   con generator, `file_picker` 8→10, `drift` minori) e due transitive **dismesse**
@@ -380,8 +426,26 @@ profilo salvato dal quiz ora registra confidence e sorgente reali.
 
 ### 6. Contenuti
 
-- [!] **Il Team builder non ha mai mostrato il suo contenuto tradotto: l'utente legge chiavi
-  grezze.** Trovato il 2026-07-29 rimuovendo il `FutureBuilder` che caricava
+- [x] **Il Team builder non ha mai mostrato il suo contenuto tradotto: l'utente legge chiavi
+  grezze** — chiuso il 2026-07-30. Ora la schermata risolve tutte le chiavi che il motore
+  emette: gli obiettivi prendono il nome dalle **sei stringhe ARB `teamObj*`**, che esistevano
+  già in IT+EN e non erano usate da nessuno (`_objectiveTitle`, switch esaustivo: un obiettivo
+  nuovo non può più uscire senza nome); descrizione e `ideal_profile` dell'obiettivo scelto
+  arrivano da `team_objectives.json` (la prima sotto il menu a tendina, il secondo in testa alla
+  lista dei risultati, dove è il metro con cui si leggono i team proposti); punti di forza e
+  blind spot si risolvono su due sezioni **nuove** dello stesso asset (`strengths`,
+  `blind_spots`: 8+8 voci per lingua, una per funzione cognitiva, esattamente le chiavi
+  `strength_*`/`blindspot_*` di `TeamOptimizer`). Rimossa l'estensione stub con i tre
+  commenti-appunto. Scelta di design: il **nome** dell'obiettivo resta in ARB perché etichetta
+  un controllo (il menu deve funzionare anche con l'asset rotto), il **contenuto** sta nel JSON;
+  se l'asset manca, la descrizione lascia il posto a `errorNotFound` e il resto della schermata
+  continua a funzionare. `_ConfigurationPanel` non è più un `ConsumerWidget` che non usa `ref`
+  (riceve il contenuto dall'alto, quindi è uno `StatelessWidget`). Nuovo
+  `test/widgets/team_builder_content_widget_test.dart` (2 test, IT e EN, sul vero asset e con un
+  trio ENFP/ESTJ/ISTJ scelto per produrre due strength e un blind spot deterministici).
+  Testo storico:
+- [ ] ~~**Il Team builder non ha mai mostrato il suo contenuto tradotto: l'utente legge chiavi
+  grezze**~~. Trovato il 2026-07-29 rimuovendo il `FutureBuilder` che caricava
   `team_objectives.json` senza leggerlo. I due asset (IT + EN, ~2 KB l'uno) hanno `title`,
   `description` e `ideal_profile` per ogni obiettivo, ma la schermata non li tocca: il menu a
   tendina usa `l10n.getTeamObjectiveTitle(obj.name)` e strengths/blind spot usano
@@ -398,6 +462,14 @@ profilo salvato dal quiz ora registra confidence e sorgente reali.
   scelto) e risolvere le chiavi strength/blindspot via ARB o via JSON, togliendo l'estensione
   stub. (Nota minore stessa schermata: `_ConfigurationPanel` è un `ConsumerWidget` che non usa
   mai `ref`.)
+- [ ] **Il `title` degli obiettivi ora ha due sorgenti e una è morta**: dopo il fix del
+  2026-07-30 il nome dell'obiettivo viene dall'ARB (`teamObjCreative`…), quindi i sei campi
+  `title` di `team_objectives.json` non sono letti da nessuno — e `content_assets_test` li
+  pretende, cioè fissa contenuto che nessuno mostra. Erano identici alle stringhe ARB, quindi
+  nessuno se ne accorge finché non divergono. Decidere: togliere `title` dal JSON (l'ARB resta
+  padrone del nome, il JSON di descrizione e `ideal_profile`) oppure il contrario. La ragione
+  per cui il nome sta in ARB è che etichetta un controllo: il menu a tendina deve funzionare
+  anche con l'asset rotto.
 - [ ] Espandere le schede di relazione per **coppia di tipi** (16×16), non solo per coppia
   di funzioni.
 - [ ] Rivedere/ampliare i testi didattici esistenti (tipi, funzioni, ruoli, obiettivi team).
@@ -437,6 +509,14 @@ a ogni update).
   `--dart-define` a build time e `deploy-web.yml:49` non lo fa, quindi
   `ChatClient.isConfigured` è `false` sulla PWA. Aggiungere il define al workflow (URL del
   Worker da GitHub secret/variable) oppure documentare che la chat è solo su build locali.
+- [ ] **La PWA online è ancora quella con i contenuti mancanti**: il fix di `pubspec.yaml` del
+  2026-07-30 è verificato solo in locale (`flutter build web --release` → gli otto file in
+  `build/web`). Finché non si pusha, `https://ventus2202.github.io/Archetypes/` continua a
+  mostrare "Contenuto non trovato" in Career fit e la riga d'errore nella sezione affinità di
+  `person_detail`. Dopo il deploy, verificare **sul sito** — non solo che i JSON rispondano 200,
+  che è l'errore di verifica del 2026-07-26, ma che le tre schermate mostrino il testo: Career
+  fit con i 16 ruoli, `person_detail` con la sezione affinità, Team builder con obiettivi e
+  punti di forza in chiaro.
 - [ ] **Action GitHub su Node 20 deprecato**: i run segnalano che `actions/checkout@v4`,
   `actions/upload-artifact@v4` e `actions/deploy-pages@v4` girano forzate su Node 24.
   Non rompe nulla ora; alzare a `@v5` prima che la forzatura sparisca.
@@ -460,6 +540,15 @@ a ogni update).
   restare in pari con le sorgenti dopo aver toccato `.arb`/schema. Correggere il testo — o,
   se si sceglie la via (b) della voce in Epica 1 (generati in `.gitignore`), la frase
   diventa vera e non serve toccarla.
+- [ ] **`CLAUDE.md` non dice che un asset va dichiarato in `pubspec.yaml`**: è esattamente il
+  genere di trappola che quel file serve a evitare, e il 2026-07-30 è costata tre contenuti mai
+  spediti (con l'aggravante che i file c'erano, il repository li leggeva e `CLAUDE.md` li
+  elencava). Aggiungere alla sezione "Educational content": gli asset si dichiarano **per
+  directory**, un file nuovo in `assets/content/<locale>/` non arriva nell'app se la directory
+  non è elencata, e `test/assets/content_assets_test.dart` è la rete che lo verifica. Nella
+  stessa sezione, annotare che `team_objectives.json` risolve anche le chiavi
+  `strength_*`/`blindspot_*` emesse da `TeamOptimizer`, mentre i **nomi** degli obiettivi
+  stanno nell'ARB.
 - [ ] Allineare `README` e `CLAUDE.md` quando cambia l'architettura.
 - [x] **`CLAUDE.md` disallineato sullo schema DB**: diceva `schemaVersion` "currently `2`"
   e citava solo la migration v1→v2 (`shareId`), ma lo schema reale è **v3**
@@ -606,6 +695,24 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   `_computeAffinityWithSelf` fa **due query DB più il calcolo di affinità e dinamiche** a ogni
   rebuild. Memoizzare il future (campo in uno `State`, o un `FutureProvider`, stile già usato
   altrove nel progetto).
+- **Il motore aggiunge un suffisso `_title` che il contenuto non ha**: `relationship_dynamics.dart`
+  emette `conflict_ne_si_title` mentre `relationship_dynamics.json` è indicizzato
+  `conflict_ne_si`, quindi `person_detail` fa `f.titleKey.replaceAll('_title', '')` **due volte
+  per voce** (titolo e descrizione, sei occorrenze in `:622`–`:655`) per ricucire il contratto.
+  Sono anche sei delle nove violazioni di `avoid_dynamic_calls` in `lib/`. Scegliere un lato: il
+  motore emette la chiave nuda, o il JSON include il `_title`.
+- **Il chatbot manda al modello le chiavi grezze di strength/blind spot**: `_optimizeTeam`
+  (`chat_tools.dart:255`) serializza `chosen.strengths`/`blindSpots` così come sono, quindi il
+  modello riceve `strength_ne` e `blindspot_ni` e deve indovinare cosa significano. È la stessa
+  radice del `[!]` chiuso il 2026-07-30 sul Team builder, ma sul lato tool: `ChatToolExecutor`
+  non ha né locale né `ContentRepository`, quindi risolverle richiede di passarglieli. Vale
+  anche per gli altri tool che restituiscono chiavi (`titleKey` dei ruoli in `list_roles`).
+- **Un widget test può pompare una schermata con `.watch()` se lo stream viene sostituito**:
+  il 2026-07-30 `TeamBuilderScreen` (che watcha `allPersonsProvider`) è stata testata
+  sovrascrivendo il provider con `Stream.value(persons)`, cioè uno stream che si chiude, e
+  `pumpAndSettle` non va in hang. È una via d'uscita concreta dal blocco annotato in Epica 1:
+  il DB in-memory resta per i repository (serve a `calculate()`), solo la sottoscrizione viene
+  aggirata. Da provare su `PeopleListScreen` e sul grafo, gli altri due casi elencati.
 - **Il repo non è `dart format` clean**: verificato il 2026-07-29 con
   `dart format --output=none --set-exit-if-changed` su file **non** toccati dalla sessione
   (`graph_screen.dart`, `person_detail_screen.dart`): entrambi "Changed". Conseguenza pratica,
@@ -865,6 +972,45 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   produce un diff enorme e la CI non se ne accorge; il pattern dell'`AssetBundle` iniettabile
   per i test, con la trappola della cache interna di `rootBundle`; e il quiz come unico
   contenuto rimasto senza cache.
+- 2026-07-30 — Epica 6 `[!]` **chiuso: il Team builder mostra finalmente testo, non chiavi** —
+  e dietro c'erano due bug peggiori. Il lavoro previsto: obiettivi rinominati con le sei stringhe
+  ARB `teamObj*` (esistevano da sempre, non usate da nessuno), descrizione e `ideal_profile`
+  dell'obiettivo cablati da `team_objectives.json`, punti di forza e blind spot risolti su due
+  sezioni nuove dello stesso asset (8+8 voci per lingua, una per funzione cognitiva), estensione
+  stub con i tre commenti-appunto rimossa. Il contenuto arriva da un `FutureProvider.family` per
+  lingua invece che da un `FutureBuilder` costruito in `build`, così la schermata non rilegge
+  l'asset a ogni selezione. **Primo bug trovato dai test**: `_CandidateList.persons` era
+  `List<dynamic>`, quindi `displayName.characters` era una chiamata dinamica a un metodo di
+  estensione → `NoSuchMethodError` a runtime, anche in release: la lista candidati era un
+  riquadro d'errore per chiunque avesse almeno una persona in rubrica, e `analyze` non poteva
+  vederlo. **Secondo bug, più grosso**: `pubspec.yaml` dichiarava i contenuti file per file
+  (`mbti.json`), quindi `career_roles.json`, `relationship_dynamics.json` e
+  `team_objectives.json` non erano **mai** stati messi nel bundle — confermato ispezionando
+  `build/web`. Dal cambio del 29/07 (loader che propagano) questo significa Career fit e la
+  sezione affinità di `person_detail` rotti **sulla PWA live**; prima degradavano in silenzio, e
+  per questo nessuno se n'era accorto. Fix: dichiarare le directory, come già per il quiz;
+  verificato con un `flutter build web --release` che ora i file ci sono tutti e otto. Nuovi
+  test: `test/assets/content_assets_test.dart` (8, caricano i quattro contenuti in IT+EN
+  attraverso `rootBundle` e verificano che le chiavi combacino con quelle dei motori) e
+  `test/widgets/team_builder_content_widget_test.dart` (2, IT ed EN sul vero asset). Il secondo
+  ha richiesto di sostituire `allPersonsProvider` con uno `Stream.value`: è una via d'uscita dal
+  blocco sui widget test delle schermate con `.watch()`, annotata nel backlog. Verifiche:
+  `flutter analyze` pulito, 124 test verdi (114→124), build web di release OK.
+- 2026-07-30 — Chiusura sessione: registrate le voci emerse dal lavoro sul Team builder, due
+  delle quali **misurate** e non solo intuite. In Epica 1: attivare `avoid_dynamic_calls`, il
+  lint che avrebbe preso a compile time il crash di oggi — provato in via temporanea, sono 22
+  violazioni (9 in `lib/`, 13 in un solo file di test), tutte indicizzazioni innocue di
+  `Map<String, dynamic>`, quindi il lavoro è tipizzare nove letture e accendere la regola; e
+  estendere `content_assets_test` alle chiavi di `career_roles.json` e
+  `relationship_dynamics.json`, che ho verificato allineate a mano ma che niente fissa (con il
+  `?? key` a valle, un id rinominato torna a schermo come chiave grezza). In Epica 7: la PWA
+  online è **ancora** quella senza contenuti finché non si pusha, e la verifica va fatta sulle
+  schermate, non sull'HTTP 200 dei JSON. In Epica 8: `CLAUDE.md` non dice da nessuna parte che
+  un asset non dichiarato in `pubspec.yaml` non viene spedito, che è la trappola di oggi. In
+  Epica 6: il `title` degli obiettivi ora ha due sorgenti e quella nel JSON non è più letta (e
+  il test nuovo la pretende, cioè fissa contenuto morto). Nel backlog: il suffisso `_title` che
+  il motore delle dinamiche aggiunge e che il JSON non ha, ricucito da sei `replaceAll` in
+  `person_detail`.
 - 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
   passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
   `archive_io` → `archive`. Nuovo helper download browser a import condizionale
