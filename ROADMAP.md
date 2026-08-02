@@ -124,8 +124,11 @@ Verificato dal codice al 2026-07-22.
   `app_database.dart`) modificato e committato **senza** i file rigenerati passa la CI
   verde, e il repo può portarsi dietro codice generato che non corrisponde alla sua
   sorgente. Effetto collaterale minore: ogni sessione che tocca l10n o schema sporca il
-  commit con i diff dei generati (3 file il 2026-07-27, di nuovo gli stessi 3 il 2026-07-29:
-  è un costo ricorrente, non un caso isolato). Scegliere una politica:
+  commit con i diff dei generati (3 file il 2026-07-27, di nuovo gli stessi 3 il 2026-07-29 e
+  ancora il 2026-08-02: è un costo ricorrente, non un caso isolato). Quantificato il 2026-08-02
+  con `git log --name-only` su `app_localizations.dart`: compare in **ogni** commit che abbia mai
+  toccato una `.arb`, cioè il churn non è un effetto delle sessioni recenti ma la norma da sempre.
+  Scegliere una politica:
   (a) tenerli committati e aggiungere `git diff --exit-code` dopo i due generatori in CI,
   così una rigenerazione dimenticata rompe la build; (b) metterli in `.gitignore` e
   affidarsi ai generatori in setup/CI. Vedi la voce collegata in Epica 8.
@@ -305,27 +308,82 @@ Verificato dal codice al 2026-07-22.
   sonda: senza `beforeOpen` 4 dei 6 falliscono, con `insertOrReplace` il test del merge fallisce.
   Verificato su native (`NativeDatabase`); su web il pragma è quello standard di `sqlite3.wasm` ma
   non è stato eseguito in un browser.
-- [!] **I backup esportati finora possono non essere più importabili, e l'errore è opaco.**
-  Misurato il 2026-08-02 con una sonda, subito dopo aver acceso le foreign key: un `data.json` che
-  contiene una riga orfana — un profilo il cui `personId` non esiste fra le persone del backup —
-  fa fallire l'import con `SqliteException(787): FOREIGN KEY constraint failed`. Non è un caso di
-  laboratorio: è **la conseguenza diretta del bug appena chiuso**, che per definizione faceva
-  viaggiare gli orfani in ogni backup, quindi qualsiasi ZIP esportato da un DB in cui era stata
-  cancellata una persona ricade qui. Due problemi distinti. (1) L'errore viola la politica fissata
-  il 2026-07-31: il restore rifiuta i backup malformati con `BackupFormatException` e il **percorso**
-  del valore rotto (`persons[2].createdAt is missing`), mentre qui l'utente riceve un codice 787
-  che non nomina né tabella né riga — ed è proprio il file che quella politica aveva sistemato.
-  (2) Più a monte: un backup referenzialmente incoerente **è** malformato, e oggi nessuno lo
-  verifica prima di scrivere. Verificato nella stessa sonda che il danno si ferma lì: la
-  transazione fa rollback e le righe esistenti sopravvivono (`replace: true`, 1 persona prima e
-  dopo), quindi è un import impossibile, non distruttivo. Da decidere fra tre vie, non
-  mutuamente esclusive: (a) validare l'integrità referenziale nel parsing, insieme agli altri
-  controlli tipizzati, così l'errore dice `profiles[0].personId points to a person not in this
-  backup`; (b) scartare le righe orfane all'import invece di rifiutare l'archivio, dato che sono
-  spazzatura di un bug e non dati dell'utente — è la stessa scelta già fatta da `_purgeOrphans`
-  all'apertura del DB, quindi sarebbe coerente; (c) ripulire in `exportToBytes`, che però non
-  aiuta gli ZIP già in mano alle persone. La (b) è l'unica che rende di nuovo importabili i backup
-  già esistenti.
+- [x] **I backup esportati finora potevano non essere più importabili, e l'errore era opaco** —
+  chiuso il 2026-08-02, la sessione dopo averlo aperto. Il problema, misurato con una sonda subito
+  dopo aver acceso le foreign key: un `data.json` che contiene una riga orfana — un profilo il cui
+  `personId` non esiste fra le persone del backup — faceva fallire l'import con
+  `SqliteException(787): FOREIGN KEY constraint failed`, un codice che non nomina né tabella né
+  riga. Non era un caso di laboratorio ma **la conseguenza diretta del bug chiuso lo stesso
+  giorno**, che per definizione faceva viaggiare gli orfani in ogni backup: qualsiasi ZIP esportato
+  da un DB in cui era stata cancellata una persona ricadeva lì. Scelta la via **(b)**, scartare le
+  righe orfane invece di rifiutare l'archivio: è l'unica che rende di nuovo importabili i backup
+  già in mano alle persone, ed è la stessa decisione che `_purgeOrphans` prende già all'apertura
+  del DB, quindi le due sponde del confine adesso dicono la stessa cosa. Nuovo
+  `BackupData.withoutOrphans()` (Dart puro, sul dominio): calcola gli id di persone e gruppi
+  presenti **nel backup** e lascia fuori i figli che puntano altrove — profili, entrambi i capi di
+  una relazione, entrambi i genitori di un `personGroups`, eventi. Il criterio è "il genitore è in
+  questo archivio", non "è nel DB", e vale anche in merge: gli id sono `autoIncrement` **locali**,
+  quindi un genitore che esiste già sul dispositivo con lo stesso numero sarebbe una coincidenza
+  che attacca la riga a una persona estranea (è la stessa radice della voce di backlog sull'import
+  in merge). Della via (a) resta il **vocabolario**: ogni riga scartata è descritta con il percorso
+  della politica del 31/07 — `profiles[1].personId points to person 7, missing from this backup` —
+  quindi il 787 muto è sostituito da una frase che nomina riga e campo. La via (c) (ripulire in
+  `exportToBytes`) è stata scartata perché irraggiungibile: con `_purgeOrphans` a ogni apertura e
+  le FK attive, un DB non ha più modo di produrre gli orfani che l'export dovrebbe filtrare.
+  Le righe scartate non spariscono in silenzio: `importFromBytes` restituisce un
+  `BackupImportReport` e `settings_screen` mostra "Dati importati. Scartate N righe incoerenti"
+  invece del solo messaggio di successo (due chiavi ARB nuove IT+EN, `backupImportSuccess` e
+  `backupImportSkipped` con plurale ICU; la prima toglie una delle tre stringhe italiane hardcoded
+  annotate nel backlog — le altre due, sui percorsi d'errore, restano). 8 test nuovi: 5 su
+  `withoutOrphans` (backup sano invariato, profilo orfano scartato e nominato, relazione scartata
+  da entrambi i capi, `personGroups` controllato su tutti e due i genitori, i genitori non si
+  scartano mai) e 3 sul servizio end-to-end (ZIP con orfani → importa il resto e li elenca, stesso
+  ZIP in merge su un DB che ha davvero una persona 7 → li scarta lo stesso, backup sano → report
+  pulito). Verificati con una sonda: disattivando `withoutOrphans` i due test sugli orfani
+  falliscono, il primo con esattamente `SqliteException(787)`.
+- [x] **Scartare le righe orfane aveva un lato tagliente: con "Sostituisci", un archivio senza
+  genitori svuotava il DB e la app diceva che era andata bene** — trovato, misurato e chiuso il
+  2026-08-02, nella stessa giornata del fix che lo aveva introdotto. La politica "scarta e conta"
+  non aveva una soglia,
+  quindi è identica che si scarti 1 riga su 100 o il 100% dell'archivio. Il caso peggiore è
+  `replace: true` su un `data.json` con la sezione `persons` vuota e i figli popolati (archivio
+  troncato o manomesso, non un backup sano): la transazione cancella tutto, non ha genitori da
+  reinserire, scarta tutti i figli e **committa** — sonda: 1 persona e 1 profilo prima, 0 e 0 dopo,
+  con la snackbar "Dati importati. Scartata 1 riga incoerente". Prima del fix di oggi lo stesso
+  archivio dava `SqliteException(787)`, quindi rollback e dati salvi: la via (b) ha **convertito un
+  fallimento sicuro in una perdita silenziosa** in questo caso. Sul caso reale — il backup pieno di
+  orfani lasciati dalle cascade inerti — la (b) resta giusta, quindi il rimedio non è tornare a
+  rifiutare tutto ma mettere una soglia. Delle due candidate è stata scelta **la regola netta**, non
+  il rapporto: `BackupData.checkParentSectionsPresent()` rifiuta con `BackupFormatException` — prima
+  che la transazione si apra — l'archivio in cui una **intera** sezione genitore è assente mentre
+  esistono righe che la richiedono (`persons` vuota con profili/relazioni/appartenenze/eventi
+  dentro, oppure `groups` vuota con `personGroups` dentro). L'errore nomina quante righe e in quali
+  sezioni: `persons is empty but 3 rows in profiles, events still need a person: the backup looks
+  truncated, not merely inconsistent`. Un rapporto (`>50% scartato`) sarebbe stato un numero
+  arbitrario da tarare senza dati, e il progetto ne ha già abbastanza; la regola netta non ha
+  costanti, non ha falsi positivi e copre il caso misurato. Ha però un buco dichiarato: un archivio
+  **parzialmente** troncato (1 persona su 50 e 200 figli) passa e scarta quasi tutto, quindi se un
+  giorno emergerà un caso reale di quel tipo il rapporto tornerà sul tavolo con dei dati sotto.
+  Confine tenuto esplicito da un test: un backup **completamente** vuoto non è troncato ma
+  legittimo, e restaurarlo con `replace` per azzerare l'app continua a funzionare. 7 test nuovi
+  (5 di dominio: rifiuto con la sezione persone assente, conteggio su più sezioni, `groups` colto
+  per conto suo, backup vuoto che passa, orfani sparsi che restano materia di pruning; 2 sul
+  servizio: il caso misurato — `replace: true` + archivio senza genitori → eccezione e le righe
+  esistenti ancora lì — e l'azzeramento con backup vuoto che non deve essere inghiottito dal
+  rifiuto). Verificato con una sonda: commentando la chiamata, il test del caso misurato torna a
+  passare l'import e a svuotare il DB.
+- [ ] **Il report dell'import è dettagliato e l'utente ne vede solo il numero.**
+  `BackupImportReport.skippedRows` contiene una riga per scarto, con il percorso e il campo
+  (`profiles[1].personId points to person 7, missing from this backup`) — cioè esattamente il
+  vocabolario che la politica del 2026-07-31 ha introdotto perché un errore dicesse *dove*. Poi
+  `settings_screen` ne mostra solo `.length`: "Scartate 2 righe incoerenti", che non permette di
+  capire cosa si è perso. Pesa di più dal fix della voce qui sopra: l'archivio *interamente* senza
+  genitori ora viene rifiutato con un messaggio esplicito, ma quello **parzialmente** troncato passa
+  ancora, e per l'utente è indistinguibile da due orfani innocui — è esattamente il caso in cui il
+  dettaglio servirebbe. Il dettaglio esiste già ed è buttato via al confine con la UI. Da decidere dove
+  metterlo: un dialog espandibile dopo l'import, oppure il primo consumatore vero della voce di
+  backlog sul logging (che oggi non esiste in nessuna forma), dato che è informazione diagnostica
+  più che copy per l'utente.
 - [ ] **`mbti.json` è ora il contenuto meno verificato dei quattro**: dopo il giro del
   2026-07-31, `career_roles`, `relationship_dynamics` e `team_objectives` hanno ogni chiave
   verificata campo per campo e con stringhe non vuote, mentre per `mbti.json` il test si ferma a
@@ -831,6 +889,14 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
 - ~~**Il motore aggiunge un suffisso `_title` che il contenuto non ha**~~ — chiuso il
   2026-07-31 insieme ad `avoid_dynamic_calls`, vedi Epica 1. Il motore emette la chiave nuda
   (`contentKey`), le sei `replaceAll` in `person_detail` sono sparite.
+- **`withoutOrphans` e `_purgeOrphans` fanno lo stesso lavoro in due linguaggi diversi**: notato
+  chiudendo il `[!]` degli orfani il 2026-08-02. Il DB li spazza con quattro DELETE SQL in
+  `AppDatabase`, il backup li filtra in Dart puro su `BackupData`; la regola è la stessa ("un figlio
+  senza genitore non vale"), ma le due liste di colonne vanno tenute allineate a mano e nessun test
+  le confronta. Se domani una tabella figlia nuova entra nello schema, dimenticarne una delle due
+  non rompe niente subito — riappare come un 787 all'import o come una riga orfana che sopravvive.
+  Il dominio non può importare drift, quindi non è una funzione sola: al massimo un test che
+  verifichi che entrambe coprano tutte e cinque le foreign key dello schema.
 - **L'import in merge sovrascrive per id locale, quindi può cancellare la persona sbagliata**:
   notato il 2026-08-02 sostituendo `insertOrReplace` con l'upsert (il problema precede il cambio,
   vale per entrambi). Gli id sono `autoIncrement` **locali**, quindi la persona 3 di un backup non
@@ -848,7 +914,10 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   DB di dimensioni personali) ed è **necessario** così, perché un database creato prima del pragma
   non ha altro momento in cui ripulirsi. Restano due code. La prima: è un fallimento muto della
   stessa famiglia che il progetto continua a chiudere altrove — se domani un percorso di scrittura
-  producesse orfani, sparirebbero all'avvio successivo senza che nessuno se ne accorga; almeno
+  producesse orfani, sparirebbero all'avvio successivo senza che nessuno se ne accorga — e da fine
+  giornata l'asimmetria è più stridente, perché l'import degli stessi orfani ora **li elenca** in un
+  `BackupImportReport` mentre la spazzata all'apertura resta muta: stessa regola, due sponde, una
+  parla e l'altra no; almeno
   contarli e loggarli quando non sono zero. La seconda: passato il tempo in cui i DB pre-pragma
   esistono ancora, il purge diventa lavoro a vuoto a ogni avvio e si può legare a un marker o
   togliere.
@@ -904,7 +973,13 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   strofe, non lo nota nessuno. Si spegne con
   `driftRuntimeOptions.dontWarnAboutMultipleDatabases = true` in un helper condiviso dei test —
   da valutare insieme al fatto che oggi non esiste nessun helper comune per aprire un DB di test
-  (ogni file ripete `AppDatabase(NativeDatabase.memory())` + `addTearDown`).
+  (ogni file ripete `AppDatabase(NativeDatabase.memory())` + `addTearDown`). Stessa famiglia,
+  notata il 2026-08-02: non esiste nemmeno un costruttore condiviso di **fixture di backup**, e
+  ormai sono tre le sessioni che ne scrivono a mano — `backupWith`/`person` in
+  `data_backup_test.dart`, `_zipWith` più i `data.json` letterali in
+  `data_backup_service_test.dart`, e oggi un terzo con le righe orfane. Sono mappe lunghe in cui
+  ogni campo obbligatorio va ricopiato, quindi una colonna nuova nello schema le rompe tutte una
+  per una.
 - **Pattern: costruire a mano il contenitore per testare chi lo legge.** Aggiunto il 2026-07-31
   con `_zipWith(String dataJson)` in `data_backup_service_test.dart`: per verificare che l'import
   **rifiuti** un archivio rotto serve fabbricare un layout che `exportToBytes` non produrrebbe
@@ -925,6 +1000,14 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   ogni avvio del test (80 item nel completo). Non è un problema di prestazioni oggi — succede
   una volta per test — ma è l'unica eccezione rimasta alla regola del repository, quindi o si
   cacha anche quello o si scrive perché no.
+- **La prima e unica stringa con plurale ICU**: `backupImportSkipped` (2026-08-02) è l'unica delle
+  ARB che usa `{count, plural, ...}` — verificato, tutte le altre hanno solo placeholder semplici.
+  Due code. La prima: è un costrutto che nessun test tocca e che si rompe in silenzio se un domani
+  una traduzione sbaglia una graffa, dato che `gen-l10n` gira in CI *prima* di `analyze` e un ARB
+  malformato fa fallire la build, ma una forma plurale sbagliata (non mancante) no. La seconda: se
+  il costrutto vale la pena, ci sono altri conteggi che oggi sono cuciti a mano o evitati — la
+  copy delle lunghezze del quiz ("16 domande · 4 min") e il numero di persone/gruppi nelle liste.
+  O si adotta come regola per i conteggi, o resta un'eccezione da spiegare.
 - **Il badge a pillola è duplicato**: stesso `Container` (alpha 38, radius 999, `labelSmall`
   w600) in `_MethodCard` (`onboarding_screen.dart`) e in `_LengthCard`
   (`quiz_screen.dart`). Due copie si tollerano; alla terza estrarre un piccolo widget
@@ -1309,3 +1392,54 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   fuori dal dispositivo che l'ha creata); `_purgeOrphans` cancella righe senza dirlo a nessuno, che
   è un fallimento muto della famiglia che il progetto continua a chiudere altrove; e le FK non sono
   mai state esercitate su web, da aggiungere al walkthrough sulla PWA.
+- 2026-08-02 — Epica 1 `[!]` **chiuso: i backup con righe orfane si importano di nuovo**. Era il
+  rovescio del fix di stamattina: acceso il controllo delle foreign key, ogni ZIP esportato da un DB
+  in cui era stata cancellata una persona — cioè, per definizione, ogni backup toccato dal bug
+  appena chiuso — falliva l'import con `SqliteException(787)`, senza dire quale riga. Delle tre vie
+  annotate è stata scelta la **(b)**: `BackupData.withoutOrphans()` scarta i figli che puntano a un
+  genitore assente dall'archivio (profili, entrambi i capi delle relazioni, entrambi i genitori di
+  `personGroups`, eventi) invece di rifiutare tutto, che è l'unica scelta che rende importabili gli
+  archivi già in mano alle persone e la stessa che `_purgeOrphans` prende sul lato DB. Il criterio è
+  "genitore presente **nel backup**" anche in merge, perché gli id sono `autoIncrement` locali e un
+  numero che combacia sul dispositivo non è la stessa persona. Della via (a) è rimasto il
+  vocabolario degli errori del 31/07: ogni riga scartata è nominata come
+  `profiles[1].personId points to person 7, missing from this backup`. La (c) è stata scartata
+  perché irraggiungibile — con il purge all'apertura, l'export non ha più orfani da filtrare. Niente
+  perdita muta: `importFromBytes` restituisce un `BackupImportReport` e la snackbar di
+  `settings_screen` dice quante righe sono state scartate (`backupImportSuccess` /
+  `backupImportSkipped` con plurale ICU, IT+EN; la prima chiude una delle tre stringhe italiane
+  hardcoded del backlog). Verifiche: `flutter analyze` pulito, 152 test verdi (144→152, +8), e una
+  sonda usa-e-getta che disattiva `withoutOrphans` per confermare che i test nuovi cadono con
+  esattamente il 787 di partenza. Nel backlog: le due spazzate di orfani (SQL nel DB, Dart nel
+  backup) sono la stessa regola scritta due volte e nessun test le tiene allineate.
+- 2026-08-02 — Chiusura sessione: registrate le voci emerse dal lavoro sugli orfani nei backup. Un
+  `[!]` nuovo in Epica 1, **misurato con una sonda** e non dedotto, ed è un lato tagliente del fix
+  di poche ore prima: la politica "scarta e conta" non ha soglia, quindi con `replace: true` un
+  archivio che dichiara figli e **nessun** genitore cancella il DB, non ha niente da reinserire e
+  committa, con la snackbar che dice "Dati importati" (sonda: 1 persona e 1 profilo prima, 0 e 0
+  dopo). Lo stesso archivio, prima del fix, dava 787 e rollback: la via (b) ha convertito un
+  fallimento sicuro in una perdita silenziosa nel caso patologico, quindi il rimedio non è tornare
+  a rifiutare tutto ma mettere una soglia. Accanto, sempre in Epica 1: il `BackupImportReport`
+  contiene il percorso di ogni riga scartata e la UI ne mostra solo il conteggio, cioè il
+  vocabolario introdotto dalla politica del 31/07 si ferma al confine con la schermata. Rafforzate
+  quattro voci esistenti invece di duplicarle: `_purgeOrphans` resta muto mentre l'import degli
+  stessi orfani ora li elenca (stessa regola, una sponda parla e l'altra no); il churn dei file
+  generati è stato quantificato con `git log --name-only` e compare in **ogni** commit che abbia
+  mai toccato una `.arb`, quindi è la norma da sempre e non un effetto delle sessioni recenti; le
+  fixture di backup sono scritte a mano in tre punti e nessun helper le condivide; e nel backlog la
+  nota che `backupImportSkipped` è l'unico plurale ICU del progetto. Nessun commit: le modifiche
+  della giornata (fix + roadmap) restano in working tree.
+- 2026-08-02 — Epica 1 `[!]` **chiuso in giornata: il lato tagliente del fix sugli orfani non c'è
+  più**. `BackupData.checkParentSectionsPresent()` gira **prima** che la transazione si apra e
+  rifiuta l'archivio in cui una intera sezione genitore è assente mentre esistono righe che la
+  richiedono, con un errore che dice quante righe e in quali sezioni (`persons is empty but 3 rows
+  in profiles, events still need a person: the backup looks truncated, not merely inconsistent`).
+  Scelta la regola netta invece del rapporto: nessuna costante da tarare, nessun falso positivo, e
+  copre il caso misurato poche ore prima. Il buco che resta è dichiarato, non nascosto — un archivio
+  **parzialmente** troncato passa ancora e scarta quasi tutto, e il rapporto tornerà sul tavolo se
+  emergerà un caso reale con dei dati sotto. Tenuto esplicito da un test il confine con il backup
+  legittimamente vuoto, che deve continuare ad azzerare l'app con `replace`. Verifiche: `flutter
+  analyze` pulito, 159 test verdi (152→159, +7), e una sonda che commenta la chiamata per
+  confermare che il test del caso misurato torna a svuotare il DB senza il controllo. Resta aperta
+  in Epica 1 la voce sul dettaglio del report che non arriva all'utente, che questo fix rende più
+  pesante: ora il caso netto è rifiutato a voce alta, quello parziale no.
