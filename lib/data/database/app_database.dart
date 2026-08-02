@@ -106,7 +106,41 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(persons, persons.avatarBytes);
           }
         },
+        // SQLite disables foreign keys by default, so until this ran the five
+        // `onDelete: KeyAction.cascade` above did nothing: deleting a person
+        // left its profile, relationships, group memberships and events behind,
+        // and those orphans then travelled into every backup. Runs after
+        // onCreate/onUpgrade, so migrations still execute with the checks off.
+        beforeOpen: (details) async {
+          await _purgeOrphans();
+          await customStatement('PRAGMA foreign_keys = ON');
+        },
       );
+
+  // Sweeps the rows the inert cascades left behind. Idempotent and cheap (five
+  // deletes on a personal-sized DB), so it runs at every open rather than
+  // needing a marker: databases created before the pragma above have no other
+  // way of being cleaned, and a future migration step runs with the checks off.
+  Future<void> _purgeOrphans() async {
+    await customStatement(
+      'DELETE FROM personality_profiles '
+      'WHERE person_id NOT IN (SELECT id FROM persons)',
+    );
+    await customStatement(
+      'DELETE FROM relationships '
+      'WHERE person_a_id NOT IN (SELECT id FROM persons) '
+      'OR person_b_id NOT IN (SELECT id FROM persons)',
+    );
+    await customStatement(
+      'DELETE FROM person_groups '
+      'WHERE person_id NOT IN (SELECT id FROM persons) '
+      'OR group_id NOT IN (SELECT id FROM groups)',
+    );
+    await customStatement(
+      'DELETE FROM event_entries '
+      'WHERE person_id NOT IN (SELECT id FROM persons)',
+    );
+  }
 
   static Future<AppDatabase> create() async => AppDatabase(openConnection());
 }

@@ -345,26 +345,32 @@ class DataBackupService {
         await db.delete(db.persons).go();
       }
 
+      // Upsert, not insertOrReplace: SQLite implements REPLACE as DELETE +
+      // INSERT, so with foreign keys enforced (since the beforeOpen pragma) a
+      // merge import of a person that already exists locally would cascade away
+      // that person's profile, relationships, memberships and events before
+      // re-inserting only what the backup happens to carry. `ON CONFLICT DO
+      // UPDATE` rewrites the row in place, so nothing cascades.
       for (final g in backup.groups) {
-        await db.into(db.groups).insert(g, mode: InsertMode.insertOrReplace);
+        await db.into(db.groups).insertOnConflictUpdate(g);
       }
 
       for (final pEntry in backup.persons) {
         // Avatar bytes ride along inside pEntry (deserialized from data.json).
-        await db.into(db.persons).insert(pEntry, mode: InsertMode.insertOrReplace);
+        await db.into(db.persons).insertOnConflictUpdate(pEntry);
       }
 
       for (final pr in backup.profiles) {
-        await db.into(db.personalityProfiles).insert(pr, mode: InsertMode.insertOrReplace);
+        await db.into(db.personalityProfiles).insertOnConflictUpdate(pr);
       }
       for (final rel in backup.relationships) {
-        await db.into(db.relationships).insert(rel, mode: InsertMode.insertOrReplace);
+        await db.into(db.relationships).insertOnConflictUpdate(rel);
       }
       for (final pg in backup.personGroups) {
-        await db.into(db.personGroups).insert(pg, mode: InsertMode.insertOrReplace);
+        await db.into(db.personGroups).insertOnConflictUpdate(pg);
       }
       for (final ev in backup.events) {
-        await db.into(db.eventEntries).insert(ev, mode: InsertMode.insertOrReplace);
+        await db.into(db.eventEntries).insertOnConflictUpdate(ev);
       }
     });
   }

@@ -121,6 +121,52 @@ void main() {
     expect(names, ['Ada']);
   });
 
+  test('importFromBytes without replace keeps rows the backup does not carry',
+      () async {
+    // A merge import updates the person it finds; it must not take that
+    // person's profile, relationships and events down with it. It would, if the
+    // insert used REPLACE: SQLite runs that as DELETE + INSERT, and the delete
+    // cascades now that foreign keys are enforced.
+    final source = AppDatabase(NativeDatabase.memory());
+    addTearDown(source.close);
+    await source
+        .into(source.persons)
+        .insert(PersonsCompanion.insert(name: 'Ada Lovelace'));
+    final bytes = await DataBackupService(source).exportToBytes();
+
+    final target = AppDatabase(NativeDatabase.memory());
+    addTearDown(target.close);
+    // Same id as the person in the backup, plus local rows made after it.
+    await target.into(target.persons).insert(PersonsCompanion.insert(name: 'Ada'));
+    await target.into(target.personalityProfiles).insert(
+          PersonalityProfilesCompanion.insert(
+            personId: 1,
+            dataJson: '{"type":"intj"}',
+          ),
+        );
+    await target.into(target.eventEntries).insert(
+          EventEntriesCompanion.insert(
+            personId: 1,
+            date: DateTime.parse('2026-08-01T00:00:00.000'),
+            kind: 'met',
+            description: 'Aggiunto dopo il backup',
+          ),
+        );
+
+    await DataBackupService(target).importFromBytes(bytes, replace: false);
+
+    expect(
+      (await target.select(target.persons).get()).single.name,
+      'Ada Lovelace',
+      reason: 'the backup still wins on the columns it carries',
+    );
+    expect(await target.select(target.personalityProfiles).get(), hasLength(1));
+    expect(
+      (await target.select(target.eventEntries).get()).single.description,
+      'Aggiunto dopo il backup',
+    );
+  });
+
   group('importFromBytes refuses a broken archive', () {
     test('bytes that are not a ZIP', () async {
       final db = AppDatabase(NativeDatabase.memory());

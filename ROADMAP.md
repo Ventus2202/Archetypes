@@ -230,21 +230,102 @@ Verificato dal codice al 2026-07-22.
   legge a schermo esattamente come una mancante — usato anche dal test degli obiettivi, che
   prima controllava solo il tipo. Verificato con una sonda usa-e-getta (rimosso `comm_default` e
   svuotato una `description` nell'asset IT): il test fallisce con il nome della chiave rotta.
-- [ ] **`data_backup.dart` passa `dynamic` dritto dentro i costruttori tipizzati: 44 errori su
-  81 di tutto il repo.** Misurato il 2026-07-31 accendendo in via temporanea `strict-casts` +
-  `strict-raw-types` + `strict-inference` (la difesa che sta un gradino sopra
-  `avoid_dynamic_calls`: quella scatta al **punto di chiamata**, queste al punto di
-  assegnazione, quindi vedono anche il `List<dynamic>` dichiarato che il 30/07 ha prodotto il
-  crash). Totale 81 diagnostiche, ma la distribuzione è la notizia: **44 stanno tutte in
-  `data_backup.dart`**, tutte `argument_type_not_assignable`, cioè ogni campo letto dal JSON di
-  un backup entra in un parametro `int`/`String`/`bool` senza un cast che lo verifichi. In
-  pratica il percorso di **restore non valida niente**: un backup vecchio o manomesso con un
-  campo del tipo sbagliato non viene rifiutato con un messaggio, esplode in `TypeError` a metà
-  import — ed è lo stesso file che portava il primo bug della roadmap (`shareId` non
-  serializzato). Le altre 37 sono sparse e innocue (17 letterali di collezione senza tipo, 15
-  `new` senza argomenti di tipo, 3 tipi raw, 2 invocazioni). Lavoro: tipizzare la
-  deserializzazione del backup con errori espliciti — che è un fix di robustezza a sé, non solo
-  la pulizia di un lint — poi rivalutare se accendere le tre opzioni stabilmente.
+- [x] **`data_backup.dart` passava `dynamic` dritto dentro i costruttori tipizzati: 44 errori su
+  81 di tutto il repo** — chiuso il 2026-07-31. Misurato il giorno prima accendendo in via
+  temporanea `strict-casts` + `strict-raw-types` + `strict-inference` (la difesa che sta un
+  gradino sopra `avoid_dynamic_calls`: quella scatta al **punto di chiamata**, queste al punto di
+  assegnazione): 81 diagnostiche in tutto, ma **44 tutte nello stesso file**, tutte
+  `argument_type_not_assignable`, cioè ogni campo letto dal JSON di un backup entrava in un
+  parametro `int`/`String`/`bool` senza un cast che lo verificasse. In pratica il **restore non
+  validava niente**: un backup vecchio o manomesso esplodeva in `TypeError` a metà import senza
+  dire quale campo — ed è lo stesso file che portava il primo bug della roadmap. Fix: la
+  deserializzazione passa per un gruppo di lettori tipizzati (`_int`, `_string`, `_bool`, `_date`,
+  `_bytesOrNull`, `_object`, `_rows`) che controllano il tipo e sollevano una
+  `BackupFormatException` con il **percorso** del valore rotto — `persons[2].createdAt is
+  missing`, `profiles[0].confidence expected a number, found String` — e l'indice della riga viene
+  dal loop, quindi indica davvero quale. Stesso trattamento per i tre punti che prima
+  propagavano eccezioni grezze (ZIP illeggibile, `data.json` assente, JSON non valido) e per il
+  controllo di `schemaVersion`, che ora dice quale versione ha trovato. Trovato lavorandoci e
+  corretto: con `replace: true` la cancellazione stava in una **transazione separata** da quella
+  degli insert, quindi un errore a metà scrittura lasciava il DB vuoto senza nulla dentro; ora
+  cancellazione e inserimento sono un'unica transazione. 13 test nuovi: sette sui lettori
+  (`data_backup_test.dart`: campo mancante, tipo sbagliato, data non parsabile, base64 corrotto,
+  riga non-oggetto, sezione top-level assente, indice della riga rotta) e cinque sul servizio
+  (`data_backup_service_test.dart`: byte non-ZIP, ZIP senza `data.json`, JSON invalido, backup più
+  nuovo dell'app, e quello che conta davvero — `replace: true` su un backup malformato **non**
+  svuota il DB esistente).
+- [x] **`strict-casts` acceso stabilmente** — conseguenza diretta della voce sopra, stesso giorno.
+  Tolti i 44 cast del backup, le tre opzioni `strict-*` scendono da 81 a 50 diagnostiche e
+  **`strict-casts` da solo dà "No issues found"** su tutto il repo: quindi non è più una misura
+  temporanea, è in `analysis_options.yaml` con il commento che spiega da quale bug arriva. È la
+  difesa al punto di **assegnazione**, il gradino sopra `avoid_dynamic_calls` che scatta solo al
+  punto di chiamata. Le 50 restanti vengono tutte dalle altre due opzioni e sono rumore, non
+  rischio: 30 letterali di collezione senza tipo (quasi tutti nei test), 15 `new` senza argomenti
+  di tipo, 3 tipi raw, 2 invocazioni — nessuna `argument_type_not_assignable` rimasta. Quelle due
+  restano spente.
+- [ ] **Il restore ignora il `schemaVersion` che il backup si porta dietro.** Emerso il
+  2026-07-31 scrivendo i lettori tipizzati: il campo viene letto solo per rifiutare un backup
+  **più nuovo** dell'app, mentre il parsing è uno solo, con un'unica lista di campi obbligatori,
+  identico per un backup v1 e per uno v3. Che i backup vecchi si aprano ancora è un accidente
+  fortunato: le due colonne aggiunte da allora (`shareId` in v2, `avatarBytes` in v3) sono
+  entrambe **nullable**, quindi i lettori `*OrNull` restituiscono `null` e nessuno se ne accorge.
+  Dal momento in cui una migration aggiungerà una colonna **non** nullable, restaurare un backup
+  precedente fallirà con `Invalid backup: persons[0].<campo> is missing` — cioè il fix di oggi,
+  che rende esplicito il rifiuto, rende anche esplicito questo limite invece di lasciarlo
+  degradare a caso. Stessa cosa per una sezione top-level: `_rows` pretende che `events`,
+  `groups`, ecc. ci siano tutte. Da decidere: (a) far guidare i default dal `schemaVersion` letto
+  (campo assente + backup più vecchio della colonna → default della colonna, non errore), oppure
+  (b) dichiarare la politica "si restaurano solo backup dello schema corrente" e fissarla con un
+  test su un fixture d'epoca. Oggi in `data_backup_test.dart` esiste un solo fixture del genere
+  (il backup pre-`shareId`), scritto a mano e senza ZIP.
+- [x] **Le foreign key non sono attive: `onDelete: KeyAction.cascade` non fa niente** — chiuso il
+  2026-08-02. Misurato il 2026-07-31 con una sonda usa-e-getta: `PRAGMA foreign_keys` valeva **0**
+  (SQLite le disattiva di default e il progetto non aveva un `beforeOpen` che le accendesse),
+  quindi cancellare una persona lasciava in DB il suo profilo, le sue relazioni, le sue
+  appartenenze ai gruppi e i suoi eventi, e si poteva inserire un profilo con un `personId`
+  inesistente senza errore. Scelto di **accenderle**, non di togliere le `references`: lo schema
+  dichiara cinque cascade e l'unico percorso di cancellazione dell'app
+  (`person_edit_screen.dart:223`) ci conta sopra. Fix in tre pezzi: (1) `beforeOpen` con
+  `PRAGMA foreign_keys = ON` — gira **dopo** `onCreate`/`onUpgrade`, quindi le migration
+  continuano a eseguire con i controlli spenti, che è il comportamento voluto; (2) `_purgeOrphans`,
+  quattro DELETE idempotenti che spazzano le righe già rimaste orfane — senza, i DB esistenti non
+  avrebbero altro modo di ripulirsi, e gli orfani continuerebbero a viaggiare in ogni backup;
+  (3) l'import del backup passa da `InsertMode.insertOrReplace` a `insertOnConflictUpdate`.
+  Il punto (3) è una **regressione che il fix stesso introduceva**, misurata con una seconda sonda:
+  SQLite implementa REPLACE come DELETE + INSERT, quindi con le FK attive un import **in merge** di
+  una persona già presente in locale ne cancellava per cascade profilo, relazioni, appartenenze ed
+  eventi prima di reinserire solo ciò che il backup si porta dietro (sonda: 1 profilo prima, 0
+  dopo). `ON CONFLICT DO UPDATE` riscrive la riga sul posto e non fa scattare niente.
+  L'ordine di insert dell'import era già FK-safe (gruppi → persone → profili → relazioni →
+  personGroups → eventi) e ora un ordine sbagliato darebbe errore invece di scrivere un orfano.
+  Nuovo `test/data/database/foreign_keys_test.dart` (6 test: pragma a 1, cascade su tutte e cinque
+  le tabelle figlie, `personId` inesistente rifiutato, ordine di insert dell'import, purge degli
+  orfani su DB **file-backed** chiuso e riaperto, e che il purge non tocchi le righe sane) più un
+  test di regressione sul merge in `data_backup_service_test.dart`. Entrambi verificati con una
+  sonda: senza `beforeOpen` 4 dei 6 falliscono, con `insertOrReplace` il test del merge fallisce.
+  Verificato su native (`NativeDatabase`); su web il pragma è quello standard di `sqlite3.wasm` ma
+  non è stato eseguito in un browser.
+- [!] **I backup esportati finora possono non essere più importabili, e l'errore è opaco.**
+  Misurato il 2026-08-02 con una sonda, subito dopo aver acceso le foreign key: un `data.json` che
+  contiene una riga orfana — un profilo il cui `personId` non esiste fra le persone del backup —
+  fa fallire l'import con `SqliteException(787): FOREIGN KEY constraint failed`. Non è un caso di
+  laboratorio: è **la conseguenza diretta del bug appena chiuso**, che per definizione faceva
+  viaggiare gli orfani in ogni backup, quindi qualsiasi ZIP esportato da un DB in cui era stata
+  cancellata una persona ricade qui. Due problemi distinti. (1) L'errore viola la politica fissata
+  il 2026-07-31: il restore rifiuta i backup malformati con `BackupFormatException` e il **percorso**
+  del valore rotto (`persons[2].createdAt is missing`), mentre qui l'utente riceve un codice 787
+  che non nomina né tabella né riga — ed è proprio il file che quella politica aveva sistemato.
+  (2) Più a monte: un backup referenzialmente incoerente **è** malformato, e oggi nessuno lo
+  verifica prima di scrivere. Verificato nella stessa sonda che il danno si ferma lì: la
+  transazione fa rollback e le righe esistenti sopravvivono (`replace: true`, 1 persona prima e
+  dopo), quindi è un import impossibile, non distruttivo. Da decidere fra tre vie, non
+  mutuamente esclusive: (a) validare l'integrità referenziale nel parsing, insieme agli altri
+  controlli tipizzati, così l'errore dice `profiles[0].personId points to a person not in this
+  backup`; (b) scartare le righe orfane all'import invece di rifiutare l'archivio, dato che sono
+  spazzatura di un bug e non dati dell'utente — è la stessa scelta già fatta da `_purgeOrphans`
+  all'apertura del DB, quindi sarebbe coerente; (c) ripulire in `exportToBytes`, che però non
+  aiuta gli ZIP già in mano alle persone. La (b) è l'unica che rende di nuovo importabili i backup
+  già esistenti.
 - [ ] **`mbti.json` è ora il contenuto meno verificato dei quattro**: dopo il giro del
   2026-07-31, `career_roles`, `relationship_dynamics` e `team_objectives` hanno ogni chiave
   verificata campo per campo e con stringhe non vuote, mentre per `mbti.json` il test si ferma a
@@ -750,6 +831,33 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
 - ~~**Il motore aggiunge un suffisso `_title` che il contenuto non ha**~~ — chiuso il
   2026-07-31 insieme ad `avoid_dynamic_calls`, vedi Epica 1. Il motore emette la chiave nuda
   (`contentKey`), le sei `replaceAll` in `person_detail` sono sparite.
+- **L'import in merge sovrascrive per id locale, quindi può cancellare la persona sbagliata**:
+  notato il 2026-08-02 sostituendo `insertOrReplace` con l'upsert (il problema precede il cambio,
+  vale per entrambi). Gli id sono `autoIncrement` **locali**, quindi la persona 3 di un backup non
+  è la persona 3 del dispositivo che lo importa: un merge di un backup preso da un altro telefono
+  — o dallo stesso dopo un import con `replace`, che rinumera — riscrive nome, avatar e note di una
+  persona del tutto estranea, in silenzio e senza conferma. Con `replace: true` la cosa non si pone
+  (si azzera tutto), quindi il difetto sta solo nella modalità merge, che l'utente sceglie da un
+  dialog in `settings_screen`. Chiudere la falla richiede una chiave stabile fra dispositivi:
+  `PersonalityProfiles.shareId` è già un id casuale stabile, ma sta sul **profilo** e non sulla
+  persona, e una persona senza profilo non ne ha nessuno. Da decidere insieme alla voce di Epica 1
+  sull'integrità referenziale dei backup: sono la stessa domanda, "che cosa identifica una riga
+  quando esce dal dispositivo che l'ha creata".
+- **`_purgeOrphans` cancella righe senza dirlo a nessuno**: aggiunto il 2026-08-02 insieme al
+  pragma sulle foreign key. Gira a ogni apertura del DB (quattro DELETE, idempotenti e rapidi su un
+  DB di dimensioni personali) ed è **necessario** così, perché un database creato prima del pragma
+  non ha altro momento in cui ripulirsi. Restano due code. La prima: è un fallimento muto della
+  stessa famiglia che il progetto continua a chiudere altrove — se domani un percorso di scrittura
+  producesse orfani, sparirebbero all'avvio successivo senza che nessuno se ne accorga; almeno
+  contarli e loggarli quando non sono zero. La seconda: passato il tempo in cui i DB pre-pragma
+  esistono ancora, il purge diventa lavoro a vuoto a ogni avvio e si può legare a un marker o
+  togliere.
+- **Le foreign key non sono mai state esercitate su web**: il `beforeOpen` del 2026-08-02 è
+  verificato solo su `NativeDatabase`. `PRAGMA foreign_keys` è SQLite standard e `sqlite3.wasm` lo
+  supporta, quindi non c'è motivo di dubitarne — ma il progetto ha già pagato una volta (2026-07-30,
+  gli asset mai messi nel bundle) il prezzo di dare per scontato che ciò che funziona in locale
+  arrivi nella PWA. Da mettere nel walkthrough end-to-end già in backlog: cancellare una persona
+  dalla PWA e controllare che il grafo non conservi i suoi archi.
 - **Il chatbot manda al modello le chiavi grezze di strength/blind spot**: `_optimizeTeam`
   (`chat_tools.dart:255`) serializza `chosen.strengths`/`blindSpots` così come sono, quindi il
   modello riceve `strength_ne` e `blindspot_ni` e deve indovinare cosa significano. È la stessa
@@ -762,15 +870,21 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   `pumpAndSettle` non va in hang. È una via d'uscita concreta dal blocco annotato in Epica 1:
   il DB in-memory resta per i repository (serve a `calculate()`), solo la sottoscrizione viene
   aggirata. Da provare su `PeopleListScreen` e sul grafo, gli altri due casi elencati.
-- **Il repo non è `dart format` clean**: verificato il 2026-07-29 con
-  `dart format --output=none --set-exit-if-changed` su file **non** toccati dalla sessione
-  (`graph_screen.dart`, `person_detail_screen.dart`): entrambi "Changed". Conseguenza pratica,
-  incontrata lo stesso giorno: non si può formattare il file su cui si sta lavorando senza
-  produrre un diff enorme e scollegato dal lavoro, quindi l'indentazione va sistemata a mano.
-  E la CI non controlla il formato, quindi la deriva continua. Decidere: un `dart format .` in
-  un commit dedicato e solo-formato + `--set-exit-if-changed` in CI, oppure dichiarare
-  esplicitamente che il formato è libero e smettere di chiederselo. Collegato alla voce
-  `.gitattributes` (stessa famiglia: igiene del diff).
+- **Il repo non è `dart format` clean, e il 2026-07-31 si è capito perché**: non è deriva, è un
+  **cambio di formatter**. Il 2026-07-29 la verifica su due file non toccati
+  (`graph_screen.dart`, `person_detail_screen.dart`) diceva "Changed"; oggi lo dicono anche i tre
+  file della sessione, **compreso il codice scritto oggi da zero**. Guardando il diff proposto
+  (`dart format -o show | diff`) non si tratta di indentazione sciatta: il formatter dell'SDK
+  3.11.5 è quello "tall style" introdotto da Dart 3.7, e riscrive costrutti che erano
+  perfettamente convenzionali quando il repo è stato scritto — corpi `=> { ... }`, catene
+  `db.into(x).insert(...)`, il rientro delle funzioni a freccia. Conseguenza sulla decisione già
+  annotata: il "commit dedicato solo-formato" non tocca qualche punto stantio, **rifà praticamente
+  ogni file Dart del repo**, quindi va fatto quando non c'è altro lavoro in volo e va messo in un
+  commit isolato, altrimenti seppellisce ogni diff successivo. Le due opzioni restano quelle:
+  adottare il tall style in un colpo solo + `dart format --set-exit-if-changed` in CI perché non
+  ricominci, oppure dichiarare che il formato è libero e smettere di verificarlo (nel frattempo il
+  codice nuovo si scrive nello stile dei file attorno, che è quello che si è fatto oggi).
+  Collegato alla voce `.gitattributes` (stessa famiglia: igiene del diff).
 - **Pattern: un test sul contenuto deriva le chiavi attese dal motore, non da una lista
   copiata.** Aggiunto il 2026-07-31 estendendo `content_assets_test`: le chiavi attese si
   ottengono da `kCareerRoles`, `RelationshipDynamics.kFunctionConflicts`,
@@ -781,6 +895,23 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   `isA<String>()` — a schermo una voce presente ma vuota si legge come una mancante, quindi un
   test che guarda solo il tipo lascia passare metà del fallimento. Vale accanto agli altri tre
   pattern annotati (geometria renderizzata, route host, `AssetBundle` iniettabile).
+- **L'output dei test è sporcato da un falso positivo di drift**: ogni file di test che apre più
+  di un `AppDatabase` fa stampare `WARNING (drift): It looks like you've created the database
+  class AppDatabase multiple times` **più uno stack trace completo**, una volta per istanza. È un
+  falso positivo: il warning avverte del rischio quando due istanze condividono lo stesso
+  `QueryExecutor`, mentre nei test ognuna ha il suo `NativeDatabase.memory()`; drift però conta le
+  istanze della classe, non gli executor. Il costo è che un warning vero, in mezzo a quelle
+  strofe, non lo nota nessuno. Si spegne con
+  `driftRuntimeOptions.dontWarnAboutMultipleDatabases = true` in un helper condiviso dei test —
+  da valutare insieme al fatto che oggi non esiste nessun helper comune per aprire un DB di test
+  (ogni file ripete `AppDatabase(NativeDatabase.memory())` + `addTearDown`).
+- **Pattern: costruire a mano il contenitore per testare chi lo legge.** Aggiunto il 2026-07-31
+  con `_zipWith(String dataJson)` in `data_backup_service_test.dart`: per verificare che l'import
+  **rifiuti** un archivio rotto serve fabbricare un layout che `exportToBytes` non produrrebbe
+  mai (ZIP senza `data.json`, `data.json` non JSON, campi del tipo sbagliato). Vale accanto agli
+  altri pattern annotati (geometria renderizzata, route host, `AssetBundle` iniettabile, chiavi
+  attese derivate dal motore): un round-trip export→import prova che il caso buono funziona e
+  **nessun** caso cattivo, perché l'esportatore non sa produrne.
 - **Pattern: per testare chi legge asset, iniettare l'`AssetBundle`.** Aggiunto il 2026-07-29
   a `ContentRepository({AssetBundle? bundle})` (default `rootBundle`): un bundle finto rende
   i test ermetici, indipendenti dal contenuto reale e capaci di simulare asset mancanti o
@@ -798,6 +929,14 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   w600) in `_MethodCard` (`onboarding_screen.dart`) e in `_LengthCard`
   (`quiz_screen.dart`). Due copie si tollerano; alla terza estrarre un piccolo widget
   condiviso invece di ricopiarlo.
+- **Tre stringhe italiane hardcoded in `settings_screen`**: `'Errore esportazione: $e'`,
+  `'Errore importazione: $e'` e `'Dati importati con successo'` (più il `text: 'Archetypes Backup'`
+  della share sheet) non passano da `l10n`, quindi in EN escono in italiano; le prime due
+  stampano anche l'eccezione grezza all'utente. Dal 2026-07-31 quell'eccezione è almeno leggibile
+  (`Invalid backup: persons[2].createdAt is missing` invece di un `TypeError`), ma resta una frase
+  inglese dentro una italiana. Stessa famiglia dell'`'Inserisci un nome'` di `person_edit`
+  (Epica 5) e della voce sui messaggi d'errore user-friendly qui sopra: conviene chiuderle in un
+  giro solo di ARB.
 - **`confidenceFromAxisBalance` usa la media, non l'asse peggiore**: 3 assi netti + 1 in
   perfetto pareggio danno 88, mentre la lettera in bilico resta un lancio di monetina. È
   documentato come "quanto sono netti gli assi", non come probabilità che il tipo sia
@@ -866,6 +1005,14 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   rimosso `dart:io`/`FileImage` dalle schermate; backup avatar via base64 in `data.json`
   (eliminato il ramo file `avatars/` nello ZIP + commenti-appunto). build_runner + gen-l10n
   rigenerati, `flutter analyze` pulito, 37 test verdi (2 nuovi round-trip avatar).
+- 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
+  passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
+  `archive_io` → `archive`. Nuovo helper download browser a import condizionale
+  (`core/platform/file_download*.dart`, Blob+anchor su `package:web`), perché
+  `file_picker.saveFile` non esiste su web. `settings_screen` fa branch web/nativo per export
+  e usa `withData:true` + `.bytes` per import. `web` promosso a dep diretta. Chiusi anche il
+  test end-to-end di `DataBackupService` (Epica 1) e l'audit `dart:io` (Epica 9). Verifiche:
+  analyze pulito, 39 test verdi (2 nuovi), **build web release OK** (wasm dry-run OK).
 - 2026-07-24 — Epica 1: fix `_AppGate` (`app.dart`). Il ramo `error:` non mostra più
   silenziosamente la HomeShell su errore reale di `getSelf()`; nuova `_GateError` con
   messaggio + **Riprova** (`ref.invalidate`), stringa l10n `retry` IT/EN, `flutter gen-l10n`
@@ -1103,11 +1250,62 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   come `key`; è il gemello rovesciato del `title` degli obiettivi, che di sorgenti ne ha due.
   Nel backlog: il pattern per cui un test sul contenuto deve derivare le chiavi attese dalle
   costanti del motore invece di copiarle, con il corollario di pretendere stringhe non vuote.
-- 2026-07-23 — Epica 9 `[!]`: **backup/restore ora funziona nella PWA**. `DataBackupService`
-  passa a byte puri (`exportToBytes`/`importFromBytes`), niente più `dart:io`/`path_provider`,
-  `archive_io` → `archive`. Nuovo helper download browser a import condizionale
-  (`core/platform/file_download*.dart`, Blob+anchor su `package:web`), perché
-  `file_picker.saveFile` non esiste su web. `settings_screen` fa branch web/nativo per export
-  e usa `withData:true` + `.bytes` per import. `web` promosso a dep diretta. Chiusi anche il
-  test end-to-end di `DataBackupService` (Epica 1) e l'audit `dart:io` (Epica 9). Verifiche:
-  analyze pulito, 39 test verdi (2 nuovi), **build web release OK** (wasm dry-run OK).
+- 2026-07-31 — Epica 1: **il restore di un backup ora valida quello che legge, e `strict-casts` è
+  acceso**. La deserializzazione di `data_backup.dart` — 44 delle 81 diagnostiche `strict-*`
+  misurate ieri, tutte nello stesso file — passa da campi `dynamic` infilati nei costruttori
+  generati a lettori tipizzati che sollevano `BackupFormatException` con il percorso del valore
+  rotto: un backup manomesso viene rifiutato con `persons[2].createdAt is missing` invece di
+  esplodere in `TypeError` a metà import. Stesso trattamento per ZIP illeggibile, `data.json`
+  mancante e JSON non valido, che prima uscivano come eccezioni grezze del pacchetto. Trovato
+  lavorandoci e corretto: con `replace: true` la cancellazione stava in una transazione **separata**
+  dagli insert, quindi un errore a metà scrittura lasciava il DB vuoto — ora è una transazione
+  sola, e un test lo pinza (backup malformato + `replace` → l'errore arriva e le righe vecchie sono
+  ancora lì). Conseguenza immediata: con quei 44 cast via, `strict-casts` da solo è pulito su tutto
+  il repo, quindi da misura temporanea diventa regola in `analysis_options.yaml`; le altre due
+  `strict-*` restano spente (50 diagnostiche residue, tutte letterali senza tipo, rumore).
+  Verifiche: `flutter analyze` pulito **con la regola nuova**, 137 test verdi (124→137, +13).
+  Emerso da una sonda usa-e-getta a margine: `PRAGMA foreign_keys` è **0**, quindi i
+  `KeyAction.cascade` dello schema non fanno niente e cancellare una persona lascia orfani profilo,
+  relazioni, gruppi ed eventi (nuova voce in Epica 1). Nel backlog: le tre stringhe italiane
+  hardcoded di `settings_screen` sul percorso backup.
+- 2026-07-31 — Chiusura sessione: registrate le voci emerse dal lavoro sul backup, tutte
+  verificate mentre si scriveva. In Epica 1, accanto alle foreign key inerti: il restore **legge**
+  il `schemaVersion` del backup solo per rifiutare quelli più nuovi, ma poi parsifica tutto con
+  un'unica lista di campi obbligatori — che i backup v1/v2 si aprano ancora dipende solo dal fatto
+  che le due colonne aggiunte da allora sono nullable, quindi la prima colonna NOT NULL romperà il
+  restore dei backup vecchi, e ora lo dirà a voce alta invece di degradare a caso. Nel backlog:
+  il warning `multiple databases` di drift sporca l'output dei test con uno stack trace per
+  istanza ed è un falso positivo (ogni test ha il suo executor); e il pattern per cui bisogna
+  fabbricare a mano l'archivio rotto, perché un round-trip export→import non può produrre nessun
+  caso cattivo. Chiarita infine la voce sul `dart format`: i tre file di oggi risultano "Changed"
+  **anche nel codice appena scritto**, e il diff mostra che a cambiare è lo stile — l'SDK 3.11.5
+  ha il formatter "tall style" di Dart 3.7, quindi il commit solo-formato rifà l'intero repo e non
+  qualche punto stantio.
+- 2026-08-02 — Epica 1: **le foreign key sono attive, le cascade dello schema fanno finalmente
+  qualcosa**. `beforeOpen` accende `PRAGMA foreign_keys` (gira dopo le migration, che restano
+  quindi con i controlli spenti) e `_purgeOrphans` spazza le righe che le cascade inerti avevano
+  già lasciato indietro — senza quel passaggio i DB esistenti non avrebbero modo di ripulirsi e gli
+  orfani continuerebbero a finire in ogni backup. Trovato lavorandoci e corretto nello stesso giro:
+  accendere le FK **introduceva** una perdita di dati sull'import in merge, perché SQLite esegue
+  REPLACE come DELETE + INSERT e la cancellazione ora cascata — un backup che contiene una persona
+  già in locale le portava via profilo, relazioni, appartenenze ed eventi (misurato con una sonda:
+  1 profilo prima, 0 dopo). I sei insert dell'import passano a `insertOnConflictUpdate`, che
+  riscrive la riga sul posto. Nuovi test: `test/data/database/foreign_keys_test.dart` (6, incluso
+  il purge su un DB file-backed chiuso e riaperto, l'unico modo di riprodurre un DB pre-pragma) e
+  uno di regressione sul merge in `data_backup_service_test.dart`. Entrambi provati con una sonda
+  usa-e-getta: senza `beforeOpen` ne falliscono 4 su 6, con `insertOrReplace` fallisce quello del
+  merge. Verifiche: `flutter analyze` pulito, 144 test verdi (137→144, +7).
+- 2026-08-02 — Chiusura sessione: registrate le voci emerse dal lavoro sulle foreign key, tutte
+  **misurate con una sonda** e non intuite. Un `[!]` nuovo in Epica 1, che è il rovescio della
+  medaglia del fix di oggi: un backup che contiene una riga orfana — cioè, per definizione,
+  qualsiasi backup esportato da un DB in cui era stata cancellata una persona, che è tutto il punto
+  del bug appena chiuso — ora fallisce l'import con `SqliteException(787)`, un codice che non nomina
+  né tabella né riga e che contraddice la politica degli errori del 31/07. La transazione fa
+  rollback, quindi l'import è impossibile ma non distruttivo. Verificato anche che in `lib/` non
+  resta **nessun** altro `insertOrReplace`, quindi la trappola del REPLACE che cascata è chiusa
+  ovunque oggi ed è solo un rischio in avanti (annotata in `CLAUDE.md`). Nel backlog: l'import in
+  merge sovrascrive per id **locale** e può quindi riscrivere una persona estranea (difetto che
+  precede il cambio di oggi, e che pone la stessa domanda del `[!]` — cosa identifica una riga
+  fuori dal dispositivo che l'ha creata); `_purgeOrphans` cancella righe senza dirlo a nessuno, che
+  è un fallimento muto della famiglia che il progetto continua a chiudere altrove; e le FK non sono
+  mai state esercitate su web, da aggiungere al walkthrough sulla PWA.

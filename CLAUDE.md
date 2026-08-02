@@ -85,6 +85,8 @@ lib/
 ### Database (Drift)
 `app_database.dart` defines all tables. The `@DataClassName('PersonEntry')` annotation renames generated data classes to avoid collision with domain entity classes (e.g. `PersonEntry` vs `Person`). After any table change: **re-run build_runner**. Schema version lives in `AppDatabase.schemaVersion` (currently `3`); increment it and add an `onUpgrade` step in `migration` when modifying tables — follow the existing steps: v1→v2 `addColumn`s `personalityProfiles.shareId`, v2→v3 `addColumn`s `persons.avatarBytes` (avatars are stored as bytes in the DB so they work on web; `persons.avatarPath` is legacy and no longer rendered).
 
+Foreign keys are **enforced**: `migration.beforeOpen` runs `PRAGMA foreign_keys = ON` (SQLite defaults it off, per connection), so the `onDelete: KeyAction.cascade` on the five child tables is real — deleting a person takes its profile, relationships, group memberships and events with it. `beforeOpen` also runs `_purgeOrphans`, an idempotent sweep for rows left behind while the pragma was missing. Two consequences when writing DB code: inserts must go parents-before-children (the backup import already does: groups → persons → profiles → relationships → personGroups → events), and **never use `InsertMode.insertOrReplace` on a parent row** — SQLite runs REPLACE as DELETE + INSERT, so it cascades the children away. Use `insertOnConflictUpdate` instead.
+
 ### State management (Riverpod)
 `databaseProvider` is intentionally unimplemented — it **must** be overridden at startup via `ProviderScope(overrides: [databaseProvider.overrideWithValue(db)])` in `main.dart`. All repository providers depend on it. Settings (theme, locale) are persisted in Hive and exposed via `settingsProvider` (a `NotifierProvider`).
 
