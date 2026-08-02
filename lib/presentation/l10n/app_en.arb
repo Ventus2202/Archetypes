@@ -199,6 +199,15 @@
   "settingsImportTextDesc": "Paste a profile code to add a person",
   "settingsAbout": "About",
 
+  "backupImportSuccess": "Data imported successfully",
+  "backupImportSkipped": "Data imported. {count, plural, =1{1 inconsistent row skipped} other{{count} inconsistent rows skipped}}.",
+  "@backupImportSkipped": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+
   "importDialogTitle": "Import profile",
   "importDialogHint": "Paste code here...",
   "importDialogError": "Invalid code or unsupported version",

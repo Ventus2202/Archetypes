@@ -481,6 +481,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAbout => 'About';
 
   @override
+  String get backupImportSuccess => 'Data imported successfully';
+
+  @override
+  String backupImportSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count inconsistent rows skipped',
+      one: '1 inconsistent row skipped',
+    );
+    return 'Data imported. $_temp0.';
+  }
+
+  @override
   String get importDialogTitle => 'Import profile';
 
   @override

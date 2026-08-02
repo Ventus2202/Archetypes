@@ -228,4 +228,191 @@ void main() {
       );
     });
   });
+
+  group('BackupData.withoutOrphans', () {
+    // Every backup taken from a DB where a person had been deleted before the
+    // foreign keys were enforced carries the rows that person left behind. With
+    // the keys on, inserting one aborts the restore with SqliteException(787),
+    // so those rows are dropped on the way in instead.
+    BackupData backupOf({
+      List<PersonEntry> persons = const [],
+      List<PersonalityProfileEntry> profiles = const [],
+      List<RelationshipEntry> relationships = const [],
+      List<GroupEntry> groups = const [],
+      List<PersonGroupEntry> personGroups = const [],
+      List<EventEntry> events = const [],
+    }) =>
+        BackupData(
+          persons: persons,
+          profiles: profiles,
+          relationships: relationships,
+          groups: groups,
+          personGroups: personGroups,
+          events: events,
+          schemaVersion: 3,
+        );
+
+    PersonalityProfileEntry profileOf(int id, int personId) =>
+        PersonalityProfileEntry(
+          id: id,
+          personId: personId,
+          system: 'mbti',
+          dataJson: '{}',
+          confidence: 80,
+          source: 'manual',
+          updatedAt: DateTime.parse('2026-08-02T10:00:00.000'),
+        );
+
+    test('a sound backup is passed through untouched', () {
+      final backup = backupOf(
+        persons: [_person()],
+        profiles: [profileOf(1, 1)],
+        events: [
+          EventEntry(
+            id: 1,
+            personId: 1,
+            date: DateTime.parse('2026-08-02T10:00:00.000'),
+            kind: 'met',
+            description: 'First met',
+          ),
+        ],
+      );
+
+      final (:data, :report) = backup.withoutOrphans();
+
+      expect(report.isClean, isTrue);
+      expect(data.profiles, hasLength(1));
+      expect(data.events, hasLength(1));
+    });
+
+    test('a profile pointing outside the backup is dropped and named', () {
+      final backup = backupOf(
+        persons: [_person()], // id 1
+        profiles: [profileOf(1, 1), profileOf(2, 7)],
+      );
+
+      final (:data, :report) = backup.withoutOrphans();
+
+      expect(data.profiles.map((p) => p.id), [1]);
+      expect(report.skippedRows, hasLength(1));
+      expect(report.skippedRows.single, contains('profiles[1].personId'));
+      expect(report.skippedRows.single, contains('person 7'));
+    });
+
+    test('a relationship is dropped if either end is missing', () {
+      final backup = backupOf(
+        persons: [_person()], // id 1
+        relationships: [
+          RelationshipEntry(id: 1, personAId: 1, personBId: 9, kind: 'friend'),
+          RelationshipEntry(id: 2, personAId: 9, personBId: 1, kind: 'friend'),
+        ],
+      );
+
+      final (:data, :report) = backup.withoutOrphans();
+
+      expect(data.relationships, isEmpty);
+      expect(report.skippedRows, [
+        contains('relationships[0].personBId'),
+        contains('relationships[1].personAId'),
+      ]);
+    });
+
+    test('a membership is checked against both parents', () {
+      final backup = backupOf(
+        persons: [_person()], // id 1
+        groups: [GroupEntry(id: 1, name: 'Work', color: '#000', icon: 'group')],
+        personGroups: [
+          PersonGroupEntry(personId: 1, groupId: 1),
+          PersonGroupEntry(personId: 1, groupId: 4), // group gone
+          PersonGroupEntry(personId: 5, groupId: 1), // person gone
+        ],
+      );
+
+      final (:data, :report) = backup.withoutOrphans();
+
+      expect(data.personGroups, hasLength(1));
+      expect(report.skippedRows, [
+        contains('personGroups[1].groupId points to group 4'),
+        contains('personGroups[2].personId points to person 5'),
+      ]);
+    });
+
+    test('an archive missing the whole persons section is refused, not pruned',
+        () {
+      // Dropping is right for orphans scattered among sound rows; an archive
+      // with no parents at all is truncated, and under `replace: true` pruning
+      // it would empty the DB and report success.
+      final backup = backupOf(profiles: [profileOf(1, 1)]);
+
+      expect(
+        backup.checkParentSectionsPresent,
+        throwsA(isA<BackupFormatException>()
+            .having((e) => e.path, 'path', 'persons')
+            .having((e) => e.problem, 'problem', contains('1 row in profiles'))
+            .having((e) => e.problem, 'problem', contains('truncated'))),
+      );
+    });
+
+    test('the refusal counts every section left without a parent', () {
+      final backup = backupOf(
+        profiles: [profileOf(1, 1), profileOf(2, 2)],
+        events: [
+          EventEntry(
+            id: 1,
+            personId: 1,
+            date: DateTime.parse('2026-08-02T10:00:00.000'),
+            kind: 'met',
+            description: 'Orphan',
+          ),
+        ],
+      );
+
+      expect(
+        backup.checkParentSectionsPresent,
+        throwsA(isA<BackupFormatException>().having(
+            (e) => e.problem, 'problem', contains('3 rows in profiles, events'))),
+      );
+    });
+
+    test('a missing groups section is caught on its own', () {
+      final backup = backupOf(
+        persons: [_person()],
+        personGroups: [PersonGroupEntry(personId: 1, groupId: 1)],
+      );
+
+      expect(
+        backup.checkParentSectionsPresent,
+        throwsA(isA<BackupFormatException>()
+            .having((e) => e.path, 'path', 'groups')),
+      );
+    });
+
+    test('an entirely empty backup is legitimate and passes', () {
+      // Restoring one over a full DB is a coherent way to clear the app.
+      expect(backupOf().checkParentSectionsPresent, returnsNormally);
+    });
+
+    test('orphans among sound rows stay a pruning matter, not a refusal', () {
+      final backup = backupOf(
+        persons: [_person()], // id 1
+        profiles: [profileOf(1, 1), profileOf(2, 7)],
+      );
+
+      expect(backup.checkParentSectionsPresent, returnsNormally);
+    });
+
+    test('parents are never dropped, however many children point at them', () {
+      final backup = backupOf(
+        persons: [_person()],
+        groups: [GroupEntry(id: 1, name: 'Work', color: '#000', icon: 'group')],
+        profiles: [profileOf(1, 42)],
+      );
+
+      final (:data, :report) = backup.withoutOrphans();
+
+      expect(data.persons, hasLength(1));
+      expect(data.groups, hasLength(1));
+      expect(report.skippedRows, hasLength(1));
+    });
+  });
 }

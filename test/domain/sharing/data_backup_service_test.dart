@@ -167,6 +167,191 @@ void main() {
     );
   });
 
+  group('importFromBytes on a backup carrying orphan rows', () {
+    // Any backup exported from a DB where a person had been deleted while the
+    // foreign keys were inert carries that person's leftovers. With the keys
+    // enforced (2026-08-02) inserting one aborts the restore with
+    // SqliteException(787) — a code naming neither table nor row — which would
+    // make every such archive permanently unimportable.
+    String withOrphans() => jsonEncode({
+          'persons': [
+            {
+              'id': 1,
+              'name': 'Ada',
+              'role': 'friend',
+              'isSelf': false,
+              'createdAt': '2026-08-01T10:00:00.000',
+            },
+          ],
+          'profiles': [
+            {
+              'id': 1,
+              'personId': 1,
+              'system': 'mbti',
+              'dataJson': '{"type":"intj"}',
+              'confidence': 90,
+              'source': 'quizLong',
+              'updatedAt': '2026-08-01T10:00:00.000',
+            },
+            {
+              // Left behind by a person deleted before the pragma.
+              'id': 2,
+              'personId': 7,
+              'system': 'mbti',
+              'dataJson': '{}',
+              'confidence': 80,
+              'source': 'manual',
+              'updatedAt': '2026-08-01T10:00:00.000',
+            },
+          ],
+          'relationships': const [],
+          'groups': const [],
+          'personGroups': const [],
+          'events': [
+            {
+              'id': 1,
+              'personId': 7,
+              'date': '2026-08-01T10:00:00.000',
+              'kind': 'met',
+              'description': 'Orphan event',
+            },
+          ],
+          'schemaVersion': 3,
+        });
+
+    test('imports the sound rows instead of failing on the FK', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      final report = await DataBackupService(db)
+          .importFromBytes(_zipWith(withOrphans()), replace: true);
+
+      expect((await db.select(db.persons).get()).single.name, 'Ada');
+      final profile = (await db.select(db.personalityProfiles).get()).single;
+      expect(profile.personId, 1);
+      expect(profile.source, 'quizLong');
+      expect(await db.select(db.eventEntries).get(), isEmpty);
+
+      expect(report.isClean, isFalse);
+      expect(report.skippedRows, [
+        contains('profiles[1].personId points to person 7'),
+        contains('events[0].personId points to person 7'),
+      ]);
+    });
+
+    test('a merge import drops them too, rather than guessing a local parent',
+        () async {
+      // Ids are local autoIncrement values, so a person 7 already on this
+      // device is not the person 7 the orphan came from.
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      for (var i = 0; i < 7; i++) {
+        await db.into(db.persons).insert(PersonsCompanion.insert(name: 'P$i'));
+      }
+
+      final report = await DataBackupService(db)
+          .importFromBytes(_zipWith(withOrphans()), replace: false);
+
+      expect(report.skippedRows, hasLength(2));
+      expect(
+        await db.select(db.personalityProfiles).get(),
+        hasLength(1),
+        reason: 'the orphan is not attached to the local person 7',
+      );
+      expect((await db.select(db.eventEntries).get()), isEmpty);
+    });
+
+    test('replace does not wipe the DB for an archive with no parents at all',
+        () async {
+      // The sharp edge of dropping rather than refusing: with the persons
+      // section gone, `replace: true` used to delete everything, find no parent
+      // to put back, drop every child and report success. Before orphan
+      // pruning existed the same archive raised SqliteException(787) and rolled
+      // back, so the data survived by accident; now it survives on purpose.
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.into(db.persons).insert(PersonsCompanion.insert(name: 'Ada'));
+      await db.into(db.personalityProfiles).insert(
+            PersonalityProfilesCompanion.insert(
+              personId: 1,
+              dataJson: '{"type":"intj"}',
+            ),
+          );
+
+      final truncated = jsonEncode({
+        'persons': const [],
+        'profiles': [
+          {
+            'id': 1,
+            'personId': 1,
+            'system': 'mbti',
+            'dataJson': '{}',
+            'confidence': 90,
+            'source': 'quizLong',
+            'updatedAt': '2026-08-01T10:00:00.000',
+          },
+        ],
+        'relationships': const [],
+        'groups': const [],
+        'personGroups': const [],
+        'events': const [],
+        'schemaVersion': 3,
+      });
+
+      await expectLater(
+        DataBackupService(db)
+            .importFromBytes(_zipWith(truncated), replace: true),
+        throwsA(isA<BackupFormatException>()
+            .having((e) => e.path, 'path', 'persons')),
+      );
+
+      expect((await db.select(db.persons).get()).single.name, 'Ada');
+      expect(await db.select(db.personalityProfiles).get(), hasLength(1));
+    });
+
+    test('replace with a legitimately empty backup still clears the DB',
+        () async {
+      // The refusal above must not swallow this: an empty archive carries no
+      // orphans, so restoring it over a full DB is a coherent way to wipe.
+      final source = AppDatabase(NativeDatabase.memory());
+      addTearDown(source.close);
+      final bytes = await DataBackupService(source).exportToBytes();
+
+      final target = AppDatabase(NativeDatabase.memory());
+      addTearDown(target.close);
+      await target
+          .into(target.persons)
+          .insert(PersonsCompanion.insert(name: 'Ada'));
+
+      await DataBackupService(target).importFromBytes(bytes, replace: true);
+
+      expect(await target.select(target.persons).get(), isEmpty);
+    });
+
+    test('a sound backup still reports nothing skipped', () async {
+      final source = AppDatabase(NativeDatabase.memory());
+      addTearDown(source.close);
+      await source
+          .into(source.persons)
+          .insert(PersonsCompanion.insert(name: 'Ada'));
+      await source.into(source.personalityProfiles).insert(
+            PersonalityProfilesCompanion.insert(
+              personId: 1,
+              dataJson: '{"type":"intj"}',
+            ),
+          );
+      final bytes = await DataBackupService(source).exportToBytes();
+
+      final target = AppDatabase(NativeDatabase.memory());
+      addTearDown(target.close);
+      final report =
+          await DataBackupService(target).importFromBytes(bytes, replace: true);
+
+      expect(report.isClean, isTrue);
+      expect(report.skippedRows, isEmpty);
+    });
+  });
+
   group('importFromBytes refuses a broken archive', () {
     test('bytes that are not a ZIP', () async {
       final db = AppDatabase(NativeDatabase.memory());

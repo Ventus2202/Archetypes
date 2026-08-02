@@ -998,6 +998,18 @@ abstract class AppLocalizations {
   /// **'Informazioni'**
   String get settingsAbout;
 
+  /// No description provided for @backupImportSuccess.
+  ///
+  /// In it, this message translates to:
+  /// **'Dati importati con successo'**
+  String get backupImportSuccess;
+
+  /// No description provided for @backupImportSkipped.
+  ///
+  /// In it, this message translates to:
+  /// **'Dati importati. {count, plural, =1{Scartata 1 riga incoerente} other{Scartate {count} righe incoerenti}}.'**
+  String backupImportSkipped(int count);
+
   /// No description provided for @importDialogTitle.
   ///
   /// In it, this message translates to:

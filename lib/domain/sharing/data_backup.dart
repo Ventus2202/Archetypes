@@ -19,6 +19,18 @@ class BackupFormatException implements Exception {
   String toString() => 'Invalid backup: $path $problem';
 }
 
+/// What a restore left out, so the caller can say so instead of the rows
+/// vanishing without a word.
+class BackupImportReport {
+  /// One line per dropped row, in the same `section[i].field` vocabulary as
+  /// [BackupFormatException] (`profiles[0].personId points to person 7, …`).
+  final List<String> skippedRows;
+
+  const BackupImportReport({this.skippedRows = const []});
+
+  bool get isClean => skippedRows.isEmpty;
+}
+
 class BackupData {
   final List<PersonEntry> persons;
   final List<PersonalityProfileEntry> profiles;
@@ -79,6 +91,104 @@ class BackupData {
       for (var i = 0; i < value.length; i++)
         parse(_object(value[i], '$key[$i]'), '$key[$i]'),
     ];
+  }
+
+  /// Refuses an archive that lost a whole parent section but kept the rows
+  /// that need it. Throws [BackupFormatException]; call it before the restore
+  /// opens its transaction.
+  ///
+  /// [withoutOrphans] drops a dangling row because it is garbage left by the
+  /// years the cascades were inert. That reasoning holds for orphans scattered
+  /// among sound rows, not for an archive where *every* parent is gone: there
+  /// the likelier story is a truncated or hand-edited file, and dropping is the
+  /// wrong answer — under `replace: true` the restore would delete the DB, find
+  /// no parent to put back, drop every child and report success. Refusing here
+  /// keeps the existing rows, which is what the 787 used to do by accident.
+  ///
+  /// An archive with no parents *and* no children is a legitimately empty
+  /// backup and passes: restoring it over a full DB is a coherent way to clear
+  /// the app.
+  void checkParentSectionsPresent() {
+    if (persons.isEmpty) {
+      final needy = <String, int>{
+        'profiles': profiles.length,
+        'relationships': relationships.length,
+        'personGroups': personGroups.length,
+        'events': events.length,
+      }..removeWhere((_, count) => count == 0);
+      if (needy.isNotEmpty) _fail('persons', _truncated(needy, 'a person'));
+    }
+    if (groups.isEmpty && personGroups.isNotEmpty) {
+      _fail(
+        'groups',
+        _truncated({'personGroups': personGroups.length}, 'a group'),
+      );
+    }
+  }
+
+  /// Returns this backup without the child rows whose parent is missing from
+  /// it, plus the report of what was left out.
+  ///
+  /// [DataBackupService.exportToBytes] dumps whole tables, so in a sound backup
+  /// every child travels with its parent: a dangling reference can only be the
+  /// orphan garbage that the inert cascades left in the DB before foreign keys
+  /// were enforced (see `AppDatabase._purgeOrphans`), and by definition every
+  /// backup taken from an affected database carries some. Now that the keys are
+  /// enforced, inserting one of those rows aborts the whole restore with a bare
+  /// `SqliteException(787)` — a code that names neither table nor row — so
+  /// those archives would be permanently unimportable. Dropping the rows is the
+  /// same call `_purgeOrphans` already makes on the DB side, and it applies to
+  /// merge imports too: the parent a row needs may happen to exist locally
+  /// under the same id, but ids are local `autoIncrement` values, so that would
+  /// be a coincidence attaching the row to an unrelated person.
+  ({BackupData data, BackupImportReport report}) withoutOrphans() {
+    final personIds = {for (final p in persons) p.id};
+    final groupIds = {for (final g in groups) g.id};
+    final skipped = <String>[];
+
+    List<T> keep<T>(
+      List<T> rows,
+      String section,
+      String? Function(T row) orphanReason,
+    ) {
+      final kept = <T>[];
+      for (var i = 0; i < rows.length; i++) {
+        final reason = orphanReason(rows[i]);
+        if (reason == null) {
+          kept.add(rows[i]);
+        } else {
+          skipped.add('$section[$i].$reason');
+        }
+      }
+      return kept;
+    }
+
+    return (
+      data: BackupData(
+        persons: persons,
+        profiles: keep(profiles, 'profiles',
+            (r) => _missingParent(personIds, 'personId', r.personId, 'person')),
+        relationships: keep(
+          relationships,
+          'relationships',
+          (r) =>
+              _missingParent(personIds, 'personAId', r.personAId, 'person') ??
+              _missingParent(personIds, 'personBId', r.personBId, 'person'),
+        ),
+        groups: groups,
+        personGroups: keep(
+          personGroups,
+          'personGroups',
+          (r) =>
+              _missingParent(personIds, 'personId', r.personId, 'person') ??
+              _missingParent(groupIds, 'groupId', r.groupId, 'group'),
+        ),
+        events: keep(events, 'events',
+            (r) => _missingParent(personIds, 'personId', r.personId, 'person')),
+        schemaVersion: schemaVersion,
+      ),
+      report: BackupImportReport(skippedRows: skipped),
+    );
   }
 
   static Map<String, dynamic> _personToJson(PersonEntry e) => {
@@ -198,6 +308,22 @@ class BackupData {
 Never _fail(String path, String problem) =>
     throw BackupFormatException(path, problem);
 
+/// Says which sections are left pointing at a parent table that is entirely
+/// absent. See [BackupData.checkParentSectionsPresent].
+String _truncated(Map<String, int> sections, String parent) {
+  final total = sections.values.reduce((a, b) => a + b);
+  return 'is empty but ${total == 1 ? '1 row' : '$total rows'} in '
+      '${sections.keys.join(', ')} still need $parent: the backup looks '
+      'truncated, not merely inconsistent';
+}
+
+/// Null when [id] is one of [known], otherwise the sentence naming the parent
+/// the row points at and cannot find. See [BackupData.withoutOrphans].
+String? _missingParent(Set<int> known, String field, int id, String parent) =>
+    known.contains(id)
+        ? null
+        : '$field points to $parent $id, missing from this backup';
+
 String _describe(Object? value) =>
     value == null ? 'nothing' : '${value.runtimeType}';
 
@@ -304,7 +430,16 @@ class DataBackupService {
   /// Restores a backup produced by [exportToBytes]. Throws
   /// [BackupFormatException] — before touching the DB — if the archive is not
   /// readable or a field does not have the type its column needs.
-  Future<void> importFromBytes(Uint8List zipBytes, {bool replace = false}) async {
+  ///
+  /// Rows pointing at a parent the backup does not carry are dropped rather
+  /// than refused, and listed in the returned report: see
+  /// [BackupData.withoutOrphans] for why an archive can contain them. An
+  /// archive missing a whole parent section is refused instead — see
+  /// [BackupData.checkParentSectionsPresent].
+  Future<BackupImportReport> importFromBytes(
+    Uint8List zipBytes, {
+    bool replace = false,
+  }) async {
     final Archive archive;
     try {
       archive = ZipDecoder().decodeBytes(zipBytes);
@@ -322,15 +457,18 @@ class DataBackupService {
       _fail('data.json', 'is not valid JSON');
     }
 
-    final backup = BackupData.fromJson(_object(decoded, 'data.json'));
+    final parsed = BackupData.fromJson(_object(decoded, 'data.json'));
 
-    if (backup.schemaVersion > db.schemaVersion) {
+    if (parsed.schemaVersion > db.schemaVersion) {
       _fail(
         'data.json.schemaVersion',
-        'is ${backup.schemaVersion}, newer than this app understands '
+        'is ${parsed.schemaVersion}, newer than this app understands '
             '(${db.schemaVersion})',
       );
     }
+
+    parsed.checkParentSectionsPresent();
+    final (data: backup, :report) = parsed.withoutOrphans();
 
     await db.transaction(() async {
       if (replace) {
@@ -373,5 +511,7 @@ class DataBackupService {
         await db.into(db.eventEntries).insertOnConflictUpdate(ev);
       }
     });
+
+    return report;
   }
 }

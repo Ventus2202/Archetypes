@@ -201,6 +201,14 @@
   "settingsImportTextDesc": "Incolla un codice profilo per aggiungere una persona",
   "settingsAbout": "Informazioni",
 
+  "backupImportSuccess": "Dati importati con successo",
+  "backupImportSkipped": "Dati importati. {count, plural, =1{Scartata 1 riga incoerente} other{Scartate {count} righe incoerenti}}.",
+  "@backupImportSkipped": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
   "importDialogTitle": "Importa profilo",
   "importDialogHint": "Incolla il codice qui...",
   "importDialogError": "Codice non valido o versione non supportata",

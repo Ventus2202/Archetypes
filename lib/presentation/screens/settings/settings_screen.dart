@@ -309,12 +309,17 @@ class SettingsScreen extends ConsumerWidget {
     if (confirmed == null) return;
 
     try {
-      await service.importFromBytes(bytes, replace: confirmed);
+      final report = await service.importFromBytes(bytes, replace: confirmed);
       ref.invalidate(allPersonsProvider);
       ref.invalidate(allGroupsProvider);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Dati importati con successo')));
+        // Rows the backup carried but the restore could not place are dropped,
+        // not refused: saying how many keeps that from being a silent loss.
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(report.isClean
+              ? l10n.backupImportSuccess
+              : l10n.backupImportSkipped(report.skippedRows.length)),
+        ));
       }
     } catch (e) {
       if (context.mounted) {
