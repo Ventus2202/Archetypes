@@ -1,8 +1,20 @@
+import 'dart:convert';
+
 import 'package:archetypes/data/database/app_database.dart';
 import 'package:archetypes/domain/sharing/data_backup.dart';
+import 'package:archive/archive.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// Builds the ZIP layout the importer expects, so a test can hand it content
+/// that `exportToBytes` would never produce.
+Uint8List _zipWith(String dataJson) {
+  final bytes = utf8.encode(dataJson);
+  final archive = Archive()
+    ..addFile(ArchiveFile('data.json', bytes.length, bytes));
+  return ZipEncoder().encodeBytes(archive);
+}
 
 // End-to-end round-trip of the real ZIP path (exportToBytes -> importFromBytes)
 // against in-memory databases. Now that backup I/O is pure bytes (no dart:io /
@@ -107,5 +119,110 @@ void main() {
     final names =
         (await target.select(target.persons).get()).map((p) => p.name).toList();
     expect(names, ['Ada']);
+  });
+
+  group('importFromBytes refuses a broken archive', () {
+    test('bytes that are not a ZIP', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      expect(
+        () => DataBackupService(db)
+            .importFromBytes(Uint8List.fromList(utf8.encode('hello'))),
+        throwsA(isA<BackupFormatException>()),
+      );
+    });
+
+    test('a ZIP without data.json', () async {
+      final other = utf8.encode('nothing to see');
+      final archive = Archive()
+        ..addFile(ArchiveFile('notes.txt', other.length, other));
+
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      expect(
+        () => DataBackupService(db)
+            .importFromBytes(ZipEncoder().encodeBytes(archive)),
+        throwsA(isA<BackupFormatException>()
+            .having((e) => e.problem, 'problem', contains('data.json'))),
+      );
+    });
+
+    test('a data.json that is not JSON', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      expect(
+        () => DataBackupService(db).importFromBytes(_zipWith('{not json')),
+        throwsA(isA<BackupFormatException>()
+            .having((e) => e.path, 'path', 'data.json')),
+      );
+    });
+
+    test('a backup newer than the app', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      final future = DataBackupService(db).importFromBytes(_zipWith(jsonEncode({
+        'persons': const [],
+        'profiles': const [],
+        'relationships': const [],
+        'groups': const [],
+        'personGroups': const [],
+        'events': const [],
+        'schemaVersion': 99,
+      })));
+
+      expect(
+        future,
+        throwsA(isA<BackupFormatException>()
+            .having((e) => e.path, 'path', 'data.json.schemaVersion')),
+      );
+    });
+
+    test('replace does not wipe the DB when the backup is malformed', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.into(db.persons).insert(PersonsCompanion.insert(name: 'Ada'));
+
+      // Valid JSON, valid persons, but the last event carries a broken date:
+      // the parse has to fail before the replace deletes anything.
+      final broken = jsonEncode({
+        'persons': [
+          {
+            'id': 1,
+            'name': 'Bob',
+            'role': 'friend',
+            'isSelf': false,
+            'createdAt': '2026-07-31T10:00:00.000',
+          },
+        ],
+        'profiles': const [],
+        'relationships': const [],
+        'groups': const [],
+        'personGroups': const [],
+        'events': [
+          {
+            'id': 1,
+            'personId': 1,
+            'date': 'yesterday',
+            'kind': 'met',
+            'description': 'First met',
+          },
+        ],
+        'schemaVersion': 3,
+      });
+
+      await expectLater(
+        DataBackupService(db).importFromBytes(_zipWith(broken), replace: true),
+        throwsA(isA<BackupFormatException>()
+            .having((e) => e.path, 'path', 'events[0].date')),
+      );
+
+      final names =
+          (await db.select(db.persons).get()).map((p) => p.name).toList();
+      expect(names, ['Ada'], reason: 'the existing rows survive a failed import');
+    });
   });
 }

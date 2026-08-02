@@ -9,6 +9,17 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  language:
+    # The counterpart of `avoid_dynamic_calls` below: that rule fires at the
+    # point of *call*, this one at the point of *assignment*, so it also
+    # catches a `dynamic` handed straight to a typed parameter. It is what
+    # made the backup restore accept any shape of JSON until 2026-07-31 (44
+    # implicit casts in `data_backup.dart` alone). The repo is clean under it
+    # now; `strict-raw-types` and `strict-inference` are not on, they flag ~50
+    # untyped collection literals that are noise, not risk.
+    strict-casts: true
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`
