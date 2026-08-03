@@ -384,17 +384,67 @@ Verificato dal codice al 2026-07-22.
   metterlo: un dialog espandibile dopo l'import, oppure il primo consumatore vero della voce di
   backlog sul logging (che oggi non esiste in nessuna forma), dato che è informazione diagnostica
   più che copy per l'utente.
-- [ ] **`mbti.json` è ora il contenuto meno verificato dei quattro**: dopo il giro del
-  2026-07-31, `career_roles`, `relationship_dynamics` e `team_objectives` hanno ogni chiave
-  verificata campo per campo e con stringhe non vuote, mentre per `mbti.json` il test si ferma a
-  "i 16 tipi e le 8 funzioni esistono" — e non guarda **nessuno** dei campi che
-  `content_viewer_screen` legge davvero: 12 per tipo (`title`, `tagline`, `description`,
-  `stack`, `strengths`, `weaknesses`, `behavioral_traits`, `in_relationships`, `at_work`, …),
-  17 per funzione (`full_name`, `as_dominant`…`as_inferior`, …), più le 4 **dicotomie**, che il
-  test non tocca affatto benché `getDichotomyContent` sia usato e la schermata legga `poles` /
-  `spectrum_note`. Ogni lettura è `?? contentKey`, `?? []` o `if (... != null)`, quindi un campo
-  che sparisce è una sezione vuota senza avviso: esattamente il fallimento muto appena chiuso
-  sugli altri tre asset, sul contenuto più grosso e più visibile dell'app.
+- [x] **`mbti.json` era il contenuto meno verificato dei quattro, e sotto c'erano due bug** —
+  chiuso il 2026-08-03. Il test si fermava a "i 16 tipi e le 8 funzioni esistono"; ora
+  `content_assets_test` verifica per ogni lingua **i campi che le schede leggono davvero** —
+  9 per tipo, 7 per funzione, i 4 assi con i due poli, i marker comportamentali e i miti — con
+  la regola del 2026-07-31 (stringhe e liste **non vuote**, perché una voce presente ma vuota si
+  legge a schermo come una mancante), e **deriva da `kMbtiStacks`** tutto ciò che il JSON ripete
+  del motore (`stack` dei 16 tipi, le quattro liste `*_in` delle 8 funzioni) invece di fissarne
+  una copia. **Primo bug, nel contenuto**: `Si.tertiary_in` diceva `[ENTP, ENFP]` invece di
+  `[INTP, INFP]` e `Si.inferior_in` diceva `[ENTJ, ENFJ]` invece di `[ENTP, ENFP]`, cioè
+  attribuiva Si a due tipi che non ce l'hanno affatto nello stack. **Secondo bug, nel lettore, ed
+  è il più grosso**: `content_viewer_screen` leggeva `description` come **lista** mentre l'asset
+  la scrive come una stringa con i paragrafi separati da riga vuota, e `poles` come lista mentre
+  è un **oggetto** indicizzato per lettera dell'asse → `TypeError` in `build` su **tutte e tre**
+  le schede. Due sono raggiungibili da `person_detail` (il badge del tipo e le chip delle
+  funzioni cognitive), quindi la scheda MBTI — il contenuto più grosso e più visibile dell'app —
+  era rotta in produzione sulla PWA, e `flutter analyze` non poteva vederlo perché il valore esce
+  da `jsonDecode` come `dynamic`: è la stessa famiglia del crash del 2026-07-30, con la stessa
+  radice (un cast su un `dynamic` che nessuna difesa statica controlla). Misurato **prima** del
+  fix con il nuovo `test/widgets/content_viewer_widget_test.dart`, che pompa la schermata vera
+  sull'asset vero: `String is not a subtype of List<dynamic>?` per tipo e funzione,
+  `_Map<String, dynamic> is not a subtype of List<dynamic>?` per la dicotomia. È il complemento
+  necessario del test sull'asset — `content_assets_test` fissa il contenuto, ma solo pompare la
+  schermata prende un lettore che si aspetta una forma diversa da quella scritta.
+  Verifiche: 171 test verdi (159→171, +12), `flutter analyze` pulito.
+- [ ] **Il contenuto arriva alle schermate come `Map<String, dynamic>` e ogni schermata se lo
+  casta da sé.** È la lezione strutturale del 2026-08-03 e vale la pena scriverla perché il bug di
+  oggi è il **terzo** della stessa famiglia in cinque settimane: 2026-07-30 una chiamata dinamica
+  su `List<dynamic>` (crash del Team builder), 2026-07-31 quarantaquattro campi di backup infilati
+  nei costruttori senza verifica, 2026-08-03 due cast di forma sbagliata in `content_viewer`. Ogni
+  volta la radice è la stessa: un valore che esce da `jsonDecode` come `dynamic` e viene castato
+  **al punto d'uso**, dentro un `build`, dove nessuna difesa statica arriva — `avoid_dynamic_calls`
+  scatta sulle chiamate, `strict-casts` sulle assegnazioni, ma `data['x'] as List?` è un cast
+  esplicito e legittimo per entrambe. Oggi i quattro modelli di `ContentRepository`
+  (`MbtiContent`, `RelationshipDynamicsContent`, `CareerRolesContent`, `TeamObjectivesContent`)
+  sono involucri attorno a mappe grezze, e le schermate castano: `career_fit_screen:75-83`,
+  `person_detail_screen:689-701`, tutto `content_viewer_screen`. Il fix del backup ha già mostrato
+  la forma della risposta — lettori tipizzati in **un** posto, che falliscono nominando il percorso
+  del campo rotto — e lì ha chiuso la classe intera. Da valutare la stessa cosa per il contenuto:
+  parsing in modelli tipizzati nel repository, schermate che ricevono oggetti Dart. Costo da
+  soppesare: sono quattro asset con forme diverse e il contenuto cambia più spesso del codice.
+- [ ] **Cinque schermate su dodici non sono mai state pompate da un test**: verificato il
+  2026-08-03 con un grep sul nome della classe — `GraphScreen`, `PeopleListScreen`,
+  `CareerFitScreen`, `SettingsScreen` e `ShareScreen` non compaiono in **nessun** file di `test/`.
+  Pesa più di ieri: oggi si è visto che una schermata mai pompata può essere rotta in **ogni** suo
+  ramo senza che niente lo dica, e `career_fit` è quella che assomiglia di più al caso di oggi
+  (legge il contenuto JSON e lo casta al punto d'uso, `career_fit_screen:75-83`). `settings`
+  contiene tutta la UI di backup, che il backlog annota come mai verificata a runtime. L'alibi
+  ormai è corto: per le due schermate con `.watch()` c'è il pattern dello `Stream.value`
+  (2026-07-30) e per quelle con `FutureBuilder` + spinner quello del repository scaldato sotto
+  `runAsync` (2026-08-03), quindi restano da scrivere, non da sbloccare.
+- [ ] **Dieci dei diciassette campi per funzione non li legge nessuno**: emerso il 2026-08-03
+  cercando quali campi valesse la pena fissare. `content_viewer` usa `title`, `full_name`,
+  `description` e le quattro `as_*`; restano fuori `label_short`, `axis`, `direction`,
+  `dominant_in`/`auxiliary_in`/`tertiary_in`/`inferior_in`, `shadow_function`, `axis_partner` e
+  `examples_behavior`. Le quattro `*_in` sono ora tenute in riga dalla derivazione da
+  `kMbtiStacks` (è così che è saltato fuori l'errore su Si), ma le altre sei sono contenuto
+  scritto in due lingue che nessuno mostra e niente verifica. Da decidere per gruppi: `axis` e
+  `axis_partner` duplicano `kComplementaryFunctions` (derivabili come le `*_in`),
+  `shadow_function` ed `examples_behavior` sono materiale per la scheda funzione, `label_short` e
+  `direction` sono probabilmente residui. Stessa domanda del `title` degli obiettivi: o si mostra
+  o si toglie.
 - [ ] **Aggiornamento dipendenze controllato**: `flutter pub outdated` (2026-07-23) segnala
   molti pacchetti major indietro (`share_plus` 12→13, `riverpod`/`riverpod_annotation` 2→3+
   con generator, `file_picker` 8→10, `drift` minori) e due transitive **dismesse**
@@ -661,6 +711,35 @@ profilo salvato dal quiz ora registra confidence e sorgente reali.
   voce di backlog sulle chiavi grezze spedite al chatbot. Decidere: togliere `titleKey` da
   `CareerRole` (l'`id` è già la chiave del contenuto, e il fallback diventa l'`id`) oppure
   farlo puntare a qualcosa che esiste.
+- [x] **Tre sezioni della scheda MBTI erano scritte, etichettate e mai renderizzate** — chiuso il
+  2026-08-03 nello stesso giro del test su `mbti.json`. (1) `famous_examples_fictional` e
+  (2) `compatibility_notes` (tre liste di tipi: alta affinità, buona collaborazione, crescita
+  stimolante) stavano nell'asset per tutti e 16 i tipi in IT+EN, e le **cinque** stringhe ARB che
+  le etichettano — `contentSectionExamples`, `contentSectionCompatibility`,
+  `contentHighAffinity`, `contentGoodWorking`, `contentChallengingGrowth` — esistevano da sempre
+  senza un solo lettore in `lib/`, esattamente come le `teamObj*` del 2026-07-30. Ora la scheda
+  le mostra (le tre liste come chip di tipo), quindi non serve nessuna stringa nuova.
+  (3) Le **4 dicotomie** erano il caso limite: contenuto completo in due lingue (due poli con
+  descrizione e marker comportamentali, nota sullo spettro, miti comuni), un ramo dedicato in
+  `ContentViewerScreen`, `getDichotomyContent` nel repository — e **nessuna schermata che ci
+  navigasse**, quindi il ramo non era mai stato eseguito e nessuno si era accorto che leggeva
+  `poles` come lista (vedi Epica 1). Punto d'ingresso scelto: le quattro barre degli assi nella
+  pagina risultati del quiz, che è dove l'utente sta già guardando I/E, N/S, T/F e J/P; ogni riga
+  è ora toccabile con un'icona informativa. Unica stringa nuova, `contentSectionMyths` (IT+EN),
+  che sostituisce il `'Miti comuni'` italiano hardcoded nel widget. Coperto da
+  `content_viewer_widget_test.dart`, incluso un test che percorre il test breve dall'inizio e
+  apre la scheda I/E dai risultati.
+- [ ] **Le dicotomie si aprono solo dai risultati del quiz**: coda diretta del fix del
+  2026-08-03. L'unico punto d'ingresso è la pagina risultati, quindi chi non fa il test — tipo
+  scelto a mano in `person_edit`, oppure importato da un codice condiviso — non vede **mai** quel
+  contenuto, e chi il test l'ha fatto lo raggiunge solo finché resta su quella pagina: dopo il
+  salvataggio non c'è più modo di tornarci. `person_detail` ha già gli ingressi per il tipo (il
+  badge) e per le funzioni cognitive (le chip), e le manca solo quello per i quattro assi.
+- [ ] **`growth_areas` resta l'unico campo del tipo senza lettore**: un paragrafo per ciascuno dei
+  16 tipi, in IT+EN, che nessuna schermata mostra e per cui — a differenza di esempi e
+  compatibilità, chiusi il 2026-08-03 — **non** esiste un'etichetta ARB pronta. Attenzione al
+  nome se lo si mostra: `contentSectionWeaknesses` in italiano è già "Aree di crescita" e sta
+  sopra `weaknesses`, quindi servono due etichette distinguibili o una fusione delle due sezioni.
 - [ ] Espandere le schede di relazione per **coppia di tipi** (16×16), non solo per coppia
   di funzioni.
 - [ ] Rivedere/ampliare i testi didattici esistenti (tipi, funzioni, ruoli, obiettivi team).
@@ -995,6 +1074,31 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   `pop()`). Trappola da ricordare: `rootBundle` è un `CachingAssetBundle` e cachea già le
   stringhe per chiave, quindi un fake che voglia **contare** le letture deve sovrascrivere
   anche `loadString`, altrimenti misura la cache del bundle e non quella del repository.
+- **Il separatore di paragrafo del contenuto è un contratto che nessuno scrive da nessuna parte**:
+  emerso il 2026-08-03 sistemando `content_viewer`. La `description` di un tipo e di una funzione
+  è **una** stringa in cui i paragrafi sono separati da una riga vuota, e la schermata la spezza
+  su `\n\n` per rendere un `Text` per paragrafo. Il test pretende una stringa non vuota, non che
+  contenga paragrafi: chi domani scrivesse una descrizione con un solo `\n` otterrebbe un blocco
+  unico, corretto per il test e sbagliato a schermo. Vale come nota per `CLAUDE.md` (la sezione
+  sugli asset didattici non dice niente sulla forma dei campi) più che come test.
+- **Le chip di compatibilità non portano da nessuna parte**: dal 2026-08-03 la scheda del tipo
+  mostra le tre liste di `compatibility_notes` come chip (`ENFP`, `ENTP`, …) e il test verifica
+  che siano tipi MBTI veri, ma sono inerti. La rotta per aprire la scheda di un tipo esiste già ed
+  è la stessa che usa `person_detail`: renderle toccabili è un `onTap` e trasforma la sezione in
+  un modo di girare fra le 16 schede.
+- **Pattern: una schermata con `FutureBuilder` + spinner non si pompa con `pumpAndSettle`.**
+  Aggiunto il 2026-08-03 scrivendo `content_viewer_widget_test.dart`. Due trappole in fila.
+  La prima: il ramo di caricamento è un `CircularProgressIndicator`, un'animazione infinita che
+  continua a programmare frame, quindi `pumpAndSettle` va in timeout invece di stabilizzarsi —
+  è una **seconda** famiglia di schermate non pompabili, accanto a quelle sottoscritte a un
+  `.watch()` drift annotate in Epica 1, e si riconosce da "c'è uno spinner", non da "c'è uno
+  stream". La seconda: sotto il clock finto l'I/O vero dell'asset non completa, quindi due
+  `pump()` mostrano ancora lo spinner. La via d'uscita che funziona è iniettare un
+  `ContentRepository` **già scaldato**: `await tester.runAsync(() => repo.loadMbtiContent('it'))`
+  prima di `pumpWidget`, override di `contentRepositoryProvider`, poi due `pump()` — la cache per
+  locale del 2026-07-29 fa sì che il future della schermata si chiuda in un microtask. Corollario
+  per il quiz, che è l'unico loader **senza** cache (voce qui sotto): lì serve comunque un
+  `runAsync` dopo il tap perché il caricamento reale possa completare.
 - **Il quiz è l'unico contenuto non cachato**: dopo il fix del 2026-07-29 i quattro contenuti
   didattici stanno in cache per locale, mentre `loadQuizQuestions` rilegge e riparsa l'asset a
   ogni avvio del test (80 item nel completo). Non è un problema di prestazioni oggi — succede
@@ -1443,3 +1547,41 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   confermare che il test del caso misurato torna a svuotare il DB senza il controllo. Resta aperta
   in Epica 1 la voce sul dettaglio del report che non arriva all'utente, che questo fix rende più
   pesante: ora il caso netto è rifiutato a voce alta, quello parziale no.
+- 2026-08-03 — Epica 1: **`mbti.json` verificato, e la scheda MBTI non crasha più**. Il lavoro
+  previsto era la rete mancante sul contenuto più grosso dell'app: `content_assets_test` ora
+  verifica per lingua i campi che le schede leggono davvero (9 per tipo, 7 per funzione, i 4 assi
+  con poli, marker e miti) pretendendo stringhe e liste non vuote, e **deriva da `kMbtiStacks`**
+  ciò che il JSON ripete del motore invece di fissarne una copia. Da lì sono usciti due bug.
+  Nel contenuto: `Si.tertiary_in` e `Si.inferior_in` attribuivano Si a quattro tipi sbagliati,
+  fra cui ENFJ ed ENTJ che nello stack non ce l'hanno. Nel lettore, ed è quello grosso:
+  `content_viewer_screen` leggeva `description` come lista (l'asset la scrive come una stringa a
+  paragrafi) e `poles` come lista (è un oggetto per lettera dell'asse) → `TypeError` in `build`
+  su **tutte e tre** le schede, due delle quali si aprono da `person_detail`: la scheda del tipo
+  e quella della funzione cognitiva erano rotte in produzione sulla PWA, e `analyze` non poteva
+  vederlo (cast su `dynamic` uscito da `jsonDecode`, stessa famiglia del 2026-07-30). Misurato
+  prima del fix con il nuovo `content_viewer_widget_test.dart`, che pompa la schermata vera
+  sull'asset vero. Epica 6, stesso giro: rese visibili tre sezioni scritte e mai renderizzate —
+  esempi celebri e compatibilità (le cinque etichette ARB esistevano già senza lettori) e le
+  **4 dicotomie**, che non avevano alcun punto d'ingresso in tutta l'app e ora si aprono dalle
+  quattro barre degli assi nella pagina risultati del quiz; unica stringa nuova
+  `contentSectionMyths` (IT+EN), che toglie il `'Miti comuni'` hardcoded. Verifiche: `flutter
+  analyze` pulito, 171 test verdi (159→171, +12: 8 sull'asset, 6 sul lettore, di cui uno percorre
+  il test breve e apre la scheda I/E dai risultati). Registrate le voci emerse: dieci dei
+  diciassette campi per funzione non li legge nessuno (Epica 1), `growth_areas` è l'unico campo
+  del tipo rimasto senza lettore né etichetta (Epica 6), e nel backlog il pattern per pompare una
+  schermata con `FutureBuilder` + spinner, che `pumpAndSettle` non riesce a stabilizzare.
+- 2026-08-03 — Chiusura sessione: registrate le voci emerse dal lavoro sul contenuto MBTI, tutte
+  verificate nel codice. Due in Epica 1. La prima è la lezione strutturale della giornata: il
+  contenuto arriva alle schermate come `Map<String, dynamic>` e **ogni schermata se lo casta da
+  sé**, che è la radice comune dei tre bug della stessa famiglia in cinque settimane (30/07 la
+  chiamata dinamica, 31/07 i 44 campi del backup, oggi le due forme sbagliate) — e il fix del
+  backup ha già mostrato la risposta, lettori tipizzati in un posto solo. La seconda, contata con
+  un grep: `GraphScreen`, `PeopleListScreen`, `CareerFitScreen`, `SettingsScreen` e `ShareScreen`
+  non compaiono in nessun test, e oggi si è visto cosa può nascondere una schermata mai pompata;
+  i due pattern noti (`Stream.value` per il `.watch()`, repository scaldato per lo spinner)
+  tolgono l'alibi tecnico. In Epica 6: le dicotomie hanno un solo ingresso, la pagina risultati
+  del quiz, quindi chi imposta il tipo a mano non le vede mai e chi fa il test le perde dopo il
+  salvataggio. Nel backlog: il separatore `\n\n` dei paragrafi è un contratto che nessun test e
+  nessun documento scrive, e le chip di compatibilità appena mostrate sono inerti mentre la rotta
+  per aprire la scheda di un tipo esiste già. Nessun commit: le modifiche della giornata (fix,
+  test e roadmap) restano in working tree.
