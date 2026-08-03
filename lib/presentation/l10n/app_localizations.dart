@@ -1190,6 +1190,12 @@ abstract class AppLocalizations {
   /// **'Esempi celebri'**
   String get contentSectionExamples;
 
+  /// No description provided for @contentSectionMyths.
+  ///
+  /// In it, this message translates to:
+  /// **'Miti comuni'**
+  String get contentSectionMyths;
+
   /// No description provided for @contentHighAffinity.
   ///
   /// In it, this message translates to:

@@ -7,6 +7,7 @@ import '../../../domain/personality_systems/mbti/mbti_profile.dart';
 import '../../../domain/entities/personality_profile.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/person_provider.dart';
+import '../content_viewer/content_viewer_screen.dart';
 
 class QuizScreen extends ConsumerStatefulWidget {
   final int? personId;
@@ -257,13 +258,17 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            _AxisResult(label: l10n.mbtiDichotomyIE, value: breakdown['IE'] ?? 0.5, left: 'I', right: 'E'),
+            // Each axis opens its dichotomy card: `mbti.json` carries the two
+            // poles, their behavioral markers and the common myths for all four
+            // axes in both languages, and until 2026-08-03 no screen in the app
+            // navigated to that content at all.
+            _AxisResult(axis: 'IE', label: l10n.mbtiDichotomyIE, value: breakdown['IE'] ?? 0.5, left: 'I', right: 'E'),
             const SizedBox(height: 16),
-            _AxisResult(label: l10n.mbtiDichotomyNS, value: breakdown['NS'] ?? 0.5, left: 'S', right: 'N'),
+            _AxisResult(axis: 'NS', label: l10n.mbtiDichotomyNS, value: breakdown['NS'] ?? 0.5, left: 'S', right: 'N'),
             const SizedBox(height: 16),
-            _AxisResult(label: l10n.mbtiDichotomyTF, value: breakdown['TF'] ?? 0.5, left: 'T', right: 'F'),
+            _AxisResult(axis: 'TF', label: l10n.mbtiDichotomyTF, value: breakdown['TF'] ?? 0.5, left: 'T', right: 'F'),
             const SizedBox(height: 16),
-            _AxisResult(label: l10n.mbtiDichotomyJP, value: breakdown['JP'] ?? 0.5, left: 'J', right: 'P'),
+            _AxisResult(axis: 'JP', label: l10n.mbtiDichotomyJP, value: breakdown['JP'] ?? 0.5, left: 'J', right: 'P'),
             const SizedBox(height: 48),
             FilledButton.icon(
               onPressed: () => _saveAndExit(result),
@@ -377,36 +382,61 @@ class _LengthCard extends StatelessWidget {
 }
 
 class _AxisResult extends StatelessWidget {
+  final String axis; // IE, NS, TF, JP — the key of the dichotomy content
   final String label;
   final double value; // 0..1
   final String left;
   final String right;
 
-  const _AxisResult({required this.label, required this.value, required this.left, required this.right});
+  const _AxisResult({required this.axis, required this.label, required this.value, required this.left, required this.right});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
-        const SizedBox(height: 8),
-        Row(
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ContentViewerScreen(
+            contentKey: axis,
+            contentType: ContentViewerType.mbtiDichotomy,
+          ),
+        ),
+      ),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(left, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: LinearProgressIndicator(
-                value: value,
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
-              ),
+            Row(
+              children: [
+                Text(label, style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Text(right, style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(left, style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: value,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(right, style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
           ],
         ),
-      ],
+      ),
     );
   }
 }

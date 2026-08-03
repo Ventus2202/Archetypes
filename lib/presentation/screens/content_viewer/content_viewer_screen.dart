@@ -130,6 +130,22 @@ class _Section extends StatelessWidget {
   }
 }
 
+/// The asset stores a `description` as **one string** whose paragraphs are
+/// separated by a blank line, and the cards render one `Text` per paragraph.
+/// Until 2026-08-03 this file read that field as a list, so building the type
+/// card or the function card threw
+/// `TypeError: String is not a subtype of List<dynamic>?` — both are reachable
+/// from `person_detail`, and `analyze` cannot see it because the value comes
+/// out of `jsonDecode` as `dynamic`.
+List<String> _paragraphs(Object? value) {
+  if (value is! String) return const [];
+  return value
+      .split('\n\n')
+      .map((paragraph) => paragraph.trim())
+      .where((paragraph) => paragraph.isNotEmpty)
+      .toList();
+}
+
 class _BulletList extends StatelessWidget {
   const _BulletList({required this.items});
 
@@ -165,11 +181,22 @@ class _MbtiTypeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final descriptions = (data['description'] as List?)?.cast<String>() ?? [];
+    final descriptions = _paragraphs(data['description']);
     final strengths = (data['strengths'] as List?)?.cast<String>() ?? [];
     final weaknesses = (data['weaknesses'] as List?)?.cast<String>() ?? [];
     final behaviors = (data['behavioral_traits'] as List?)?.cast<String>() ?? [];
     final stack = (data['stack'] as List?)?.cast<String>() ?? [];
+    final examples =
+        (data['famous_examples_fictional'] as List?)?.cast<String>() ?? [];
+    // Content and labels for these last two sections had been in the asset and
+    // in the ARB from the start, and no screen rendered either: `.arb` carried
+    // `contentSectionExamples`, `contentSectionCompatibility` and the three
+    // affinity labels with no reader at all.
+    final compatibility = data['compatibility_notes'];
+    final compat =
+        compatibility is Map<String, dynamic> ? compatibility : null;
+    List<String> compatGroup(String key) =>
+        (compat?[key] as List?)?.cast<String>() ?? const [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,8 +257,62 @@ class _MbtiTypeBody extends StatelessWidget {
             title: l10n.contentSectionWork,
             child: Text(data['at_work'] as String),
           ),
+        if (examples.isNotEmpty)
+          _Section(
+            title: l10n.contentSectionExamples,
+            child: _BulletList(items: examples),
+          ),
+        if (compat != null)
+          _Section(
+            title: l10n.contentSectionCompatibility,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _TypeChipRow(
+                  label: l10n.contentHighAffinity,
+                  types: compatGroup('high_affinity'),
+                ),
+                _TypeChipRow(
+                  label: l10n.contentGoodWorking,
+                  types: compatGroup('good_working'),
+                ),
+                _TypeChipRow(
+                  label: l10n.contentChallengingGrowth,
+                  types: compatGroup('challenging_growth'),
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: 32),
       ],
+    );
+  }
+}
+
+class _TypeChipRow extends StatelessWidget {
+  const _TypeChipRow({required this.label, required this.types});
+
+  final String label;
+  final List<String> types;
+
+  @override
+  Widget build(BuildContext context) {
+    if (types.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: types.map((type) => Chip(label: Text(type))).toList(),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -244,7 +325,7 @@ class _MbtiFunctionBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final descriptions = (data['description'] as List?)?.cast<String>() ?? [];
+    final descriptions = _paragraphs(data['description']);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,7 +375,13 @@ class _MbtiDichotomyBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final poles = data['poles'] as List?;
+    // `poles` is an object keyed by the two letters of the axis (`I`/`E`, …),
+    // not a list: reading it as one threw for every dichotomy. The values keep
+    // the order the asset lists them in, which is the order of the axis name.
+    final polesRaw = data['poles'];
+    final poles = polesRaw is Map
+        ? polesRaw.values.whereType<Map<String, dynamic>>().toList()
+        : const <Map<String, dynamic>>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,8 +391,8 @@ class _MbtiDichotomyBody extends StatelessWidget {
             padding: const EdgeInsets.only(top: 8),
             child: Text(data['spectrum_note'] as String),
           ),
-        if (poles != null) ...[
-          for (final pole in poles.cast<Map>()) ...[
+        if (poles.isNotEmpty) ...[
+          for (final pole in poles) ...[
             const SizedBox(height: 20),
             Text(
               pole['label'] as String? ?? '',
@@ -326,7 +413,7 @@ class _MbtiDichotomyBody extends StatelessWidget {
         ],
         if (data['common_myths'] != null) ...[
           const SizedBox(height: 24),
-          Text('Miti comuni',
+          Text(l10n.contentSectionMyths,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,

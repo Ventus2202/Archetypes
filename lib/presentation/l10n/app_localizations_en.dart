@@ -594,6 +594,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contentSectionExamples => 'Famous examples';
 
   @override
+  String get contentSectionMyths => 'Common myths';
+
+  @override
   String get contentHighAffinity => 'High affinity';
 
   @override
