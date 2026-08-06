@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals, setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:archetypes/presentation/l10n/app_localizations.dart';
@@ -86,8 +87,11 @@ class _GraphScreenState extends ConsumerState<GraphScreen> {
                 return _GraphBody(
                   persons: persons,
                   mode: _mode,
-                  filterGroups: _selectedGroups,
-                  filterTypes: _selectedTypes,
+                  // Copies, not the live sets: handing down the same mutable
+                  // instance made `didUpdateWidget` compare an object with
+                  // itself, so no chip ever reached the graph (see there).
+                  filterGroups: Set.of(_selectedGroups),
+                  filterTypes: Set.of(_selectedTypes),
                 );
               },
             ),
@@ -256,10 +260,17 @@ class _GraphBodyState extends ConsumerState<_GraphBody> {
   @override
   void didUpdateWidget(_GraphBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.persons != widget.persons ||
-        oldWidget.filterGroups != widget.filterGroups ||
-        oldWidget.filterTypes != widget.filterTypes) {
+    // Sets and lists compare by identity in Dart, and the parent used to pass
+    // its own mutable sets straight down: toggling a chip mutated the very
+    // object `oldWidget` still pointed at, so this test was comparing a set
+    // with itself and the graph was never rebuilt — both filters were inert.
+    if (!listEquals(oldWidget.persons, widget.persons)) {
       _loadData();
+    } else if (!setEquals(oldWidget.filterGroups, widget.filterGroups) ||
+        !setEquals(oldWidget.filterTypes, widget.filterTypes)) {
+      // Filtering reads only what is already in memory: no need to re-read
+      // every person's profile and groups from the database for a chip tap.
+      _buildGraph();
     }
   }
 
@@ -360,10 +371,44 @@ class _GraphBodyState extends ConsumerState<_GraphBody> {
     return 1.5;
   }
 
+  Person? _personFor(int id) =>
+      widget.persons.where((p) => p.id == id).firstOrNull;
+
+  List<Person> get _visiblePersons => _graph.nodes
+      .map((n) => n.key?.value as int?)
+      .whereType<int>()
+      .map(_personFor)
+      .whereType<Person>()
+      .toList();
+
   @override
   Widget build(BuildContext context) {
     if (_graph.nodes.isEmpty && widget.persons.isNotEmpty) {
       return Center(child: Text(AppLocalizations.of(context).errorNotFound));
+    }
+
+    // graphview's Fruchterman-Reingold drops every single-node cluster and then
+    // indexes the list it has just emptied, so a graph with *no* edges throws
+    // RangeError inside performLayout and nothing renders. Measured on
+    // graphview 1.5.1 (the latest) with 1, 2, 3 and 4 unconnected people; one
+    // edge anywhere is enough to make it pass. That is the state of a freshly
+    // onboarded app, whose only person is the owner — which is what the
+    // 2026-07-22 walkthrough saw as "the graph looks empty". With nothing to
+    // connect there is no force layout to compute either, so the nodes are
+    // placed directly.
+    if (_graph.edges.isEmpty) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 24,
+          runSpacing: 24,
+          children: [
+            for (final person in _visiblePersons)
+              _PersonNode(person: person, profile: _profiles[person.id]),
+          ],
+        ),
+      );
     }
 
     return InteractiveViewer(
@@ -381,8 +426,11 @@ class _GraphBodyState extends ConsumerState<_GraphBody> {
         builder: (Node node) {
           final id = node.key?.value as int?;
           if (id == null) return const SizedBox.shrink();
-          final person =
-              widget.persons.firstWhere((p) => p.id == id);
+          // The graph is rebuilt asynchronously, so it can briefly hold a node
+          // for a person the current list no longer has: `firstWhere` without
+          // a fallback would throw here.
+          final person = _personFor(id);
+          if (person == null) return const SizedBox.shrink();
           return _PersonNode(
             person: person,
             profile: _profiles[id],
