@@ -90,7 +90,16 @@ Verificato dal codice al 2026-07-22.
   (filtro delle combinazioni sul percorso esaustivo, seed del greedy sull'altro); se la
   persona non è tra i candidati restituisce lista vuota e il tool risponde con un errore
   esplicito invece di un fallback muto.
-- [ ] **Testabilità delle schermate con stream drift**: `PeopleListScreen` (e potenzialmente
+- [x] **Testabilità delle schermate con stream drift** — chiuso il 2026-08-06, e la chiusura è
+  semplicemente l'aver pompato le due schermate che restavano: `PeopleListScreen` e il grafo
+  girano ora su `Stream.value`, con i repository sul DB in-memory sotto. Non è servito nessun
+  helper nuovo. Sul grafo è emersa una **seconda** cosa da sapere, che lo `Stream.value` da solo
+  non copre: `_GraphBody` legge il DB per ogni persona e poi prende il primo evento di uno
+  stream drift, e quell'I/O reale non avanza sotto il fake clock, quindi dopo il `pumpAndSettle`
+  serve un `runAsync` (`Future.delayed(30ms)`) e un secondo `pumpAndSettle`, altrimenti il corpo
+  resta sul grafo vuoto iniziale. È lo stesso `runAsync` che serviva al quiz, per lo stesso
+  motivo. Testo originale della voce sotto, per memoria.
+- ~~**Testabilità delle schermate con stream drift**~~: `PeopleListScreen` (e potenzialmente
   il grafo) si sottoscrivono a un `.watch()` drift che sotto il fake clock di `flutter_test`
   non va mai idle → `pumpAndSettle` va in hang (vedi nota in `share_import_widget_test.dart`).
   È un blocco reale all'aumento di copertura widget: introdurre un helper/pattern per pompare
@@ -424,16 +433,24 @@ Verificato dal codice al 2026-07-22.
   del campo rotto — e lì ha chiuso la classe intera. Da valutare la stessa cosa per il contenuto:
   parsing in modelli tipizzati nel repository, schermate che ricevono oggetti Dart. Costo da
   soppesare: sono quattro asset con forme diverse e il contenuto cambia più spesso del codice.
-- [ ] **Cinque schermate su dodici non sono mai state pompate da un test**: verificato il
-  2026-08-03 con un grep sul nome della classe — `GraphScreen`, `PeopleListScreen`,
-  `CareerFitScreen`, `SettingsScreen` e `ShareScreen` non compaiono in **nessun** file di `test/`.
-  Pesa più di ieri: oggi si è visto che una schermata mai pompata può essere rotta in **ogni** suo
-  ramo senza che niente lo dica, e `career_fit` è quella che assomiglia di più al caso di oggi
-  (legge il contenuto JSON e lo casta al punto d'uso, `career_fit_screen:75-83`). `settings`
-  contiene tutta la UI di backup, che il backlog annota come mai verificata a runtime. L'alibi
-  ormai è corto: per le due schermate con `.watch()` c'è il pattern dello `Stream.value`
-  (2026-07-30) e per quelle con `FutureBuilder` + spinner quello del repository scaldato sotto
-  `runAsync` (2026-08-03), quindi restano da scrivere, non da sbloccare.
+- [x] **Le schermate mai pompate da un test** — chiuso il 2026-08-06. Prima correzione al conto
+  del 2026-08-03: le schermate scoperte erano **quattro**, non cinque. `ShareScreen` non compare
+  in `test/` perché **non esiste in `lib/`**: la UI di condivisione è `share/share_code_ui.dart`
+  (sheet del codice + dialog di import), ed è coperta da `share_import_widget_test.dart` dal
+  2026-07-24. Il grep contava un nome, non un file. Le altre quattro ora hanno un test che pompa
+  la schermata vera. `CareerFitScreen` (5 test) — era la sospettata numero uno, perché legge il
+  JSON e lo casta nel `build` come `content_viewer`, e invece è **sana** su tutti i rami; il test
+  fissa titoli localizzati IT/EN, l'espansione del tile, l'ordine dei punteggi derivato dal motore
+  (non una lista copiata) e l'asset illeggibile che deve dire "Contenuto non trovato". Emerso
+  scrivendolo: due ruoli pareggiano a 84 per INTJ, quindi il punteggio non si può cercare per
+  testo. `SettingsScreen` (7 test) — chiude anche la voce di backlog "il backup non è mai stato
+  verificato a runtime": `FilePicker.platform` è uno statico sostituibile, quindi l'import passa
+  dal vero dialog Sostituisci/Aggiungi fino alla snackbar, con un archivio prodotto dal vero
+  exporter; coperti anche l'annullamento (che non deve toccare il DB) e l'archivio rotto (che deve
+  dirlo). Restano fuori i due rami che vogliono un canale di piattaforma: export (`SharePlus` /
+  download del browser) e `_shareMyProfile`. `PeopleListScreen` (5 test) e `GraphScreen` (6 test)
+  erano le due bloccate dallo stream drift, e da lì sono usciti **due bug veri nel grafo**, vedi
+  Epica 3.
 - [ ] **Dieci dei diciassette campi per funzione non li legge nessuno**: emerso il 2026-08-03
   cercando quali campi valesse la pena fissare. `content_viewer` usa `title`, `full_name`,
   `description` e le quattro `as_*`; restano fuori `label_short`, `axis`, `direction`,
@@ -450,6 +467,24 @@ Verificato dal codice al 2026-07-22.
   con generator, `file_picker` 8→10, `drift` minori) e due transitive **dismesse**
   (`build_resolvers`, `build_runner_core`, catena `build_runner`). Pianificare un giro di
   update a scaglioni con CI verde ad ogni passo (riverpod 3 è breaking → valutarlo a parte).
+- [ ] **`flutter_markdown` è una dipendenza diretta, dismessa e che nessuno usa**: verificato il
+  2026-08-06 mentre si cercava se un aggiornamento di `graphview` potesse chiudere il bug del
+  grafo. `pubspec.yaml:40` la dichiara `^0.7.6`; `pub get` la segnala come **discontinued**
+  (sostituita da `flutter_markdown_plus`) ed è l'**unico** pacchetto dismesso del progetto — le
+  altre dismesse citate nella voce qui sopra sono transitive della catena `build_runner`, questa
+  è dichiarata a mano. Un grep su `lib/` non trova né l'import né un `Markdown(`: non è usata da
+  nessuna parte. Quindi la risposta non è aggiornarla ma **toglierla**, ed è un one-liner che
+  riduce anche il peso del bundle web. Da fare prima del giro di update, così è una riga in meno
+  da valutare.
+- [ ] **Il bug del grafo è in una dipendenza che non ha più un upstream a cui sperare**: emerso il
+  2026-08-06 chiudendo il `RangeError` di Epica 3. `graphview` è fermo a 1.5.1 e `pub outdated`
+  non propone nulla di più recente, quindi il workaround scritto nella schermata (`Wrap` quando
+  non ci sono archi) non è temporaneo: è per sempre, salvo agire sulla libreria. Le vie sono tre —
+  (a) tenere il workaround e accettare che il layout force-directed valga solo per i grafi con
+  almeno un arco; (b) forkare/patchare `positionCluster` (il fix upstream è una riga: uscire se
+  `nodeClusters` è vuota); (c) sostituire la libreria, che però è il cuore della schermata
+  principale. Oggi (a) costa zero ed è quello che c'è; la voce serve perché la prossima persona
+  che tocca il grafo sappia che il ramo senza archi non passa dall'algoritmo.
 
 ### 2. Profilo ibrido multi-sistema
 
@@ -530,15 +565,62 @@ questa epica, non un miglioramento cosmetico. Nota: il dato serve già esiste ed
 
 ### 3. Grafo e relazioni
 
+- [x] **Il grafo non renderizzava niente finché non esisteva almeno una relazione** — trovato,
+  misurato e chiuso il 2026-08-06 dal primo widget test mai scritto su questa schermata. Non era
+  "vuoto": andava in `RangeError` dentro `performLayout`. La radice è in graphview 1.5.1 (che è
+  l'ultima: `pub outdated` non ne propone altre), in `FruchtermanReingoldAlgorithm`:
+  `combineSingleNodeCluster` fa `removeWhere((c) => c.size() == 1)` e subito dopo
+  `positionCluster` fa `nodeClusters[0]` sulla lista che ha appena svuotato. Un grafo senza archi
+  è fatto **solo** di cluster da un nodo, quindi la lista resta vuota e l'indicizzazione esplode.
+  Misurato con una sonda su sette forme prima di toccare il codice, e il confine è netto: 1, 2, 3
+  e 4 persone **senza** relazioni → eccezione e zero nodi a schermo; le stesse persone con **una
+  sola** relazione qualsiasi → tutto renderizza, nodi isolati compresi. Cioè la prima tab
+  dell'app era rotta esattamente nello stato in cui si trova ogni utente appena finito
+  l'onboarding, quando l'unica persona in DB è sé stesso — ed è la spiegazione della nota del
+  2026-07-22 qui sotto, che l'aveva letta come "grafo vuoto". Non essendoci una versione più
+  nuova della libreria, il fix sta da questa parte: se `_graph.edges.isEmpty` la schermata dispone
+  i nodi da sé in un `Wrap` scrollabile invece di passare un grafo senza archi a un algoritmo
+  force-directed — che con niente da connettere non avrebbe comunque nulla da calcolare.
+  Corretto nello stesso giro il `firstWhere` senza `orElse` nel builder dei nodi: il grafo si
+  ricostruisce in asincrono, quindi può tenere per un attimo il nodo di una persona che la lista
+  corrente non ha più.
+- [x] **I filtri del grafo erano inerti: le chip si accendevano e il grafo non cambiava** —
+  trovato lo stesso giorno dal test sul filtro per tipo MBTI, che continuava a mostrare la persona
+  esclusa. `GraphScreen` passava a `_GraphBody` i propri `Set` **mutabili** (`_selectedGroups`,
+  `_selectedTypes`) e li mutava sul posto; `didUpdateWidget` li confrontava con `!=`, che sui
+  `Set` è identità, quindi confrontava un oggetto con sé stesso: sempre uguale, ricostruzione mai
+  fatta, filtro mai applicato. Verificato prima del fix che nemmeno un `runAsync` in più sbloccasse
+  la cosa, cioè non era una latenza del test. Fix in due pezzi, servono entrambi: il genitore passa
+  `Set.of(...)` (copie) e `didUpdateWidget` confronta con `setEquals`/`listEquals` invece che per
+  riferimento — solo le copie avrebbero fatto ricaricare tutto a ogni rebuild, solo `setEquals`
+  avrebbe continuato a confrontare lo stesso oggetto. Il cambio di filtro ora chiama `_buildGraph`
+  e non `_loadData`: filtrare legge roba già in memoria, non serve rileggere dal DB il profilo e i
+  gruppi di ogni persona a ogni tap su una chip.
+- [ ] **Il selettore di modalità del grafo non fa niente**: verificato il 2026-08-06 subito dopo
+  aver chiuso i filtri inerti, perché è la stessa domanda ("questo controllo arriva davvero al
+  grafo?") posta all'altro controllo della barra. `_GraphBody` dichiara `final GraphViewMode
+  mode;` e **non lo legge mai** — le uniche occorrenze sono la dichiarazione e il parametro del
+  costruttore, `_buildGraph` non lo guarda e `didUpdateWidget` non lo confronta nemmeno. Quindi
+  "Libero / Per tipo / Cronologico" cambia solo quale segmento appare selezionato. A differenza
+  dei filtri, però, qui non c'è niente da riparare: l'implementazione non esiste proprio, il
+  `SegmentedButton` promette due viste che non sono mai state scritte. Da decidere: implementare
+  cluster (raggruppa per gruppo o per tipo) e timeline (ordina per `firstMetDate`), oppure
+  **togliere il selettore** finché non ci sono — oggi è una promessa a vuoto in cima alla
+  schermata principale, ed è più visibile di una funzione mancante.
 - [ ] Avatar reali sui nodi del grafo (`image_picker` già presente).
-- [ ] Filtri per gruppo / per tipo MBTI, con animazione cluster.
+- [ ] Animazione cluster per i filtri: la parte funzionale della voce originale
+  ("Filtri per gruppo / per tipo MBTI, con animazione cluster") era già scritta e da oggi
+  **funziona davvero** (vedi sopra); resta l'animazione.
 - [ ] Creazione/modifica relazioni direttamente dal grafo (tap su arco).
 - [ ] **Gestione gruppi**: schermata CRUD (tabelle `Groups`/`PersonGroups` e repo esistono,
   manca la UI).
 - [ ] **Timeline eventi**: la tabella `EventEntries` esiste ma non ha né repository né UI —
   aggiungere repo + schermata cronologia per persona.
-- [ ] Verificare che il nodo "io" venga renderizzato nel grafo dopo l'onboarding: nella
-  walkthrough di questa sessione il grafo appariva vuoto con il solo profilo self.
+- [x] **Verificare che il nodo "io" venga renderizzato nel grafo dopo l'onboarding** — la
+  walkthrough del 2026-07-22 aveva ragione, e il 2026-08-06 si è capito perché: con il solo
+  profilo self il grafo non ha archi, e senza archi la libreria esplodeva in `performLayout`
+  (voce in cima a questa epica). Ora il primo test del file pompa esattamente quello stato — una
+  persona, `isSelf`, nessuna relazione — e pretende iniziale, tipo e nome a schermo.
 
 ### 4. Chatbot
 
@@ -881,7 +963,13 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
 - Messaggi d'errore user-friendly + logging/crash-reporting: la schermata `_GateError`
   (`app.dart`) stampa la stringa d'eccezione grezza all'utente e nessun errore viene loggato.
   Valutare copy amichevole + un minimo di observability.
-- Ricerca/filtro persone nella lista.
+- ~~Ricerca/filtro persone nella lista~~ — **già fatta**, scoperto il 2026-08-06 scrivendo il
+  primo widget test su `PeopleListScreen`: la schermata ha l'icona di ricerca in appbar, il campo
+  che sostituisce il titolo e il filtro `contains` sul `displayName`, più il messaggio
+  "Nessun risultato per ..." distinto dallo stato "rubrica vuota". Era una voce di backlog per una
+  funzione che esisteva: nessuno l'aveva mai aperta da un test, che è il tema della giornata.
+  Ora è coperta da 4 asserzioni (filtra, non trova, distingue i due vuoti, chiudere la ricerca
+  ripristina la lista).
 - Statistiche aggregate (distribuzione tipi nella propria rete).
 - Note vocali / allegati sugli eventi.
 - Export PDF di un profilo o di un team.
@@ -940,6 +1028,29 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   non viene distrutto (con `_mbtiType` nullo il blocco di scrittura non parte, e dopo il fix di
   oggi nemmeno il `source` verrebbe toccato), quindi non è urgente — ma è un fallimento muto
   della stessa famiglia di quelli già chiusi in `_AppGate` e nel backup.
+- **"Condividi il mio profilo" può non fare assolutamente nulla, in tre modi diversi**: letto il
+  2026-08-06 scrivendo i test di `settings`. `_shareMyProfile` (`settings_screen.dart:146-173`)
+  esce con un `return;` muto se non c'è un self e con un altro se quel self non ha un profilo
+  MBTI, e avvolge tutto il resto — costruzione del payload e apertura della share sheet — in un
+  `catch (_) {}`. Quindi toccare la voce senza avere un profilo produce zero feedback: nessun
+  errore, nessuna spiegazione, la schermata non si muove e l'utente non ha modo di capire se ha
+  sbagliato lui o se l'app è rotta. Stessa famiglia di `_loadExisting` qui sopra, ma peggiore in
+  un punto: quello nasconde un dato in un form già aperto, questo non risponde a un tap
+  esplicito. Nota di contorno che la rende più scomoda: è anche uno dei due rami che nessun
+  widget test può coprire (vuole la share sheet), quindi oggi è muto sia per l'utente sia per la
+  suite. La correzione naturale è la stessa che ha già chiuso i casi analoghi — snackbar
+  esplicita — e va nel giro unico di ARB già annotato più sotto, perché serve una stringa nuova.
+- **La schermata "Ruoli ideali" resta bianca se la lista è vuota, e l'Epica 2 la renderà
+  raggiungibile**: notato il 2026-08-06 scrivendo `career_fit_widget_test`. `careerFitProvider`
+  restituisce `[]` sia quando `system != mbti` sia quando `MbtiProfile.fromJson` solleva, e la
+  schermata rende un `ListView` da zero elementi: disclaimer in cima e sotto il nulla, senza un
+  messaggio. Oggi non è un bug perché il ramo non si raggiunge — `person_detail` mostra la voce
+  solo quando ha già deserializzato un profilo MBTI — e il test lo fissa come "non esplode", non
+  come UX accettabile. Ma il primo controllo di quel provider è `profile.system.name != 'mbti'`,
+  cioè diventerà vero il giorno in cui esisterà un profilo Big Five o Enneagramma: è quindi una
+  conseguenza concreta della voce **"Consumatori a valle"** di Epica 2, e va decisa lì (il motore
+  career passa all'ibrido, oppure la schermata dice "questo sistema non ha ancora un calcolo
+  ruoli"), non con una pezza locale.
 - **`person_detail` ha la stessa copy sbagliata appena tolta dal quiz**:
   `person_detail_screen.dart:280` usa `l10n.mbtiSourceQuizShort` ("Test breve") come titolo
   della voce che **apre il quiz**, con il commento-appunto `// Or a "Retry quiz" label`. Da
@@ -1099,6 +1210,33 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   locale del 2026-07-29 fa sì che il future della schermata si chiuda in un microtask. Corollario
   per il quiz, che è l'unico loader **senza** cache (voce qui sotto): lì serve comunque un
   `runAsync` dopo il tap perché il caricamento reale possa completare.
+- **Pattern: una schermata che legge il DB fuori dal `build` vuole un `runAsync` anche dopo
+  `pumpAndSettle`.** Aggiunto il 2026-08-06 scrivendo `graph_widget_test.dart`, ed è la **terza**
+  famiglia di schermate non pompabili, dopo quelle sottoscritte a un `.watch()` (Epica 1) e quelle
+  con `FutureBuilder` + spinner (voce qui sopra). Si riconosce da "fa I/O in `initState` /
+  `didUpdateWidget` e poi `setState`": `_GraphBody` legge profili e gruppi di ogni persona e poi
+  prende il primo evento di uno stream drift, e quell'I/O non avanza sotto il clock finto —
+  `pumpAndSettle` ritorna soddisfatto su un albero che è ancora nello stato iniziale, cioè **non
+  va in timeout, mente**. Ed è la differenza che rende questa famiglia più insidiosa delle altre
+  due: le altre si annunciano con un hang, questa con asserzioni che falliscono come se la
+  schermata fosse rotta. La via d'uscita è un `await tester.runAsync(() =>
+  Future.delayed(Duration(milliseconds: 30)))` seguito da un secondo `pumpAndSettle`, e va
+  ripetuta **dopo ogni interazione** che rimette in moto quel percorso (nel test del filtro serve
+  di nuovo dopo il tap sulla chip). Corollario che si è pagato in sessione: la prima lettura di un
+  fallimento del genere è "la schermata è rotta", e in questo caso lo era davvero — ma solo dopo
+  aver aggiunto il `runAsync` si è potuto distinguere il bug vero (i filtri inerti) dall'artefatto
+  del test.
+- **Pattern: un flusso bloccato da un plugin si apre se il plugin espone un platform interface
+  sostituibile.** Aggiunto il 2026-08-06 con `_StubFilePicker` in `settings_widget_test.dart`.
+  `FilePicker.platform` è un setter statico e `FilePicker` è una classe astratta i cui metodi
+  hanno già un corpo che solleva `UnimplementedError`, quindi basta estenderla e sovrascrivere il
+  solo `pickFiles` per consegnare alla schermata i byte che avrebbe scelto l'utente: l'intero
+  import di backup — dialog Sostituisci/Aggiungi, scrittura in DB, snackbar — diventa testabile
+  senza toccare un file vero. È il motivo per cui la voce di backlog sul backup mai verificato a
+  runtime si è dimezzata invece di restare intera. Il criterio da applicare al prossimo flusso
+  bloccato: guardare se il pacchetto ha un `*.platform` (o un `*.instance`) scrivibile, prima di
+  concludere che serve un test manuale. `SharePlus.instance` non ce l'ha, ed è esattamente perché
+  export e condivisione profilo restano fuori.
 - **Il quiz è l'unico contenuto non cachato**: dopo il fix del 2026-07-29 i quattro contenuti
   didattici stanno in cache per locale, mentre `loadQuizQuestions` rilegge e riparsa l'asset a
   ogni avvio del test (80 item nel completo). Non è un problema di prestazioni oggi — succede
@@ -1124,6 +1262,14 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   inglese dentro una italiana. Stessa famiglia dell'`'Inserisci un nome'` di `person_edit`
   (Epica 5) e della voce sui messaggi d'errore user-friendly qui sopra: conviene chiuderle in un
   giro solo di ARB.
+  Contate il 2026-08-06 pompando le schermate: **non sono tre, sono nove**, e stanno tutte sulle
+  due schermate appena testate. In `settings_screen`, oltre alle tre note: le due etichette di
+  sezione `'Profilo'` e `'Dati'`, la domanda del dialog di import
+  (`'Vuoi sostituire tutti i dati esistenti o aggiungere quelli nuovi?'`) e i suoi due pulsanti
+  `'Aggiungi'` / `'Sostituisci'` — cioè la scelta più delicata dell'app, quella che può azzerare
+  il database, è l'unica parte del flusso di backup che in EN resta in italiano, mentre la
+  snackbar che la segue è tradotta dal 2026-08-02. In `people_list_screen`, i due `tooltip`
+  `'Inserisci codice'` e `'Assistente'`. Il giro unico di ARB ha quindi un perimetro preciso.
 - **`confidenceFromAxisBalance` usa la media, non l'asse peggiore**: 3 assi netti + 1 in
   perfetto pareggio danno 88, mentre la lettera in bilico resta un lancio di monetina. È
   documentato come "quanto sono netti gli assi", non come probabilità che il tipo sia
@@ -1151,10 +1297,13 @@ Contenitore per lo sviluppo "infinito": idee non ancora pianificate.
   possibile jank sul pick. Valutare un cap dimensionale prima del decode (o `compute`, che su
   web resta comunque sul main). Collegato: `package:image` include tutti i decoder (li prova
   in `decodeImage`), quindi non è tree-shakeable → verificare l'impatto sul bundle web della PWA.
-- Verifica manuale del **backup a runtime** (il round-trip byte/ZIP è coperto dai test, ma
-  la UI no): su **web** esporta → controlla che il browser scarichi lo `.zip` → reimportalo;
-  su **mobile** verifica la share sheet (`XFile.fromData`) in export e `pickFiles(withData:
-  true)` in import. È il caveat lasciato aperto dal fix del 2026-07-23.
+- Verifica manuale del **backup a runtime**, ridotta il 2026-08-06 al solo **export**. L'import
+  non è più materia di verifica manuale: `settings_widget_test` sostituisce `FilePicker.platform`
+  e percorre il flusso vero — dialog Sostituisci/Aggiungi, `importFromBytes`, invalidazione dei
+  provider, snackbar — su un archivio prodotto dal vero exporter, più l'annullamento e l'archivio
+  rotto. Resta da provare a mano il ramo che nessun harness può servire: su **web** esporta →
+  controlla che il browser scarichi lo `.zip` → reimportalo; su **mobile** la share sheet
+  (`XFile.fromData`). Stessa cosa per `_shareMyProfile`. È il caveat del 2026-07-23, ora dimezzato.
 - ~~Layout repo~~ **risolto il 2026-07-26**: `.claude/` spostata dentro `Archetypes/`, che
   ora è la root da aprire in Claude Code. Conseguenze: (1) i 3 server MCP in `.mcp.json`
   (dart, context7, github) finalmente si caricano — stavano un livello sotto la root e non
@@ -1585,3 +1734,51 @@ Una riga per giornata di lavoro: `AAAA-MM-GG — task completati / note`.
   nessun documento scrive, e le chip di compatibilità appena mostrate sono inerti mentre la rotta
   per aprire la scheda di un tipo esiste già. Nessun commit: le modifiche della giornata (fix,
   test e roadmap) restano in working tree.
+- 2026-08-06 — Epica 1: **le schermate mai pompate ora lo sono, e il grafo era rotto in due punti**.
+  Il lavoro previsto era scrivere i test mancanti sulle cinque schermate contate il 03/08; la prima
+  correzione è che erano **quattro** — `ShareScreen` non compare in `test/` perché non esiste in
+  `lib/`, la UI di condivisione è `share_code_ui.dart` ed è coperta dal 24/07: il grep contava un
+  nome, non un file. `CareerFitScreen` era la sospettata (legge il JSON e lo casta nel `build`,
+  come `content_viewer` il giorno prima) ed è risultata sana su tutti i rami. `SettingsScreen`
+  chiude la voce di backlog sul backup mai verificato a runtime: `FilePicker.platform` è
+  sostituibile, quindi il test percorre il dialog Sostituisci/Aggiungi fino alla snackbar su un
+  archivio prodotto dal vero exporter. I due bug sono usciti dal grafo, la schermata della prima
+  tab. **Primo**: senza **nessuna** relazione la schermata non era vuota, andava in `RangeError`
+  dentro `performLayout` — graphview 1.5.1 (l'ultima) toglie tutti i cluster da un nodo e poi
+  indicizza la lista che ha appena svuotato, e un grafo senza archi è fatto solo di quelli.
+  Sonda su sette forme prima di toccare il codice: 1, 2, 3 e 4 persone senza relazioni →
+  eccezione e zero nodi; una relazione qualsiasi → tutto renderizza. È lo stato di ogni utente
+  appena finito l'onboarding, ed è la spiegazione della nota del 22/07 su "il grafo appare vuoto".
+  Fix da questa parte, non essendoci una versione più nuova: senza archi la schermata dispone i
+  nodi in un `Wrap` invece di chiamare un algoritmo force-directed che non avrebbe niente da
+  calcolare. **Secondo**: i filtri per gruppo e per tipo erano **inerti** — i `Set` mutabili
+  passati per riferimento e confrontati con `!=` in `didUpdateWidget` facevano confrontare un
+  oggetto con sé stesso, quindi il grafo non si ricostruiva mai; verificato che non fosse una
+  latenza del test. Fix: copie dal genitore **più** `setEquals`, servono entrambi, e il cambio di
+  filtro chiama `_buildGraph` invece di rileggere il DB per ogni persona. Registrate le voci
+  emerse: la ricerca nella lista persone era già implementata (voce di backlog per una funzione
+  che esisteva e che nessuno aveva mai aperto da un test), le stringhe italiane hardcoded sono
+  nove e non tre — fra cui i due pulsanti del dialog che può azzerare il database — e la verifica
+  manuale del backup si riduce al solo export. Verifiche: `flutter analyze` pulito, 194 test verdi
+  (171→194, +23).
+- 2026-08-06 — Chiusura sessione: registrate sei voci emerse dal lavoro sulle schermate, tutte
+  **verificate nel codice** durante la sessione e non intuite. Due in Epica 1, entrambe uscite dal
+  cercare se un aggiornamento di libreria potesse chiudere il bug del grafo: `flutter_markdown` è
+  una dipendenza **diretta**, dismessa e che un grep non trova usata da nessuna parte — quindi la
+  risposta non è aggiornarla ma toglierla — e `graphview` è fermo all'ultima versione, cioè il
+  workaround scritto oggi nella schermata non è temporaneo e la prossima persona che tocca il
+  grafo deve sapere che il ramo senza archi non passa dall'algoritmo. Una in Epica 3, che è la
+  stessa domanda dei filtri posta all'altro controllo della barra: `_GraphBody` riceve `mode` e
+  **non lo legge mai**, quindi "Libero / Per tipo / Cronologico" cambia solo il segmento
+  selezionato — ma qui non c'è un bug da correggere, l'implementazione non esiste, e la scelta è
+  fra scriverla e togliere una promessa a vuoto dalla schermata principale. Tre nel backlog:
+  "Condividi il mio profilo" può non fare **niente** in tre modi (due `return` muti più un
+  `catch (_) {}`) ed è un fallimento muto peggiore di quelli già annotati perché non risponde a un
+  tap esplicito; la schermata dei ruoli resta bianca con lista vuota, oggi irraggiungibile ma
+  destinata a diventarlo con il primo sistema non-MBTI, quindi la decisione appartiene alla voce
+  "Consumatori a valle" di Epica 2 e non a una pezza locale; e due pattern nuovi per i test — la
+  terza famiglia di schermate non pompabili (I/O fuori dal `build`, che a differenza delle altre
+  due **non va in hang, mente**: `pumpAndSettle` ritorna su un albero fermo allo stato iniziale) e
+  il criterio per sbloccare un flusso che dipende da un plugin, cioè cercare un `.platform`
+  scrivibile prima di rassegnarsi al test manuale. Nessun commit: le modifiche della giornata
+  (i due fix del grafo, i quattro file di test e la roadmap) restano in working tree.
